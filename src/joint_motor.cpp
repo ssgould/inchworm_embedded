@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "JointMotor.h"
+#include "joint_motor.h"
 
 JointMotor::JointMotor() {
 }
@@ -20,7 +20,7 @@ JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1) {
     //PID
     kP = 125;
     kI = 0.0;
-    kD = 0; 
+    kD = 0;
 }
 /*
 * Takes speed -255 - 255 and moves motor
@@ -66,7 +66,7 @@ void JointMotor::setAngle(double angle) {
     return;
 }
 /*
-* Update motor speed for PID 
+* Update motor speed for PID
 */
 void JointMotor::updateSpeed() {
     double currentAngle = getAngleDegrees();
@@ -78,7 +78,7 @@ void JointMotor::updateSpeed() {
     int speed = (kP * error) + (kI * sumError) + (kD * changeError);
     setSpeed(speed);
 
-    
+
     // Serial.println(error);
     // Serial.println(sumError);
     // Serial.println(changeError);
