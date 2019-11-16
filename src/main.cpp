@@ -1,24 +1,23 @@
 #include <Arduino.h>
 #include <Wire.h>
-#include "JointMotor.h"
 #include <Servo.h>
+#include "joint_motor.h"
+#include "global_pins.h"
 
-#define MOTOR1_1  6
-#define MOTOR1_2  4
-#define MOTOR1_PWM  3
-
+//Variables
 JointMotor motor1;
 Servo servo;
 
+//Function definitions
 void setDirection(int direction);
 
 void setup() {
     Serial.begin(9600); //Debug Serial
-    Wire.begin(); //begin i2c
-    
-    motor1 = JointMotor(MOTOR1_1, MOTOR1_2, MOTOR1_PWM);
+    Wire.begin(); //begin I2C
+
+    motor1 = JointMotor(INCHWORM_JOINT_MOTOR1_1, INCHWORM_JOINT_MOTOR1_2, INCHWORM_JOINT_MOTOR1_PWM);
     motor1.setAngle(45);
-    
+
     /* Debug */
     // pinMode(6, OUTPUT);
     // pinMode(7, OUTPUT);
