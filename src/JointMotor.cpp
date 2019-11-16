@@ -10,9 +10,7 @@ JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1) {
     pinDirectionB =  pinDirectionB1;
     pinPWM = pinPWM1;
     pinMode(pinDirectionA, OUTPUT);
-    pinMode(pinDirectionA + 1, OUTPUT);
     pinMode(pinDirectionB, OUTPUT);
-    pinMode(pinDirectionB + 1, OUTPUT);
     pinMode(pinPWM, OUTPUT);
     //Encoder Setup
     encoder     .begin(); //Encoder Constructor
