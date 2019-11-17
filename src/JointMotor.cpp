@@ -4,7 +4,7 @@
 JointMotor::JointMotor() {
 }
 
-JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress) {
+JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd) {
     //Pin Configuration
     pinDirectionA = pinDirectionA1;
     pinDirectionB =  pinDirectionB1;
@@ -19,9 +19,12 @@ JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int 
     encoder.begin(); //Encoder Constructor
     encoder.setZeroReg(); //Zero Encoders
     //PID
-    kP = 150;
-    kI = 0.1;
-    kD = 125; 
+    kP = kp;
+    kI = ki;
+    kD = kd;
+    // kP = 150;
+    // kI = 0.1;
+    // kD = 125; 
 }
 /*
 * Takes speed -255 - 255 and moves motor
