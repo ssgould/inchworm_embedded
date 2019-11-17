@@ -4,7 +4,7 @@
 JointMotor::JointMotor() {
 }
 
-JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1) {
+JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress) {
     //Pin Configuration
     pinDirectionA = pinDirectionA1;
     pinDirectionB =  pinDirectionB1;
@@ -15,12 +15,13 @@ JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1) {
     pinMode(pinDirectionB + 1, OUTPUT);
     pinMode(pinPWM, OUTPUT);
     //Encoder Setup
-    encoder     .begin(); //Encoder Constructor
+    encoder = AMS_AS5048B(encoderAddress);
+    encoder.begin(); //Encoder Constructor
     encoder.setZeroReg(); //Zero Encoders
     //PID
-    kP = 125;
-    kI = 0.0;
-    kD = 0; 
+    kP = 150;
+    kI = 0.1;
+    kD = 125; 
 }
 /*
 * Takes speed -255 - 255 and moves motor
@@ -38,15 +39,11 @@ void JointMotor::setSpeed(int speed) {
 void JointMotor::changeDirection(int speed) {
     if (speed < 0) {
         digitalWrite(pinDirectionA, HIGH);
-        digitalWrite(pinDirectionA + 1, HIGH);
         digitalWrite(pinDirectionB, LOW);
-        digitalWrite(pinDirectionB + 1, LOW);
     }
     else {
         digitalWrite(pinDirectionA, LOW);
-        digitalWrite(pinDirectionA + 1, LOW);
         digitalWrite(pinDirectionB, HIGH);
-        digitalWrite(pinDirectionB + 1, HIGH);
     }
     return;
 }
@@ -72,6 +69,8 @@ void JointMotor::updateSpeed() {
     double currentAngle = getAngleDegrees();
 
     double error = desiredAngle - currentAngle;
+    if (abs(int(error)) > 180) { error = error + 360;}
+
     sumError = sumError + error;
     double changeError = error - lastError;
 

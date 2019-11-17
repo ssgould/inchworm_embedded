@@ -13,7 +13,7 @@ class JointMotor {
 
     public:
         JointMotor(); 
-        JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1);
+        JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress);
 
         void    setSpeed(int speed);
         void    changeDirection(int speed);
