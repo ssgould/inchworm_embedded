@@ -10,9 +10,7 @@ JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int 
     pinDirectionB =  pinDirectionB1;
     pinPWM = pinPWM1;
     pinMode(pinDirectionA, OUTPUT);
-    pinMode(pinDirectionA + 1, OUTPUT);
     pinMode(pinDirectionB, OUTPUT);
-    pinMode(pinDirectionB + 1, OUTPUT);
     pinMode(pinPWM, OUTPUT);
     //Encoder Setup
     encoder = AMS_AS5048B(encoderAddress);
@@ -22,9 +20,6 @@ JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int 
     kP = kp;
     kI = ki;
     kD = kd;
-    // kP = 150;
-    // kI = 0.1;
-    // kD = 125; 
 }
 /*
 * Takes speed -255 - 255 and moves motor
@@ -55,10 +50,21 @@ void JointMotor::changeDirection(int speed) {
 */
 double JointMotor::getAngleDegrees() {
     double angle = encoder.angleR(U_DEG, true);
-    Serial.println(angle);
-    return angle;
-}
+    if (debug) { Serial.print("angle: "); Serial.println(angle); }
 
+    if (angle >= 0 && angle <= 365) { //don't return "I2C Error" as angle
+        lastAngle = encoder.angleR(U_DEG, true); 
+        return angle;
+        }
+    else {
+        return lastAngle;
+    }
+    
+    return ;
+}
+/*
+* Set desired joint angle
+*/
 void JointMotor::setAngle(double angle) {
     desiredAngle = angle;
     lastError = 0;

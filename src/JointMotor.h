@@ -11,6 +11,10 @@ class JointMotor {
         double kP, kI, kD;
         double sumError, lastError;
 
+        double jointAngle; //angle of joint
+
+        bool debug;
+
     public:
         JointMotor(); 
         JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd);
