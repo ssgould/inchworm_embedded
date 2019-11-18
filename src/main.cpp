@@ -3,6 +3,7 @@
 #include <Servo.h>
 #include "JointMotor.h"
 #include "global_pins.h"
+#include "gripper.h"
 
 //Variables
 JointMotor motor1;

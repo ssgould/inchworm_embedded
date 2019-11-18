@@ -1,10 +1,11 @@
 -IC:/Users/JosuD/Documents/MQP/githubCode/inchworm_embedded/include
 -IC:/Users/JosuD/Documents/MQP/githubCode/inchworm_embedded/src
--IC:/Users/JosuD/.platformio/packages/framework-arduinoavr/libraries/__cores__/arduino/Wire/src
 -IC:/Users/JosuD/.platformio/lib/Servo_ID883/src
+-IC:/Users/JosuD/.platformio/packages/framework-arduinoavr/libraries/__cores__/arduino/Wire/src
 -IC:/Users/JosuD/.platformio/packages/framework-arduinoavr/cores/arduino
 -IC:/Users/JosuD/.platformio/packages/framework-arduinoavr/variants/standard
 -IC:/Users/JosuD/Documents/MQP/githubCode/inchworm_embedded/lib/ams_as5048b
+-IC:/Users/JosuD/Documents/MQP/githubCode/inchworm_embedded/lib/system_calibration
 -IC:/Users/JosuD/.platformio/lib/Arduino-LiquidCrystal-I2C-library
 -IC:/Users/JosuD/.platformio/lib/FastLED_ID126
 -IC:/Users/JosuD/.platformio/packages/framework-arduinoavr/libraries/__cores__/arduino/EEPROM/src
