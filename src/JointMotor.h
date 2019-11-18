@@ -11,7 +11,7 @@ class JointMotor {
         double kP, kI, kD;
         double sumError, lastError;
 
-        double jointAngle; //angle of joint
+        double lastAngle; //angle of joint
 
         bool debug;
 

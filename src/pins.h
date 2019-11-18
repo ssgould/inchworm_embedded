@@ -1,6 +1,6 @@
 //*****************************************************************************
 //
-// global_pins.h - Centralizes where pins are set and added. Readability improved
+// pins.h - Centralizes where pins are set and added. Readability improved
 //
 //*****************************************************************************
 

@@ -7,19 +7,19 @@
 #include <Servo.h>
 #include <Arduino.h>
 
-class gripper {
+class Gripper {
     private:
-      int pin, zeroPosition, threshold;
-      int maxSpeedCCW, maxSpeedCW;
-      int maxPulse, minPulse, medianPulse;
+        int pin, zeroPosition, threshold;
+        int maxSpeedCCW, maxSpeedCW;
+        int maxPulse, minPulse, medianPulse;
 
-      typedef enum{
+    typedef enum{
         engage,
         disengage,
         idle,
-      }gripperState;
+        }gripperState;
 
-      Servo grip;
+    Servo grip;
       
     public:
         Gripper(); //default constructor
@@ -28,3 +28,4 @@ class gripper {
         void write(int power);
         char setGripper(gripperState gState, int time);
 };
+

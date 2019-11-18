@@ -2,7 +2,7 @@
 #include <Wire.h>
 #include <Servo.h>
 #include "JointMotor.h"
-#include "global_pins.h"
+#include "pins.h"
 #include "gripper.h"
 
 //Variables
@@ -21,7 +21,7 @@ void setup() {
     motor1 = JointMotor(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 150, 0.1, 125);
     motor2 = JointMotor(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 150, 0.1, 125);
     motor3 = JointMotor(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 150, 0.1, 125);
-   
+
     motor1.setAngle(45);
     motor2.setAngle(-90);
     motor3.setAngle(5);

@@ -85,7 +85,6 @@ void JointMotor::updateSpeed() {
 
     int speed = (kP * error) + (kI * sumError) + (kD * changeError);
     setSpeed(speed);
-
     
     // Serial.println(error);
     // Serial.println(sumError);
