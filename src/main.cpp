@@ -23,7 +23,6 @@ void setup() {
     motor3 = JointMotor(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 150, 0.1, 125);
     /*
     * TODO
-    * add Kp Ki Kd to constructor
     * add i2c error case to getAngle() => set to last measured angle
     */
     motor1.setAngle(45);
