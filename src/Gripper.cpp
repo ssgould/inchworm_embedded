@@ -38,7 +38,7 @@ void Gripper::write(int power){
     int pulseWidth;
     int direction = power ;
 
-    Serial.println(direction);
+    //Serial.println(direction);
 
     pulseWidth = map(power, maxSpeedCCW, maxSpeedCW, maxPulse, minPulse);
     grip.writeMicroseconds(pulseWidth);
@@ -71,40 +71,6 @@ bool Gripper::setGripper(gripperState gState, int time){
   }
 
   return true;
-}
-
-/*
-* Enables to interface (engage and disengage) the grippers using buttons.
-* Buttons should be pulgged into the Analog pins set in Gripper contructor.
-*/
-gripperState Gripper::gripperButtonTest(gripperState currentState){
-
-gripperState localState;
-
-Serial.println(currentState);
- if(currentState == engage){
-    if(buttonGripper.isPressed() && buttonGripper.stateChanged() && buttonState){
-      buttonState = false;
-      localState = disengage;
-    }
-    if(buttonGripper.isPressed() && buttonGripper.stateChanged() && !buttonState){
-      buttonState = true;
-      localState = engage;
-    }
-  }
-
-  if(currentState == disengage){
-    if(buttonGripper.isPressed() && buttonGripper.stateChanged() && buttonState){
-      buttonState = false;
-      localState = engage;
-    }
-    if(buttonGripper.isPressed() && buttonGripper.stateChanged() && !buttonState){
-      buttonState = true;
-      localState = disengage;
-    }
-  }
-
-  return localState;
 }
 
 /*
