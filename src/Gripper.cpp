@@ -41,14 +41,15 @@ Gripper::Gripper(int pin, int zeroPosition = 0, int threshold = 5){
 void Gripper::write(int power){
 
     int pulseWidth;
+    int direction = power - zeroPosition;
 
     // if it's greater than threshold -- then it spinning in the CW
-    if ((power - zeroPosition) > threshold)
+    if (direction > threshold)
     {
         pulseWidth = map(power, zeroPosition, maxSpeedCW, medianPulse, minPulse);
         grip.writeMicroseconds(pulseWidth);
         }
-    else if ((power - zeroPosition) < -threshold)
+    else if (direction < -threshold)
     {
         pulseWidth = map(power, maxSpeedCCW, zeroPosition, maxPulse, medianPulse);
         grip.writeMicroseconds(pulseWidth);
@@ -61,9 +62,9 @@ void Gripper::write(int power){
 
 /*
 * For gripper engagment and disengament
-* TODO: when current sensing added to gripper add that sensng instead of the time delay.
+* TODO: when current sensing added to gripper, add that sensng instead of the time delay.
 */
-char Gripper::setGripper(gripperState gState, int time){
+bool Gripper::setGripper(gripperState gState, int time){
 
   switch(gState){
     case engage: //engage gripper
@@ -76,7 +77,7 @@ char Gripper::setGripper(gripperState gState, int time){
         delay(time);
         write (0);
         break;
-    case idle:
+    case idle: //nothing happens
         write(0);
         break;
     default: //if none are selected
@@ -84,6 +85,8 @@ char Gripper::setGripper(gripperState gState, int time){
         delay(time);
         break;
   }
+
+  return true;
 }
 
 /*

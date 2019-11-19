@@ -4,8 +4,17 @@
 //
 //*****************************************************************************
 
+#ifndef GRIPPER_H
+#define GRIPPER_H
+
 #include <Servo.h>
 #include <Arduino.h>
+
+typedef enum{
+    engage,
+    disengage,
+    idle,
+    }gripperState;
 
 class Gripper {
     private:
@@ -13,19 +22,15 @@ class Gripper {
         int maxSpeedCCW, maxSpeedCW;
         int maxPulse, minPulse, medianPulse;
 
-    typedef enum{
-        engage,
-        disengage,
-        idle,
-        }gripperState;
+        Servo grip;
 
-    Servo grip;
-      
     public:
+
         Gripper(); //default constructor
         Gripper(int pin, int zeroPosition = 0, int threshold = 5); //contructor with values
 
         void write(int power);
-        char setGripper(gripperState gState, int time);
+        bool setGripper(gripperState gState, int time);// time is in milliseconds (1000 milliseconds = 1 sec)
 };
 
+#endif
