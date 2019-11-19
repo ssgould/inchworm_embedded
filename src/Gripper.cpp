@@ -1,13 +1,9 @@
 /*******************************************************************
 * Gripper library that allows to enagage and disengage the grippers
 * of the robot. This code is designed for the Vex 29 motor controllers.
-* This code is also adapted from the vexMotor Arduino Library found in
-* the following link: https://github.com/sparkfun/vexMotor
 *
-*
-* 22 Dec 2014 - Brian Huang, SparkFun Electronics
 * Nov 2019 - Josue Contreras and Trevor Rizzo, Swarm Construction MQP
-/******************************************************************/
+******************************************************************/
 
 #include "Gripper.h"
 
@@ -33,31 +29,19 @@ Gripper::Gripper(int pin, int zeroPosition = 0, int threshold = 5){
 }
 
 /*
-* Function adapted from the vexMotor Arduino Library. VEX Motor
-* Controller spins CW for pulse widths less than 1500 uS and CCW
+* Motor spins CW for pulse widths less than 1500 uS and CCW
 * for pulse widths greater than 1500. map() scales the power to a
 * pulse width.
 */
 void Gripper::write(int power){
 
     int pulseWidth;
-    int direction = power - zeroPosition;
+    int direction = power ;
 
-    // if it's greater than threshold -- then it spinning in the CW
-    if (direction > threshold)
-    {
-        pulseWidth = map(power, zeroPosition, maxSpeedCW, medianPulse, minPulse);
-        grip.writeMicroseconds(pulseWidth);
-        }
-    else if (direction < -threshold)
-    {
-        pulseWidth = map(power, maxSpeedCCW, zeroPosition, maxPulse, medianPulse);
-        grip.writeMicroseconds(pulseWidth);
-    }
-    else
-    {
-        grip.writeMicroseconds(medianPulse);
-    }
+    Serial.println(direction);
+
+    pulseWidth = map(power, maxSpeedCCW, maxSpeedCW, maxPulse, minPulse);
+    grip.writeMicroseconds(pulseWidth);
 }
 
 /*
@@ -68,12 +52,12 @@ bool Gripper::setGripper(gripperState gState, int time){
 
   switch(gState){
     case engage: //engage gripper
-        write(255);
+        write(-255);
         delay(time);
         write (0);
         break;
     case disengage: //disengage gripper
-        write(-255);
+        write(255);
         delay(time);
         write (0);
         break;
@@ -87,6 +71,40 @@ bool Gripper::setGripper(gripperState gState, int time){
   }
 
   return true;
+}
+
+/*
+* Enables to interface (engage and disengage) the grippers using buttons.
+* Buttons should be pulgged into the Analog pins set in Gripper contructor.
+*/
+gripperState Gripper::gripperButtonTest(gripperState currentState){
+
+gripperState localState;
+
+Serial.println(currentState);
+ if(currentState == engage){
+    if(buttonGripper.isPressed() && buttonGripper.stateChanged() && buttonState){
+      buttonState = false;
+      localState = disengage;
+    }
+    if(buttonGripper.isPressed() && buttonGripper.stateChanged() && !buttonState){
+      buttonState = true;
+      localState = engage;
+    }
+  }
+
+  if(currentState == disengage){
+    if(buttonGripper.isPressed() && buttonGripper.stateChanged() && buttonState){
+      buttonState = false;
+      localState = engage;
+    }
+    if(buttonGripper.isPressed() && buttonGripper.stateChanged() && !buttonState){
+      buttonState = true;
+      localState = disengage;
+    }
+  }
+
+  return localState;
 }
 
 /*
