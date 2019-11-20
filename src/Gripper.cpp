@@ -13,19 +13,27 @@
 Gripper::Gripper(){
 }
 
-Gripper::Gripper(int pin, int zeroPosition = 0, int threshold = 5){
+Gripper::Gripper(int pin, bool directionCW, int zeroPosition = 0, int threshold = 5){
 
     pin = pin;
+    directionCW = directionCW;
     zeroPosition = zeroPosition;
     threshold = threshold;
-    maxSpeedCCW = -255;
-    maxSpeedCW = 255;
-    maxPulse = 2000;
-    minPulse = 1000;
     medianPulse = 1500;
 
-    grip.attach(pin);
+    if(directionCW){
+      maxSpeedCCW = -255;
+      maxSpeedCW = 255;
+      maxPulse = 2000;
+      minPulse = 1000;
+    }else if(!directionCW){
+      maxSpeedCCW = 255;
+      maxSpeedCW = -255;
+      maxPulse = 1000;
+      minPulse = 2000;
+    }
 
+    grip.attach(pin);
 }
 
 /*
@@ -36,9 +44,6 @@ Gripper::Gripper(int pin, int zeroPosition = 0, int threshold = 5){
 void Gripper::write(int power){
 
     int pulseWidth;
-    int direction = power ;
-
-    //Serial.println(direction);
 
     pulseWidth = map(power, maxSpeedCCW, maxSpeedCW, maxPulse, minPulse);
     grip.writeMicroseconds(pulseWidth);
@@ -46,18 +51,19 @@ void Gripper::write(int power){
 
 /*
 * For gripper engagment and disengament
+* IMPORTANT: The gripper set function uses a blocking delay.
 * TODO: when current sensing added to gripper, add that sensng instead of the time delay.
 */
 bool Gripper::setGripper(gripperState gState, int time){
 
   switch(gState){
     case engage: //engage gripper
-        write(-255);
+        write(maxSpeedCCW);
         delay(time);
         write (0);
         break;
     case disengage: //disengage gripper
-        write(255);
+        write(maxSpeedCW);
         delay(time);
         write (0);
         break;

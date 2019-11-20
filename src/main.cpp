@@ -15,8 +15,9 @@ Servo servo;
 // Buttons have to be pull up
 // Pull up: one terminal on GND and the other
 //          attached to the analog pin.
-Button buttonGrip_1 = Button(A0, PULLUP);;
+Button buttonGrip_1 = Button(A0, PULLUP);
 bool buttonState = true;
+bool triggerGrip = true;
 
 // FUNCTION DEFINITIONS
 // to controls grippers with buttons. Remember to set grippers current state.
@@ -30,8 +31,8 @@ void setup() {
     Wire.begin(); //begin I2C
     //pinMode(13,OUTPUT);
 
-    gripper[0] = Gripper(GRIPPER_MOTOR_1);
-    // gripper[1] = Gripper(GRIPPER_MOTOR_2);
+    gripper[0] = Gripper(GRIPPER_MOTOR_1, true);
+    gripper[1] = Gripper(GRIPPER_MOTOR_2, false);
 
     // motor1 = JointMotor(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 150, 0.1, 125);
     // motor2 = JointMotor(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 150, 0.1, 125);
@@ -47,7 +48,11 @@ void loop() {
     // motor2.updateSpeed();
     // motor3.updateSpeed();
 
-  gripperButtonTest(disengage, gripper[0], buttonGrip_1);
+    if(triggerGrip){
+    triggerGrip = !gripper[0].setGripper(engage, 21000);
+    }
+  //USED: when want ot enagage and diangage with button
+  //gripperButtonTest(engage, gripper[0], buttonGrip_1);
 
 }
 
@@ -55,6 +60,7 @@ void loop() {
 /*
 * Enables to interface (engage and disengage) the grippers using buttons.
 * Buttons should be pulgged into the Analog pins.
+* IMPORTANT: The gripper set function uses a blocking delay.
 */
 void gripperButtonTest(gripperState currentState, Gripper grip, Button buttonGripper){
 

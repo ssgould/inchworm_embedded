@@ -22,13 +22,14 @@ class Gripper {
         int pin, zeroPosition, threshold;
         int maxSpeedCCW, maxSpeedCW;
         int maxPulse, minPulse, medianPulse;
+        bool directionCW;
 
         Servo grip;
 
     public:
 
         Gripper(); //default constructor
-        Gripper(int pin, int zeroPosition = 0, int threshold = 5); //contructor with values
+        Gripper(int pin, bool directionCW, int zeroPosition = 0, int threshold = 5); //contructor with values
 
         void write(int power);
         bool setGripper(gripperState gState, int time);// time is in milliseconds (1000 milliseconds = 1 sec)
