@@ -13,9 +13,9 @@ class JointMotor {
 
         double lastAngle; //angle of joint
 
+    public:
         bool debug;
 
-    public:
         JointMotor(); 
         JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd);
 
@@ -24,5 +24,7 @@ class JointMotor {
         void    setAngle(double angle);
         void    updateSpeed();
         double  getAngleDegrees();
+        // double getKP();
+        // void setKP(double kpValue)
 
 };

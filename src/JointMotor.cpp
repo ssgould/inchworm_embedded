@@ -20,6 +20,8 @@ JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int 
     kP = kp;
     kI = ki;
     kD = kd;
+
+    debug = false;
 }
 /*
 * Takes speed -255 - 255 and moves motor
@@ -53,14 +55,12 @@ double JointMotor::getAngleDegrees() {
     if (debug) { Serial.print("angle: "); Serial.println(angle); }
 
     if (angle >= 0 && angle <= 365) { //don't return "I2C Error" as angle
-        lastAngle = encoder.angleR(U_DEG, true); 
+        lastAngle = angle; 
         return angle;
         }
     else {
         return lastAngle;
     }
-    
-    return ;
 }
 /*
 * Set desired joint angle
