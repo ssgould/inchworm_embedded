@@ -10,27 +10,32 @@
 /*
 * Gripper Constructors
 */
+
+//Empty contructor to build object
 Gripper::Gripper(){
 }
 
+//Constructor to added object properties. Two arguments are optional, zeroposition:
+//sets the middle value for the range of values that are mapped. Threshold is not used
+//but could serve to implement the write to motor function.
 Gripper::Gripper(int pin, bool directionCW, int zeroPosition = 0, int threshold = 5){
 
     pin = pin;
     directionCW = directionCW;
     zeroPosition = zeroPosition;
     threshold = threshold;
-    medianPulse = 1500;
+    medianPulse = 1500; //motor stops at this pulse width
 
     if(directionCW){
       maxSpeedCCW = -255;
       maxSpeedCW = 255;
-      maxPulse = 2000;
-      minPulse = 1000;
+      maxPulse = 2000; //unique value to VEX 29 motorcontrollers
+      minPulse = 1000; //unique value to VEX 29 motorcontrollers
     }else if(!directionCW){
       maxSpeedCCW = 255;
       maxSpeedCW = -255;
-      maxPulse = 1000;
-      minPulse = 2000;
+      maxPulse = 1000; //unique value to VEX 29 motorcontrollers
+      minPulse = 2000; //unique value to VEX 29 motorcontrollers
     }
 
     grip.attach(pin);

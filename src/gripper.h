@@ -11,7 +11,7 @@
 #include <Arduino.h>
 
 
-typedef enum{
+typedef enum{ // Used globaly as states for gripper functions
     engage,
     disengage,
     idle,
@@ -31,8 +31,10 @@ class Gripper {
         Gripper(); //default constructor
         Gripper(int pin, bool directionCW, int zeroPosition = 0, int threshold = 5); //contructor with values
 
+        // Writes the pulsewidth specified to the motorcontroller and maps the values.
         void write(int power);
-        bool setGripper(gripperState gState, int time);// time is in milliseconds (1000 milliseconds = 1 sec)
+        // Sets gripper state to engage or disengage. Time is in milliseconds (1000 milliseconds = 1 sec)
+        bool setGripper(gripperState gState, int time);
         //gripperState gripperButtonTest(gripperState currentState);
 
 };
