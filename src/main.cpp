@@ -8,15 +8,13 @@
 
 //Variables
 JointMotor jointMotor[3];
-// JointMotor motor0;
-// JointMotor motor1;
-// JointMotor motor2;
 
 //Serial Buffer
 const int len = 9;
 char serialBuffer[len];
 char temp[int(len/3)];
 
+/*DEBUG*/
 // Buttons have to be pull up
 // Pull up: one terminal on GND and the other
 //          attached to the analog pin.
@@ -34,20 +32,14 @@ Gripper gripper[2];
 void setup() {
     Serial.begin(9600); //Debug Serial
     Wire.begin(); //begin I2C
-    //pinMode(13,OUTPUT);
-    
 
-    jointMotor[0] = JointMotor(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 180, 0.1, 90 );
+    jointMotor[0] = JointMotor(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 170, 0.1, 8560 );
     jointMotor[1] = JointMotor(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 150, 0.1, 70);
     jointMotor[2] = JointMotor(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 12, 0.1, 6);
-    // motor0 = JointMotor(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 150, 0.1, 125);
-    // motor1 = JointMotor(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 150, 0.1, 125);
-    // motor2 = JointMotor(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 150, 0.1, 125);
-
+    
     /* DEBUG */
-    jointMotor[2].debug = true;
-    jointMotor[0].setAngle(0);
-    jointMotor[1].setAngle(5);
+    jointMotor[0].setAngle(20);
+    jointMotor[1].setAngle(10);
     jointMotor[2].setAngle(-55);
 
     gripper[0] = Gripper(GRIPPER_MOTOR_1, true);
@@ -56,9 +48,9 @@ void setup() {
 
 void loop() {
 
-    if(triggerGrip){
-        triggerGrip = !gripper[0].setGripper(engage, 21000);
-    }
+    // if(triggerGrip){
+    //     triggerGrip = !gripper[1].setGripper(engage, 21000);
+    // }
     //USED: when want ot enagage and diangage with button
     //gripperButtonTest(engage, gripper[0], buttonGrip_1);
 
