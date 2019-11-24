@@ -51,6 +51,7 @@ void setup() {
 	//Timer1 Interupt
 	// Timer1.initialize(500000);
 	// Timer1.attachInterrupt(updateSpeeds);
+	// interrupts();
 }
 
 void loop() {
