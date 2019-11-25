@@ -25,7 +25,8 @@ bool triggerGrip = true;
 bool gripperFinished1 = true;
 bool gripperFinished2 = true;
 int gripperStatus = 0;
-int previousGripperState;
+int previousGripperState1;
+int previousGripperState2;
 int gripperStatusSerial1;
 int gripperStatusSerial2;
 
@@ -72,8 +73,6 @@ void loop() {
         Serial.readBytesUntil('\n', serialBuffer, len);
         int tempIndex = 0;
         int jointIndex = 0;
-        int gripperIndex = 0;
-
 
         for(int i = 0; i < len; i++){
           temp[tempIndex] = serialBuffer[i];
@@ -83,37 +82,24 @@ void loop() {
           }
           else{
               if (jointIndex > 2) { //Gripper
-                gripperStatusSerial1 = temp[1] - '0';//atoi(temp[gripperIndex]);
-                gripperStatusSerial2 = temp[2] - '0';//atoi(temp[gripperIndex]);
-                gripperFinished2 = false;
-                gripperFinished1 = false;
-                Serial.println(gripperStatusSerial1);
-                Serial.println(gripperStatusSerial2);
-                //TODO: code that checks for previous state. have to do it for both
-                // gripperStatus = atoi(temp[gripperIndex]);
-                // if(gripperStatus != previousGripperState){
-                //   gripper[gripperIndex].setGripper(gripperStatus,2100);
-                //   previousGripperState = gripperStatus;
-                // }
+                if((temp[1] - '0') != previousGripperState1){
+                  gripperStatusSerial1 = temp[1] - '0';
+                  previousGripperState1 = gripperStatusSerial1;
+                  gripperFinished1 = false;
+                }
 
-                //Serial.println(temp);
-                // if(gripperIndex > 0){ //Engage or disengage gripper
-                //   gripperFinished1 = false;
-                //   gripperFinished2 = false;
-                //   if(gripperIndex == 1){
-                //     gripperStatusSerial1 = temp[gripperIndex] - '0';//atoi(temp[gripperIndex]);
-                //     Serial.println(gripperStatusSerial1);
-                //     tempIndex = 0;
-                //   }else{
-                //     gripperStatusSerial2 = temp[gripperIndex] - '0';//atoi(temp[gripperIndex]);
-                //     Serial.println(gripperStatusSerial2);
-                //     tempIndex = 0;
-                //   }
-                // }else{ //the first char of the gripper message can be used here
-                // }
-                // gripperIndex++;
+                if((temp[2] - '0') != previousGripperState2){
+                  gripperStatusSerial2 = temp[2] - '0';
+                  previousGripperState2 = gripperStatusSerial2;
+                  gripperFinished2 = false;
+                }
 
-               } else { //Joint angles
+                                  // Serial.print("Gripper 1 (Red): ");
+                                  // Serial.println(gripperStatusSerial1);
+                                  // Serial.print("Gripper 2 (Yellow): ");
+                                  // Serial.println(gripperStatusSerial2);
+               }
+               else { //Joint angles
                 	jointMotor[jointIndex].setAngle(atoi(temp));
               		jointIndex++;
               		tempIndex = 0;
