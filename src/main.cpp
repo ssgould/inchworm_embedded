@@ -121,7 +121,7 @@ void updateSpeeds() {
 
 /*
 * Enables to interface (engage and disengage) the grippers using buttons.
-* Buttons should be pulgged into the Analog pins.
+* Buttons should be plugged into the Analog pins.
 */
 void gripperButtonTest(gripperState currentState, Gripper grip, Button buttonGripper){
 

@@ -1,12 +1,12 @@
-# Smart Scaffolding Robot Controller
+# Smart Scaffolding Inchworm Embedded System
 
-This repo is for the robot controllers as well as includes a simulation using Matplotlib to view the robot
+This repo is for the control of the robots motors on the joint and grippers. The control is done through PID and the encoders placed on each joint.
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+These instructions will allow you to run this system on a robot like the inchworm.
 
-### Prerequisites
+### Prerequisites (libraries needed)
 
 What things you need to install the software and how to install them
 
@@ -14,65 +14,46 @@ What things you need to install the software and how to install them
 Give examples
 ```
 
-### Installing
+### Debugging the System
 
-A step by step series of examples that tell you how to get a development env running
-
-Say what the step will be
+Additionally, for debugging we added some functions that allow you to debug the system. Some of these functions allow you to connect a button to test various parts of the physical system separately. For example the in main the helper function:
 
 ```
-Give the example
+void gripperButtonTest(gripperState currentState, Gripper grip, Button buttonGripper)
+```
+Enables to interface (engage and disengage) the grippers using one button. The button should be plugged into the analog pins in a pull up configuration.
+
+NOTE: Pull Up Configuration
+```
+GND => Button Terminal 1
+Analog Pin => Button Terminal 2
 ```
 
-And repeat
+## Running the system
+
+The system is simple to run. To move the joint angles and the grippers a message has to be sent through the serial terminal. The message is 12 characters long and has the following structure.
 
 ```
-until finished
-```
-
-End with an example of getting some data out of the system or using it for a little demo
-
-## Running the tests
-
-Explain how to run the automated tests for this system
-
-### Break down into end to end tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
-
-### And coding style tests
-
-Explain what these tests test and why
-
-```
-Give an example
+Joint_1 Angle  Joint_2 Angle  Joint_3 Angle  Gripper1&2_States  
+   (0 0 0)         (0 0 0)       (0 0 0)           (0 0 0)
 ```
 
 ## Deployment
 
-Add additional notes about how to deploy this on a live system
+It is important to mention that this code in non-blocking.
 
 ## Built With
 
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
+* [PlataformIO](https://platformio.org/) - Generation ecosystem for embedded development
 
 ## Contributing
 
 Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
 
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
-
 ## Authors
 
-* **Caleb Wagner** - *Initial work* -
+* **Trevor Rizzo** - *PID* -
+* **Josue Contreras** - *Gripper* -
 
 See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
 
@@ -82,6 +63,4 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Acknowledgments
 
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
+* Multi-tasking in arduino [article](https://learn.adafruit.com/multi-tasking-the-arduino-part-1/a-clean-sweep)
