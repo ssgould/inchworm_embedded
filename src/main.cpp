@@ -11,7 +11,7 @@
 JointMotor jointMotor[3];
 
 //Serial Buffer
-const int len = 9;
+const int len = 12;
 char serialBuffer[len];
 char temp[int(len/3)];
 
@@ -22,12 +22,14 @@ char temp[int(len/3)];
 Button buttonGrip_1 = Button(A0, PULLUP);
 bool buttonState = true;
 bool triggerGrip = true;
+bool gripperFinished = false;
+int gripperStatus = 0;
+int previousGripperState;
 
 // FUNCTION DEFINITIONS
 // to controls grippers with buttons. Remember to set grippers current state.
 void gripperButtonTest(gripperState currentState, Gripper grip, Button buttonGripper);
 void updateSpeeds();
-
 
 Gripper gripper[2];
 
@@ -38,7 +40,6 @@ void setup() {
     jointMotor[0] = JointMotor(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 170, 0.1, 85, 12, 0.1, 6);
     jointMotor[1] = JointMotor(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 150, 0.1, 70);
     jointMotor[2] = JointMotor(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 12, 0.1, 6, 170, 0.1, 85);
-    
 
     /* DEBUG */
     jointMotor[0].setAngle(20);
@@ -57,49 +58,60 @@ void setup() {
 void loop() {
 
     // if(triggerGrip){
-    //     triggerGrip = !gripper[1].setGripper(engage, 21000);
+    //     triggerGrip = !gripper[0].setGripper(1, 21000);
     // }
-    //USED: when want ot enagage and diangage with button
+    //USED: when want ot enagage and disengage with button
     //gripperButtonTest(engage, gripper[0], buttonGrip_1);
 
 
-    if (Serial.available() > 0){
+      if (Serial.available() > 0){
         Serial.println("Message received");
         Serial.readBytesUntil('\n', serialBuffer, len);
         int tempIndex = 0;
         int jointIndex = 0;
-        
+        int gripperIndex = 0;
+
 
         for(int i = 0; i < len; i++){
-        temp[tempIndex] = serialBuffer[i];
+          temp[tempIndex] = serialBuffer[i];
 
         	if(tempIndex < 2){
               	tempIndex++;
-          	}
-          	else{
-            	if (jointIndex > 3) { //Gripper
-					//check that current gripper state and desired state matches
-					// check if gripper is openif (temp[1] = '1' && )
-					//check if gripper is closed
-              	}
-              	else { //Joint angles
+          }else{
+              if (jointIndex > 2) { //Gripper
+
+                //TODO: code that checks for previous state. have to do it for both
+                // gripperStatus = atoi(temp[gripperIndex]);
+                // if(gripperStatus != previousGripperState){
+                //   gripper[gripperIndex].setGripper(gripperStatus,2100);
+                //   previousGripperState = gripperStatus;
+                // }
+
+                if(gripperIndex != 0){ //Engage or disengage gripper
+                  gripper[gripperIndex].setGripper(atoi(temp[gripperIndex]),2100);
+                }else{ //the first char of the gripper message can be used here
+                }
+                gripperIndex++;
+            } else { //Joint angles
                 	jointMotor[jointIndex].setAngle(atoi(temp));
               		jointIndex++;
               		tempIndex = 0;
-              	}
+            }
         	}
         }
-    }
-	
+   }
+
 	updateSpeeds();
+
     // jointMotor[0].updateSpeed();
     // jointMotor[1].updateSpeed();
     // jointMotor[2].updateSpeed();
 
 }
+
 /*
-* Update Speed of all joint motor for pwm
-*/ 
+* Update Speed of all joint motor for PWM
+*/
 void updateSpeeds() {
 	int numMotors = 3;
 	for (int i = 0; i < numMotors; i++) {
@@ -110,7 +122,6 @@ void updateSpeeds() {
 /*
 * Enables to interface (engage and disengage) the grippers using buttons.
 * Buttons should be pulgged into the Analog pins.
-* IMPORTANT: The gripper set function uses a blocking delay.
 */
 void gripperButtonTest(gripperState currentState, Gripper grip, Button buttonGripper){
 

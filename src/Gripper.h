@@ -12,9 +12,9 @@
 
 
 typedef enum{ // Used globaly as states for gripper functions
-    engage,
-    disengage,
-    idle,
+    engage,   //0
+    disengage,//1
+    idle,     //2
     }gripperState;
 
 class Gripper {
@@ -23,6 +23,11 @@ class Gripper {
         int maxSpeedCCW, maxSpeedCW;
         int maxPulse, minPulse, medianPulse;
         bool directionCW;
+
+        int lastUpdate = 0; //increment for motor move interval
+        int startTime = 0;
+        bool resetTime = true;
+        bool gripperFinished;
 
         Servo grip;
 
@@ -35,7 +40,7 @@ class Gripper {
         void write(int power);
         // Sets gripper state to engage or disengage. Time is in milliseconds (1000 milliseconds = 1 sec)
         bool setGripper(gripperState gState, int time);
-        //gripperState gripperButtonTest(gripperState currentState);
+        bool setGripper(int gState, int time);
 
 };
 

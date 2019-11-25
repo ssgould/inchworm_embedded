@@ -56,33 +56,93 @@ void Gripper::write(int power){
 
 /*
 * For gripper engagment and disengament
-* IMPORTANT: The gripper set function uses a blocking delay.
 * TODO: when current sensing added to gripper, add that sensng instead of the time delay.
 */
 bool Gripper::setGripper(gripperState gState, int time){
 
+  if(resetTime){
+    startTime = millis();
+    resetTime = false;
+  }
+
   switch(gState){
     case engage: //engage gripper
+      if((int)(millis() - startTime) < time){
         write(maxSpeedCCW);
-        delay(time);
-        write (0);
+        gripperFinished = false;
+      }else{
+        write(0);
+        resetTime = true;
+        gripperFinished = true;
+      }
         break;
     case disengage: //disengage gripper
+      if((int)(millis() - startTime) < time){
         write(maxSpeedCW);
-        delay(time);
-        write (0);
+        gripperFinished = false;
+      }else{
+        write(0);
+        resetTime = true;
+        gripperFinished = true;
+      }
         break;
     case idle: //nothing happens
         write(0);
+        gripperFinished = true;
         break;
     default: //if none are selected
         write(0);
-        delay(time);
+        gripperFinished = true;
         break;
   }
 
-  return true;
+  return gripperFinished;
+
 }
+
+bool Gripper::setGripper(int gState, int time){
+
+  if(resetTime){
+    startTime = millis();
+    resetTime = false;
+  }
+
+  switch(gState){
+    case engage: //engage gripper
+      if((int)(millis() - startTime) < time){
+        write(maxSpeedCCW);
+        gripperFinished = false;
+      }else{
+        write(0);
+        resetTime = true;
+        gripperFinished = true;
+      }
+        break;
+    case disengage: //disengage gripper
+      if((int)(millis() - startTime) < time){
+        write(maxSpeedCW);
+        gripperFinished = false;
+      }else{
+        write(0);
+        resetTime = true;
+        gripperFinished = true;
+      }
+        break;
+    case idle: //nothing happens
+        write(0);
+        gripperFinished = true;
+        break;
+    default: //if none are selected
+        write(0);
+        gripperFinished = true;
+        break;
+  }
+
+  return gripperFinished;
+
+}
+
+
 
 /*
 * Chooses the gripper and action (enagage or disenagage) of the grippers
