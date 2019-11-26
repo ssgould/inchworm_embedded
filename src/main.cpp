@@ -25,8 +25,8 @@ bool triggerGrip = true;
 bool gripperFinished1 = true;
 bool gripperFinished2 = true;
 int gripperStatus = 0;
-int previousGripperState1;
-int previousGripperState2;
+int previousGripperState1 = -1;
+int previousGripperState2 = -1;
 int gripperStatusSerial1;
 int gripperStatusSerial2;
 
