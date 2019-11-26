@@ -104,9 +104,9 @@ void loop() {
                else { //Joint angles
                   int sign = 1;
                   if (temp[0] == '-') {
-                    temp[0] = '0';
                     sign = -1;
                   }
+                  temp[0] = '0';
                 	jointMotor[jointIndex].setAngle(sign*atoi(temp));
               		jointIndex++;
               		tempIndex = 0;
