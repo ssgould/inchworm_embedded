@@ -102,7 +102,12 @@ void loop() {
                                   // Serial.println(gripperStatusSerial2);
                }
                else { //Joint angles
-                	jointMotor[jointIndex].setAngle(atoi(temp));
+                  int sign = 1;
+                  if (temp[0] == '-') {
+                    temp[0] = '0';
+                    sign = -1;
+                  }
+                	jointMotor[jointIndex].setAngle(sign*atoi(temp));
               		jointIndex++;
               		tempIndex = 0;
             }
