@@ -41,17 +41,19 @@ void setup() {
     Serial.begin(9600); //Debug Serial
     Wire.begin(); //begin I2C
 
-    jointMotor[0] = JointMotor(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 170, 0.1, 85, 12, 0.1, 6);
-    jointMotor[1] = JointMotor(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 150, 0.1, 70);
-    jointMotor[2] = JointMotor(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 12, 0.1, 6, 170, 0.1, 85);
+    Serial.println("Robot intializing....");
+    jointMotor[0] = JointMotor(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 145, 0.1, 72.5, 10, 0.1, 5);
+    jointMotor[1] = JointMotor(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 135, 0.1, 65.5);
+    jointMotor[2] = JointMotor(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 10, 0.1, 5, 145, 0.1, 72.5);
 
     /* DEBUG */
-    jointMotor[0].setAngle(20);
-    jointMotor[1].setAngle(20);
-    jointMotor[2].setAngle(-55);
+    jointMotor[0].setAngle(0);
+    jointMotor[1].setAngle(0);
+    jointMotor[2].setAngle(0);
 
     gripper[0] = Gripper(GRIPPER_MOTOR_1, true);
     gripper[1] = Gripper(GRIPPER_MOTOR_2, false);
+    Serial.println("Done");
 
 	//Timer1 Interupt
 	// Timer1.initialize(500000);
@@ -113,7 +115,7 @@ void loop() {
    }
 
    if(!gripperFinished2){
-     gripperFinished2 = gripper[1].setGripper(gripperStatusSerial2, 22000);
+     gripperFinished2 = gripper[1].setGripper(gripperStatusSerial2, 23000);
    }
 
 	updateSpeeds();
