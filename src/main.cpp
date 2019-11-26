@@ -11,9 +11,9 @@
 JointMotor jointMotor[3];
 
 //Serial Buffer
-const int len = 12;
+const int len = 16;
 char serialBuffer[len];
-char temp[int(len/3)];
+char temp[int(len/4)];
 
 /*DEBUG*/
 // Buttons have to be pull up
