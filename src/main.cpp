@@ -76,51 +76,55 @@ void loop() {
         int tempIndex = 0;
         int jointIndex = 0;
 
-        for(int i = 0; i < len; i++){
-          temp[tempIndex] = serialBuffer[i];
+        if (serialBuffer[0] == '-' || serialBuffer[0] == '0') {
+          for(int i = 0; i < len; i++){
+            temp[tempIndex] = serialBuffer[i];
 
-        	if(tempIndex < 2){
-              	tempIndex++;
-          }
-          else{
-              if (jointIndex > 2) { //Gripper
-                if((temp[2] - '0') != previousGripperState1){
-                  gripperStatusSerial1 = temp[2] - '0';
-                  previousGripperState1 = gripperStatusSerial1;
-                  gripperFinished1 = false;
-                }
-
-                if((temp[3] - '0') != previousGripperState2){
-                  gripperStatusSerial2 = temp[3] - '0';
-                  previousGripperState2 = gripperStatusSerial2;
-                  gripperFinished2 = false;
-                }
-
-                                  // Serial.print("Gripper 1 (Red): ");
-                                  // Serial.println(gripperStatusSerial1);
-                                  // Serial.print("Gripper 2 (Yellow): ");
-                                  // Serial.println(gripperStatusSerial2);
-               }
-               else { //Joint angles
-                  int sign = 1;
-                  if (temp[0] == '-') {
-                    sign = -1;
-                  }
-                  temp[0] = '0';
-                	jointMotor[jointIndex].setAngle(sign*atoi(temp));
-              		jointIndex++;
-              		tempIndex = 0;
+            if(tempIndex < 2){
+                  tempIndex++;
             }
-        	}
-        }
-   }
+            else{
+                if (jointIndex > 2) { //Gripper
+                  //if((temp[2] - '0') != previousGripperState1){
+                    gripperStatusSerial1 = temp[2] - '0';
+                    previousGripperState1 = gripperStatusSerial1;
+                    gripperFinished1 = false;
+                  //}
+
+                  //if((temp[3] - '0') != previousGripperState2){
+                    gripperStatusSerial2 = temp[3] - '0';
+                    previousGripperState2 = gripperStatusSerial2;
+                    gripperFinished2 = false;
+                  //}
+
+                                    // Serial.print("Gripper 1 (Red): ");
+                                    // Serial.println(gripperStatusSerial1);
+                                    // Serial.print("Gripper 2 (Yellow): ");
+                                    // Serial.println(gripperStatusSerial2);
+                }
+                else { //Joint angles
+                    int sign = 1;
+                    if (temp[0] == '-') {
+                      sign = -1;
+                    }
+                    temp[0] = '0';
+                    jointMotor[jointIndex].setAngle(sign*atoi(temp));
+                    jointIndex++;
+                    tempIndex = 0;
+              }
+            }
+          }
+    }
+  }
 
   if(!gripperFinished1){
      gripperFinished1 = gripper[0].setGripper(gripperStatusSerial1, 21000);
+     Serial.println("Gripper red moving");
    }
 
    if(!gripperFinished2){
      gripperFinished2 = gripper[1].setGripper(gripperStatusSerial2, 23000);
+          Serial.println("Gripper yellow moving");
    }
 
 	updateSpeeds();
