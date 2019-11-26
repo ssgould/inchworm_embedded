@@ -84,14 +84,14 @@ void loop() {
           }
           else{
               if (jointIndex > 2) { //Gripper
-                if((temp[1] - '0') != previousGripperState1){
-                  gripperStatusSerial1 = temp[1] - '0';
+                if((temp[2] - '0') != previousGripperState1){
+                  gripperStatusSerial1 = temp[2] - '0';
                   previousGripperState1 = gripperStatusSerial1;
                   gripperFinished1 = false;
                 }
 
-                if((temp[2] - '0') != previousGripperState2){
-                  gripperStatusSerial2 = temp[2] - '0';
+                if((temp[3] - '0') != previousGripperState2){
+                  gripperStatusSerial2 = temp[3] - '0';
                   previousGripperState2 = gripperStatusSerial2;
                   gripperFinished2 = false;
                 }
