@@ -23,6 +23,7 @@ class Gripper {
         int maxSpeedCCW, maxSpeedCW;
         int maxPulse, minPulse, medianPulse;
         bool directionCW;
+        bool isEngaged;
 
         int lastUpdate = 0; //increment for motor move interval
         int startTime = 0;
@@ -36,6 +37,8 @@ class Gripper {
         Gripper(); //default constructor
         Gripper(int pin, bool directionCW, int zeroPosition = 0, int threshold = 5); //contructor with values
 
+        void setEngaged(bool e);
+        bool getEngaged(void);
         // Writes the pulsewidth specified to the motorcontroller and maps the values.
         void write(int power);
         // Sets gripper state to engage or disengage. Time is in milliseconds (1000 milliseconds = 1 sec)
