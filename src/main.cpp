@@ -13,7 +13,7 @@ JointMotor jointMotor[3];
 //Serial Buffer
 const int len = 16;
 char serialBuffer[len];
-char temp[int(len/4)];
+char temp[int(len/4)+1];
 
 /*DEBUG*/
 // Buttons have to be pull up
@@ -42,8 +42,7 @@ void setup() {
 		Wire.begin(); //begin I2C
 
 		Serial.println("Robot intializing....");
-		// char test[] = {'0', '0', '0', '0'};
-		// Serial.println(atoi(test));
+		temp[int(len/4)] = '\n'; //you need this
 		jointMotor[0] = JointMotor(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 100, 0.1, 50, 10, 0.1, 5);
 		jointMotor[1] = JointMotor(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 120, 0.1, 60);
 		jointMotor[2] = JointMotor(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 10, 0.1, 5, 100, 0.1, 60);
@@ -75,26 +74,33 @@ void loop() {
 	if (Serial.available() > 0){
 		Serial.println("Message received");
 		Serial.readBytesUntil('\n', serialBuffer, len);
-		// Serial.println(serialBuffer[0]);
 		int tempIndex = 0;
 		int jointIndex = 0;
 
 		if (serialBuffer[0] == '-' || serialBuffer[0] == '0') {
-			// Serial.println(int(len/4));
-			// Serial.println(atoi(temp)); 
+			// Serial.println("____________Robot GO____________");
+
 			for(int i = 0; i < len; i++){
+				// Serial.print("Iteration: ");
+				// Serial.println(i);
+
 				temp[tempIndex] = serialBuffer[i];
-				Serial.println(tempIndex);
-				Serial.println(temp[tempIndex]);
-				Serial.println(atoi(temp)); 
+
+				// Serial.print("temp properties: ");
+				// Serial.print(tempIndex);
+				// Serial.print(" ");
+				// Serial.print(temp[tempIndex]);
+				// Serial.print(" ");
+				// Serial.println(atoi(temp));
+
 				if(tempIndex < 3){
 					tempIndex++;
 				}
 				else {
-					// Serial.println(atoi(temp)); 
-					Serial.print("jointIndex: ");
-					Serial.println(jointIndex);
+
 					if (jointIndex > 2) { //Gripper
+						// Serial.println("Moving Gripper");
+				
 						if((temp[2] - '0') != previousGripperState1){ //'0'm = engage
 							gripperStatusSerial1 = temp[2] - '0';
 							previousGripperState1 = gripperStatusSerial1;
@@ -115,11 +121,16 @@ void loop() {
 						int sign = 1;
 						if (temp[0] == '-') {
 							sign = -1;
-							Serial.print('-');
 						}
+						
 						temp[0] = '0';
-						int angle = sign*atoi(temp);
+
+						// Serial.print("joint ");
+						// Serial.print(jointIndex);
+
+						signed int angle = sign*atoi(temp);
 						jointMotor[jointIndex].setAngle(angle);
+						Serial.print(" angle: ");
 						Serial.println(angle);
 						jointIndex++;
 					}
@@ -128,6 +139,7 @@ void loop() {
 			}
 		}
 		else {
+			//Serial.println("____________Why I am here____________");
 			for (int i = 0; i < len; i ++) {
 				Serial.read();
 			}
