@@ -8,8 +8,8 @@
             "includePath": [
                 "c:/Users/Trevor/Documents/mqp/githubCode/inchworm_embedded/include",
                 "c:/Users/Trevor/Documents/mqp/githubCode/inchworm_embedded/src",
-                "C:/Users/Trevor/.platformio/packages/framework-arduinoavr/libraries/__cores__/arduino/Wire/src",
                 "C:/Users/Trevor/.platformio/lib/Servo_ID883/src",
+                "C:/Users/Trevor/.platformio/packages/framework-arduinoavr/libraries/__cores__/arduino/Wire/src",
                 "C:/Users/Trevor/.platformio/packages/framework-arduinoavr/cores/arduino",
                 "C:/Users/Trevor/.platformio/packages/framework-arduinoavr/variants/standard",
                 "c:/Users/Trevor/Documents/mqp/githubCode/inchworm_embedded/lib/Button",
@@ -28,8 +28,8 @@
                 "path": [
                     "c:/Users/Trevor/Documents/mqp/githubCode/inchworm_embedded/include",
                     "c:/Users/Trevor/Documents/mqp/githubCode/inchworm_embedded/src",
-                    "C:/Users/Trevor/.platformio/packages/framework-arduinoavr/libraries/__cores__/arduino/Wire/src",
                     "C:/Users/Trevor/.platformio/lib/Servo_ID883/src",
+                    "C:/Users/Trevor/.platformio/packages/framework-arduinoavr/libraries/__cores__/arduino/Wire/src",
                     "C:/Users/Trevor/.platformio/packages/framework-arduinoavr/cores/arduino",
                     "C:/Users/Trevor/.platformio/packages/framework-arduinoavr/variants/standard",
                     "c:/Users/Trevor/Documents/mqp/githubCode/inchworm_embedded/lib/Button",

@@ -42,6 +42,8 @@ void setup() {
 		Wire.begin(); //begin I2C
 
 		Serial.println("Robot intializing....");
+		// char test[] = {'0', '0', '0', '0'};
+		// Serial.println(atoi(test));
 		jointMotor[0] = JointMotor(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 100, 0.1, 50, 10, 0.1, 5);
 		jointMotor[1] = JointMotor(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 120, 0.1, 60);
 		jointMotor[2] = JointMotor(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 10, 0.1, 5, 100, 0.1, 60);
@@ -73,18 +75,25 @@ void loop() {
 	if (Serial.available() > 0){
 		Serial.println("Message received");
 		Serial.readBytesUntil('\n', serialBuffer, len);
-		Serial.println(serialBuffer[0]);
+		// Serial.println(serialBuffer[0]);
 		int tempIndex = 0;
 		int jointIndex = 0;
 
 		if (serialBuffer[0] == '-' || serialBuffer[0] == '0') {
+			// Serial.println(int(len/4));
+			// Serial.println(atoi(temp)); 
 			for(int i = 0; i < len; i++){
 				temp[tempIndex] = serialBuffer[i];
-
+				Serial.println(tempIndex);
+				Serial.println(temp[tempIndex]);
+				Serial.println(atoi(temp)); 
 				if(tempIndex < 3){
 					tempIndex++;
 				}
 				else {
+					// Serial.println(atoi(temp)); 
+					Serial.print("jointIndex: ");
+					Serial.println(jointIndex);
 					if (jointIndex > 2) { //Gripper
 						if((temp[2] - '0') != previousGripperState1){ //'0'm = engage
 							gripperStatusSerial1 = temp[2] - '0';
@@ -106,12 +115,15 @@ void loop() {
 						int sign = 1;
 						if (temp[0] == '-') {
 							sign = -1;
+							Serial.print('-');
 						}
 						temp[0] = '0';
-						jointMotor[jointIndex].setAngle(sign*atoi(temp));
+						int angle = sign*atoi(temp);
+						jointMotor[jointIndex].setAngle(angle);
+						Serial.println(angle);
 						jointIndex++;
-						tempIndex = 0;
 					}
+					tempIndex = 0;
 				}
 			}
 		}
