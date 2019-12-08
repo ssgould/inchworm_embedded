@@ -5,7 +5,7 @@
 #include "pins.h"
 #include "Gripper.h"
 #include "Button.h"
-#include "TimerOne.h"
+//#include "TimerOne.h"
 
 //Variables
 JointMotor jointMotor[3];
@@ -43,14 +43,18 @@ void setup() {
 
 		Serial.println("Robot intializing....");
 		temp[int(len/4)] = '\n'; //you need this
-		jointMotor[0] = JointMotor(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 100, 0.1, 50, 10, 0.1, 5);
-		jointMotor[1] = JointMotor(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 120, 0.1, 60);
-		jointMotor[2] = JointMotor(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 10, 0.1, 5, 100, 0.1, 60);
+		jointMotor[0] = JointMotor(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 60, .12, 60, 10, 0.1, 5, 10);
+		jointMotor[1] = JointMotor(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 60, .12, 60, 10);
+		jointMotor[2] = JointMotor(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 10, .12, 15, 100, 0.1, 60, 10);
 
 		/* DEBUG */
 		jointMotor[0].setAngle(0);
 		jointMotor[1].setAngle(0);
 		jointMotor[2].setAngle(0);
+
+		jointMotor[0].debug = true;
+		jointMotor[1].debug = true;
+		jointMotor[2].debug = true;
 
 		gripper[0] = Gripper(GRIPPER_MOTOR_1, true);
 		gripper[1] = Gripper(GRIPPER_MOTOR_2, false);
@@ -112,7 +116,7 @@ void loop() {
 							previousGripperState2 = gripperStatusSerial2;
 							gripperFinished2 = false;
 						}
-						if (temp[2] != temp[3]) {
+						if (temp[1] == "1") {
 							jointMotor[0].switchPID();
 							jointMotor[2].switchPID();
 						}

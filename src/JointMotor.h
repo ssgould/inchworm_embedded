@@ -14,12 +14,18 @@ class JointMotor {
 
         double lastAngle; //angle of joint
 
+        double last_calibrated_angle; //angle of joint
+	    double angle_offset; // offset of angle in calibration position
+
+        double lastPubAng;
+
     public:
         bool debug;
 
         JointMotor(); 
-        JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd);
-        JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd, double kp2, double ki2, double kd2);
+        JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd, double ang_offset);
+        JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd, double kp2, double ki2, double kd2, double ang_offset);
+
 
         void    setSpeed(int speed);
         void    changeDirection(int speed);

@@ -4,7 +4,7 @@
 JointMotor::JointMotor() {
 }
 
-JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd) {
+JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd, double ang_offset) {
     //Pin Configuration
     pinDirectionA = pinDirectionA1;
     pinDirectionB =  pinDirectionB1;
@@ -24,10 +24,13 @@ JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int 
     kP2 = kp;
     kI2 = ki;
     kD2 = kd;
+    lastPubAng=0;
+
+    angle_offset = ang_offset;
 
     debug = false;
 }
-JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd, double kp2, double ki2, double kd2) {
+JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd, double kp2, double ki2, double kd2, double ang_offset) {
     //Pin Configuration
     pinDirectionA = pinDirectionA1;
     pinDirectionB =  pinDirectionB1;
@@ -47,6 +50,7 @@ JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int 
     kP2 = kp2;
     kI2 = ki2;
     kD2 = kd2;
+    angle_offset = ang_offset;
 
     debug = false;
 }
@@ -79,17 +83,45 @@ void JointMotor::changeDirection(int speed) {
 * Gets encoder angle in degrees
 */
 double JointMotor::getAngleDegrees() {
-    double angle = encoder.angleR(U_DEG, true);
-    if (debug) { Serial.print("angle: "); Serial.println(angle); }
+     double angle = encoder.angleR(U_DEG, true);
+     if (debug) {
+         if (millis()-lastPubAng>2000)
+         {
+           Serial.print("angle: "); Serial.println(angle);
+           lastPubAng=millis(); 
+         }
+          
+          
+         }
 
-    if (angle >= 0 && angle <= 365) { //don't return "I2C Error" as angle
-        lastAngle = angle; 
-        return angle;
-        }
-    else {
-        return lastAngle;
-    }
-}
+     if (angle >= 0 && angle <= 360) { //don't return "I2C Error" as angle
+         lastAngle = angle; 
+         return angle;
+         }
+     else {
+         return lastAngle;
+     }
+ }
+// double JointMotor::getAngleDegrees() {
+// 	double angle = encoder.angleR(U_DEG, true);
+// 	double calibrated_angle = 0;
+
+// 	if (debug) { Serial.print("angle: "); Serial.println(angle); }
+    
+
+// 	if (angle >= 0 && angle <= 360) { //don't return "I2C Error" as angle
+// 		calibrated_angle = angle + angle_offset;
+// 		if (calibrated_angle > 360) {
+// 			calibrated_angle = calibrated_angle - 360;
+// 		}
+// 		last_calibrated_angle = calibrated_angle;
+        
+// 		return calibrated_angle;
+// 	}
+// 	else {
+// 		return last_calibrated_angle;
+// 	}
+// }
 /*
 * Set desired joint angle
 */
