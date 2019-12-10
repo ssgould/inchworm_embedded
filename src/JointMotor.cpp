@@ -1,10 +1,11 @@
 #include <Arduino.h>
 #include "JointMotor.h"
 
+
 JointMotor::JointMotor() {
 }
 
-JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd, double ang_offset) {
+JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd, double ang_offset, int id_input) {
     //Pin Configuration
     pinDirectionA = pinDirectionA1;
     pinDirectionB =  pinDirectionB1;
@@ -29,8 +30,10 @@ JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int 
     angle_offset = ang_offset;
 
     debug = false;
+
+    id = id_input;
 }
-JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd, double kp2, double ki2, double kd2, double ang_offset) {
+JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd, double kp2, double ki2, double kd2, double ang_offset, int id_input, double power_in) {
     //Pin Configuration
     pinDirectionA = pinDirectionA1;
     pinDirectionB =  pinDirectionB1;
@@ -53,12 +56,15 @@ JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int 
     angle_offset = ang_offset;
 
     debug = false;
+
+    id = id_input;
+    power = power_in;
 }
 /*
 * Takes speed -255 - 255 and moves motor
 */
 void JointMotor::setSpeed(int speed) {
-    double maxPercent = 0.9;
+    double maxPercent = power;
     if (speed < -255 * maxPercent) { speed = -255 * maxPercent; }
     else if (speed > 255  * maxPercent) { speed = 255  * maxPercent; }
     changeDirection(speed);
@@ -87,7 +93,7 @@ double JointMotor::getAngleDegrees() {
      if (debug) {
          if (millis()-lastPubAng>2000)
          {
-           Serial.print("angle: "); Serial.println(angle);
+           Serial.print("angle "); Serial.print(id); Serial.print(": "); Serial.println(angle);
            lastPubAng=millis(); 
          }
           

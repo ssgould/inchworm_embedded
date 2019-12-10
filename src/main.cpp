@@ -43,9 +43,9 @@ void setup() {
 
 		Serial.println("Robot intializing....");
 		temp[int(len/4)] = '\n'; //you need this
-		jointMotor[0] = JointMotor(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 60, .12, 60, 10, 0.1, 5, 10);
-		jointMotor[1] = JointMotor(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 60, .12, 60, 10);
-		jointMotor[2] = JointMotor(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 10, .12, 15, 100, 0.1, 60, 10);
+		jointMotor[0] = JointMotor(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 50, .12, 60, 10, 0.1, 20, 10, 1, 0.75);
+		jointMotor[1] = JointMotor(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 120, .12, 120, 150, 1, 100, 10, 2, 1);
+		jointMotor[2] = JointMotor(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 10, .12, 15, 80, 0.12, 80, 10, 3, 0.75);
 
 		/* DEBUG */
 		jointMotor[0].setAngle(0);
@@ -56,8 +56,8 @@ void setup() {
 		jointMotor[1].debug = true;
 		jointMotor[2].debug = true;
 
-		gripper[0] = Gripper(GRIPPER_MOTOR_1, true);
-		gripper[1] = Gripper(GRIPPER_MOTOR_2, false);
+		gripper[0] = Gripper(GRIPPER_MOTOR_1, false); //yellow gripper
+		gripper[1] = Gripper(GRIPPER_MOTOR_2, true);  //red gripper
 		Serial.println("Done");
 
 	//Timer1 Interupt
@@ -107,7 +107,7 @@ void loop() {
 				
 						if((temp[2] - '0') != previousGripperState1){ //'0'm = engage
 							gripperStatusSerial1 = temp[2] - '0';
-							previousGripperState1 = gripperStatusSerial1;
+							previousGripperState1 = gripperStatusSerial1; //yellow gripper
 							gripperFinished1 = false;
 						}
 
@@ -116,10 +116,17 @@ void loop() {
 							previousGripperState2 = gripperStatusSerial2;
 							gripperFinished2 = false;
 						}
-						if (temp[1] == "1") {
+						if (temp[1] - '0' == 1) {
+							Serial.println("-----------PID values switched-----------");
 							jointMotor[0].switchPID();
 							jointMotor[2].switchPID();
 						}
+
+						// if (gripper[1].getEngaged()) {
+						// 	Serial.println("-----------PID values switched (gripper red)-----------");
+						// 	jointMotor[0].switchPID();
+						// 	jointMotor[2].switchPID();
+						// }
 					}
 					else { //Joint angles
 						int sign = 1;
@@ -150,13 +157,14 @@ void loop() {
 		}
 	}
 
-	if(!gripperFinished1){
-		 gripperFinished1 = gripper[0].setGripper(gripperStatusSerial1, 21000);
+	//Note: last byte red gripper
+	if(!gripperFinished1){ //yellow gripper
+		 gripperFinished1 = gripper[0].setGripper(gripperStatusSerial1, 30000);
 		 //Serial.println("Gripper red moving");
 	 }
 
 	if(!gripperFinished2){
-		 gripperFinished2 = gripper[1].setGripper(gripperStatusSerial2, 23000);
+		gripperFinished2 = gripper[1].setGripper(gripperStatusSerial2, 30000);
 		//Serial.println("Gripper yellow moving");
 	 }
 
