@@ -1,14 +1,16 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <Servo.h>
-#include "JointMotor.h"
+//#include "JointMotor.h"
+#include "JointMotor2.h"
 #include "pins.h"
 #include "Gripper.h"
 #include "Button.h"
 //#include "TimerOne.h"
 
 //Variables
-JointMotor jointMotor[3];
+// JointMotor jointMotor[3];
+JointMotor2 jointMotor[3];
 
 //Serial Buffer
 const int len = 16;
@@ -43,14 +45,18 @@ void setup() {
 
 		Serial.println("Robot intializing....");
 		temp[int(len/4)] = '\n'; //you need this
-		jointMotor[0] = JointMotor(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 50, .12, 60, 10, 0.1, 20, 10, 1, 0.75);
-		jointMotor[1] = JointMotor(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 120, .12, 120, 150, 1, 100, 10, 2, 1);
-		jointMotor[2] = JointMotor(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 10, .12, 15, 80, 0.12, 80, 10, 3, 0.75);
+		// jointMotor[0] = JointMotor(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 50, .12, 10, 10, 0.1, 20, 10, 1, 0.8);
+		// jointMotor[1] = JointMotor(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 50, .12, 70, 50, .1, 50, 10, 2, .8);
+		// jointMotor[2] = JointMotor(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 10, .12, 50, 60, 0.12, 60, 10, 3, 0.8);
 
+		jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 12, 0.1, 40, 10, 0.1, 5, 27.81, true,1);
+		jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 35, 0.2, 25, 124.38, true,2);
+		jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 15, 0.2, 5, 100, 0.1, 60, 27.81, false,3);
+		
 		/* DEBUG */
-		jointMotor[0].setAngle(0);
-		jointMotor[1].setAngle(0);
-		jointMotor[2].setAngle(0);
+		jointMotor[0].setAngle(27.81);
+		jointMotor[1].setAngle(124.38);
+		jointMotor[2].setAngle(27.81);
 
 		jointMotor[0].debug = true;
 		jointMotor[1].debug = true;

@@ -64,7 +64,7 @@ JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int 
 * Takes speed -255 - 255 and moves motor
 */
 void JointMotor::setSpeed(int speed) {
-    double maxPercent = power;
+    double maxPercent = power ;
     if (speed < -255 * maxPercent) { speed = -255 * maxPercent; }
     else if (speed > 255  * maxPercent) { speed = 255  * maxPercent; }
     changeDirection(speed);
@@ -96,8 +96,6 @@ double JointMotor::getAngleDegrees() {
            Serial.print("angle "); Serial.print(id); Serial.print(": "); Serial.println(angle);
            lastPubAng=millis(); 
          }
-          
-          
          }
 
      if (angle >= 0 && angle <= 360) { //don't return "I2C Error" as angle
