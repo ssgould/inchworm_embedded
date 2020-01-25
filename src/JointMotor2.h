@@ -21,6 +21,7 @@ private:
 	double desiredAngle;
 	double kP, kI, kD;
 	double kP2, kI2, kD2;
+	double kP3, kI3, kD3;
 	double sumError, lastError;
 
 	double last_calibrated_angle; //angle of joint
@@ -28,11 +29,11 @@ private:
 	bool enc_clockwise; //1 if switch direction
 
 	double lastPubAng;
-	int id;
 
 
 public:
 	bool debug;
+	int id;
 
 	JointMotor2();
 	JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd, double ang_offset, bool encoder_clockwise,int id_input);
@@ -41,9 +42,10 @@ public:
 	void    setSpeed(int speed);
 	void    changeDirection(int speed);
 	void    setAngle(double angle);
-	void    switchPID();
-	void    updateSpeed();
+	void    switchPID(int gripperEngagedSelect);
+	void    updateSpeed(int gc);
 	double  getAngleDegrees();
+	// float gravityCompensation(int th);
 	// double getKP();
 	// void setKP(double kpValue)
 

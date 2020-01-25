@@ -10,6 +10,7 @@ class JointMotor {
         double desiredAngle;
         double kP, kI, kD;
         double kP2, kI2, kD2;
+        double kP3, kI3, kD3;
         double sumError, lastError;
 
         double lastAngle; //angle of joint
@@ -32,7 +33,7 @@ class JointMotor {
         void    setSpeed(int speed);
         void    changeDirection(int speed);
         void    setAngle(double angle);
-        void    switchPID();
+        void    switchPID(int gripperEngagedSelect);
         void    updateSpeed();
         double  getAngleDegrees();
         // double getKP();

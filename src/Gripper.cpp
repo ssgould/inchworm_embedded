@@ -18,13 +18,14 @@ Gripper::Gripper(){
 //Constructor to added object properties. Two arguments are optional, zeroposition:
 //sets the middle value for the range of values that are mapped. Threshold is not used
 //but could serve to implement the write to motor function.
-Gripper::Gripper(int pin, bool directionCW, int zeroPosition = 0, int threshold = 5){
+Gripper::Gripper(int pin, bool directionCW, bool isEngaged, int zeroPosition = 0, int threshold = 5){
 
     pin = pin;
     directionCW = directionCW;
     zeroPosition = zeroPosition;
     threshold = threshold;
     medianPulse = 1500; //motor stops at this pulse width
+    isE = isEngaged;
 
     if(directionCW){
       maxSpeedCCW = -255;
@@ -58,7 +59,7 @@ void Gripper::write(int power){
 * For gripper engagment and disengament
 * TODO: when current sensing added to gripper, add that sensng instead of the time delay.
 */
-bool Gripper::setGripper(gripperState gState, int time){
+bool Gripper::setGripper(gripperState gState){
 
   if(resetTime){
     startTime = millis();
@@ -66,29 +67,33 @@ bool Gripper::setGripper(gripperState gState, int time){
   }
 
   switch(gState){
+    case idle: //nothing happens
+        write(0);
+        gripperFinished = true;
+        break;
     case engage: //engage gripper
       if((int)(millis() - startTime) < time){
         write(maxSpeedCCW);
         gripperFinished = false;
+        isE = false;
       }else{
         write(0);
         resetTime = true;
         gripperFinished = true;
+        isE = true;
       }
         break;
     case disengage: //disengage gripper
       if((int)(millis() - startTime) < time){
         write(maxSpeedCW);
         gripperFinished = false;
+        isE = true;
       }else{
         write(0);
         resetTime = true;
         gripperFinished = true;
+        isE = false;
       }
-        break;
-    case idle: //nothing happens
-        write(0);
-        gripperFinished = true;
         break;
     default: //if none are selected
         write(0);
@@ -100,7 +105,7 @@ bool Gripper::setGripper(gripperState gState, int time){
 
 }
 
-bool Gripper::setGripper(int gState, int time){
+bool Gripper::setGripper(int gState){
 
   if(resetTime){
     startTime = millis();
@@ -108,29 +113,33 @@ bool Gripper::setGripper(int gState, int time){
   }
 
   switch(gState){
-    case engage: //engage gripper
+    case 0: //nothing happens
+        write(0);
+        gripperFinished = true;
+        break;
+    case 1: //engage gripper
       if((int)(millis() - startTime) < time){
         write(maxSpeedCCW);
         gripperFinished = false;
+        isE = false;
       }else{
         write(0);
         resetTime = true;
         gripperFinished = true;
+        isE = true;
       }
         break;
-    case disengage: //disengage gripper
+    case 2: //disengage gripper
       if((int)(millis() - startTime) < time){
         write(maxSpeedCW);
         gripperFinished = false;
+        isE = true;
       }else{
         write(0);
         resetTime = true;
         gripperFinished = true;
+        isE = false;
       }
-        break;
-    case idle: //nothing happens
-        write(0);
-        gripperFinished = true;
         break;
     default: //if none are selected
         write(0);
@@ -142,8 +151,3 @@ bool Gripper::setGripper(int gState, int time){
 
 }
 
-
-
-/*
-* Chooses the gripper and action (enagage or disenagage) of the grippers
-*/

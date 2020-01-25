@@ -6,11 +6,27 @@
 #include "pins.h"
 #include "Gripper.h"
 #include "Button.h"
+#include "scLookUp.h"
 //#include "TimerOne.h"
 
 //Variables
 // JointMotor jointMotor[3];
 JointMotor2 jointMotor[3];
+int theta[3];
+
+float m1 = 0.09;
+float m2 = 0.09;
+float m3 = 0.15;
+
+float L1 = 0.1633;
+float L2 = 0.1633;
+float L3 = 0.1048;
+
+float g = 9.81;
+
+float k1 = -150;
+float k2 = -300;
+float k3 = -150;
 
 //Serial Buffer
 const int len = 16;
@@ -32,9 +48,13 @@ int previousGripperState2 = -1;
 int gripperStatusSerial1;
 int gripperStatusSerial2;
 
+int gripperSelect = 0; //idle (No gripper selected)
+int gripperState = 0; //idle (No gripper action)
+int gripperEngagedSelect = 0;
+
 // FUNCTION DEFINITIONS
 // to controls grippers with buttons. Remember to set grippers current state.
-void gripperButtonTest(gripperState currentState, Gripper grip, Button buttonGripper);
+void gripperButtonTest(int currentState, Gripper grip, Button buttonGripper);
 void updateSpeeds();
 
 Gripper gripper[2];
@@ -62,8 +82,8 @@ void setup() {
 		jointMotor[1].debug = true;
 		jointMotor[2].debug = true;
 
-		gripper[0] = Gripper(GRIPPER_MOTOR_1, false); //yellow gripper
-		gripper[1] = Gripper(GRIPPER_MOTOR_2, true);  //red gripper
+		gripper[0] = Gripper(GRIPPER_MOTOR_1, false, false); //yellow gripper
+		gripper[1] = Gripper(GRIPPER_MOTOR_2, true, false);  //red gripper
 		Serial.println("Done");
 
 	//Timer1 Interupt
@@ -110,29 +130,16 @@ void loop() {
 
 					if (jointIndex > 2) { //Gripper
 						// Serial.println("Moving Gripper");
-				
-						if((temp[2] - '0') != previousGripperState1){ //'0'm = engage
-							gripperStatusSerial1 = temp[2] - '0';
-							previousGripperState1 = gripperStatusSerial1; //yellow gripper
-							gripperFinished1 = false;
-						}
+						if((temp[2]-'0' == 1) || (temp[2]-'0' == 2)){
+							gripperSelect = (temp[2] - '0');
+							gripperState = (temp[3] - '0');
 
-						if((temp[3] - '0') != previousGripperState2){
-							gripperStatusSerial2 = temp[3] - '0';
-							previousGripperState2 = gripperStatusSerial2;
-							gripperFinished2 = false;
+							if(gripperSelect == 1){
+								gripperFinished1 = false;	
+							}else if(gripperSelect == 2){
+								gripperFinished2 = false;
+							}
 						}
-						if (temp[1] - '0' == 1) {
-							Serial.println("-----------PID values switched-----------");
-							jointMotor[0].switchPID();
-							jointMotor[2].switchPID();
-						}
-
-						// if (gripper[1].getEngaged()) {
-						// 	Serial.println("-----------PID values switched (gripper red)-----------");
-						// 	jointMotor[0].switchPID();
-						// 	jointMotor[2].switchPID();
-						// }
 					}
 					else { //Joint angles
 						int sign = 1;
@@ -164,15 +171,16 @@ void loop() {
 	}
 
 	//Note: last byte red gripper
-	if(!gripperFinished1){ //yellow gripper
-		 gripperFinished1 = gripper[0].setGripper(gripperStatusSerial1, 30000);
+	if(!gripperFinished1 && gripperSelect == 1){ //yellow gripper
+		 gripperFinished1 = gripper[gripperSelect-1].setGripper(gripperState);
 		 //Serial.println("Gripper red moving");
 	 }
 
-	if(!gripperFinished2){
-		gripperFinished2 = gripper[1].setGripper(gripperStatusSerial2, 30000);
+	if(!gripperFinished2 && gripperSelect == 2){
+		gripperFinished2 = gripper[gripperSelect-1].setGripper(gripperState);
 		//Serial.println("Gripper yellow moving");
 	 }
+
 
 	updateSpeeds();
 
@@ -183,12 +191,39 @@ void loop() {
 }
 
 /*
+*	Calculate Gravity Compensation
+*/
+int gravityCompensation(JointMotor2 i, int th[]){
+
+	if(i.id == 0){
+		return k1*(g*m3*(L1*sinLut[th[0]]+L2*sinLut[th[1]]+L3*sinLut[th[2]])+g*m2*(L1*sinLut[th[0]]+L2*sinLut[th[1]])+g*L1*m1*sinLut[th[0]]);
+	}else if(i.id == 1){
+		return k2*(g*m3*(L2*sinLut[th[1]]+L3*sinLut[th[2]])+g*L2*m2*sinLut[th[1]]);
+	}else if(i.id == 2){
+		return k3*(g*L3*m3*sinLut[th[2]]);
+	}else{
+		//Serial.print("NO JOINT ID AVAILABLE FOR GRAVITY COMPENSATION");
+		return 0;
+	}
+}
+
+/*
 * Update Speed of all joint motor for PWM
 */
 void updateSpeeds() {
+	if(gripper[0].isE){
+		gripperEngagedSelect = 1;
+	}else if(gripper[1].isE){
+		gripperEngagedSelect = 2;
+	}else{
+		gripperEngagedSelect = 0;
+	}
+
 	int numMotors = 3;
 	for (int i = 0; i < numMotors; i++) {
-		jointMotor[i].updateSpeed();
+		theta[i] = jointMotor[i].getAngleDegrees()+360;
+		jointMotor[i].updateSpeed(gravityCompensation(jointMotor[i], theta));
+		jointMotor[i].switchPID(gripperEngagedSelect);
 	}
 }
 
@@ -196,26 +231,26 @@ void updateSpeeds() {
 * Enables to interface (engage and disengage) the grippers using buttons.
 * Buttons should be plugged into the Analog pins.
 */
-void gripperButtonTest(gripperState currentState, Gripper grip, Button buttonGripper){
+void gripperButtonTest(int currentState, Gripper grip, Button buttonGripper){
 
 		if(buttonGripper.isPressed() && buttonGripper.stateChanged() && buttonState){
 			buttonState = false;
-			if(currentState == engage){
+			if(currentState == 1){
 				Serial.println("disengage");
-				grip.setGripper(disengage, 21000);
+				grip.setGripper(2);
 			}else{
 				Serial.println("engage");
-				grip.setGripper(engage, 21000);
+				grip.setGripper(1);
 			}
 		}
 		if(buttonGripper.isPressed() && buttonGripper.stateChanged() && !buttonState){
 			buttonState = true;
-			if(currentState == engage){
+			if(currentState == 1){
 				Serial.println("engage");
-				grip.setGripper(engage, 21000);
+				grip.setGripper(1);
 			}else{
 				Serial.println("disengage");
-				grip.setGripper(disengage, 21000);
+				grip.setGripper(2);
 			}
 		}
 }

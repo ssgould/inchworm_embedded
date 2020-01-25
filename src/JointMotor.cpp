@@ -33,6 +33,7 @@ JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int 
 
     id = id_input;
 }
+
 JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd, double kp2, double ki2, double kd2, double ang_offset, int id_input, double power_in) {
     //Pin Configuration
     pinDirectionA = pinDirectionA1;
@@ -53,6 +54,15 @@ JointMotor::JointMotor(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int 
     kP2 = kp2;
     kI2 = ki2;
     kD2 = kd2;
+
+    //Variable to store both PID values
+    kP2 = kP;   
+    kI2 = kI;
+    kD2 = kD;   
+    
+    kP3 = kP2;   
+    kI3 = kI2;
+    kD3 = kD2;  
     angle_offset = ang_offset;
 
     debug = false;
@@ -138,18 +148,17 @@ void JointMotor::setAngle(double angle) {
 /*
 * Switch PID values for which joint is fixed
 */
-void JointMotor::switchPID(){
-    double tempkP = kP;
-    double tempkI = kI;
-    double tempkD = kD;
+void JointMotor::switchPID(int gripperEngagedSelect){ 
 
-    kP = kP2;
-    kI = kI2;
-    kD = kD2;
-
-    kP2 = tempkP;
-    kI2 = tempkI;
-    kD2 = tempkD;
+    if(gripperEngagedSelect == 1){
+        kP = kP2;
+        kI = kI2;
+        kD = kD2;
+    }else if(gripperEngagedSelect == 2){
+        kP = kP3;
+        kI = kI3;
+        kD = kD3;
+    }
 }
 /*
 * Update motor speed for PID 

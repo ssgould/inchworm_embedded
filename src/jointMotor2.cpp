@@ -60,6 +60,11 @@ JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, in
 	kI2 = ki2;
 	kD2 = kd2;
 
+	//Variable to store both PID values  
+    kP3 = kp;
+    kI3 = ki;
+    kD3 = kd; 
+
 	angle_offset = ang_offset;
 	enc_clockwise = encoder_clockwise;
 	encoder.setClockWise(enc_clockwise);
@@ -134,23 +139,22 @@ void JointMotor2::setAngle(double angle) {
 /*
 * Switch PID values for which joint is fixed
 */
-void JointMotor2::switchPID() {
-	double tempkP = kP;
-	double tempkI = kI;
-	double tempkD = kD;
+void JointMotor2::switchPID(int gripperEngagedSelect){ 
 
-	kP = kP2;
-	kI = kI2;
-	kD = kD2;
-
-	kP2 = tempkP;
-	kI2 = tempkI;
-	kD2 = tempkD;
+    if(gripperEngagedSelect == 1){
+        kP = kP2;
+        kI = kI2;
+        kD = kD2;
+    }else if(gripperEngagedSelect == 2){
+        kP = kP3;
+        kI = kI3;
+        kD = kD3;
+    }
 }
 /*
 * Update motor speed for PID
 */
-void JointMotor2::updateSpeed() {
+void JointMotor2::updateSpeed(int gc) {
 	double currentAngle = getAngleDegrees();
 
 	double error = desiredAngle - currentAngle;
@@ -159,7 +163,13 @@ void JointMotor2::updateSpeed() {
 	sumError = sumError + error;
 	double changeError = error - lastError;
 
-	int speed = (kP * error) + (kI * sumError) + (kD * changeError);
+	//int speed = (kP * error) + (kI * sumError) + (kD * changeError);
+	int speed = gc;
+	Serial.print("angle "); 
+	Serial.print(id); 
+	Serial.print(": "); 
+	Serial.println(speed);
+           
 	setSpeed(speed);
 
 	// Serial.println(error);
