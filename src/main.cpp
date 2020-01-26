@@ -26,7 +26,7 @@ float g = 9.81;
 
 float k1 = -150;
 float k2 = -300;
-float k3 = -150;
+float k3 = -125;
 
 //Serial Buffer
 const int len = 16;
@@ -69,9 +69,9 @@ void setup() {
 		// jointMotor[1] = JointMotor(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 50, .12, 70, 50, .1, 50, 10, 2, .8);
 		// jointMotor[2] = JointMotor(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 10, .12, 50, 60, 0.12, 60, 10, 3, 0.8);
 
-		jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 12, 0.1, 40, 10, 0.1, 5, 27.81, true,1);
-		jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 35, 0.2, 25, 124.38, true,2);
-		jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 15, 0.2, 5, 100, 0.1, 60, 27.81, false,3);
+		jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 12, 0.1, 40, 10, 0.1, 5, 27.81, true,0);
+		jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 35, 0.2, 25, 124.38, true,1);
+		jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 15, 0.2, 5, 100, 0.1, 60, 27.81, false,2);
 		
 		/* DEBUG */
 		jointMotor[0].setAngle(27.81);
@@ -195,14 +195,28 @@ void loop() {
 */
 int gravityCompensation(JointMotor2 i, int th[]){
 
+	
 	if(i.id == 0){
-		return k1*(g*m3*(L1*sinLut[th[0]]+L2*sinLut[th[1]]+L3*sinLut[th[2]])+g*m2*(L1*sinLut[th[0]]+L2*sinLut[th[1]])+g*L1*m1*sinLut[th[0]]);
+		// Serial.print("Theta values ");
+		// Serial.print(i.id);
+		// Serial.print(": ");
+		// Serial.println(th[0]);
+		// Serial.print(", sin value: ");
+		// Serial.print(sinLut[th[0]]);
+		// Serial.print(", decimal: ");
+		// Serial.println(sinLut[th[0]]*0.001);
+
+		return k1*(g*m3*(L1*sinLut[th[0]]*0.001+L2*sinLut[th[1]]*0.001+L3*sinLut[th[2]]*0.001)+g*m2*(L1*sinLut[th[0]]*0.001+L2*sinLut[th[1]]*0.001)+g*L1*m1*sinLut[th[0]]*0.001);
 	}else if(i.id == 1){
-		return k2*(g*m3*(L2*sinLut[th[1]]+L3*sinLut[th[2]])+g*L2*m2*sinLut[th[1]]);
+		return k2*(g*m3*(L2*sinLut[th[1]]*0.001+L3*sinLut[th[2]]*0.001)+g*L2*m2*sinLut[th[1]]*0.001);
 	}else if(i.id == 2){
-		return k3*(g*L3*m3*sinLut[th[2]]);
+		Serial.print("Theta values ");
+		Serial.print(i.id);
+		Serial.print(": ");
+		Serial.println(th[2]);
+		return k3*(g*L3*m3*sinLut[th[2]]*0.001);
 	}else{
-		//Serial.print("NO JOINT ID AVAILABLE FOR GRAVITY COMPENSATION");
+		Serial.print("NO JOINT ID AVAILABLE FOR GRAVITY COMPENSATION");
 		return 0;
 	}
 }
@@ -220,10 +234,12 @@ void updateSpeeds() {
 	}
 
 	int numMotors = 3;
+	int gc = 0;
 	for (int i = 0; i < numMotors; i++) {
-		theta[i] = jointMotor[i].getAngleDegrees()+360;
-		jointMotor[i].updateSpeed(gravityCompensation(jointMotor[i], theta));
-		jointMotor[i].switchPID(gripperEngagedSelect);
+		theta[i] = jointMotor[i].getAngleDegrees();
+		gc = gravityCompensation(jointMotor[i], theta);
+		jointMotor[i].updateSpeed(gc);
+		//jointMotor[i].switchPID(gripperEngagedSelect);
 	}
 }
 

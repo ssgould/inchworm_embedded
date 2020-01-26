@@ -150,6 +150,8 @@ void JointMotor2::switchPID(int gripperEngagedSelect){
         kI = kI3;
         kD = kD3;
     }
+
+	Serial.println("In Switch PID");
 }
 /*
 * Update motor speed for PID
@@ -164,8 +166,9 @@ void JointMotor2::updateSpeed(int gc) {
 	double changeError = error - lastError;
 
 	//int speed = (kP * error) + (kI * sumError) + (kD * changeError);
+	
 	int speed = gc;
-	Serial.print("angle "); 
+	Serial.print("GC speed of angle "); 
 	Serial.print(id); 
 	Serial.print(": "); 
 	Serial.println(speed);
