@@ -31,7 +31,7 @@ JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, in
 	lastPubAng=0;
 	id=id_input;
 
-	debug = false;
+	debug = true;
 }
 JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd, double kp2, double ki2, double kd2, double ang_offset, bool encoder_clockwise, int id_input) {
 	//Pin Configuration
@@ -168,10 +168,10 @@ void JointMotor2::updateSpeed(int gc) {
 	int speed = (kP * error) + (kI * sumError) + (kD * changeError)+gc;
 
 	// int speed = gc;
-	Serial.print("speed of angle "); 
-	Serial.print(id); 
-	Serial.print(": "); 
-	Serial.println(speed);
+	// Serial.print("speed of angle "); 
+	// Serial.print(id); 
+	// Serial.print(": "); 
+	// Serial.println(speed);
            
 	setSpeed(speed);
 
