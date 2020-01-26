@@ -206,15 +206,25 @@ int gravityCompensation(JointMotor2 i, int th[]){
 		// Serial.print(", decimal: ");
 		// Serial.println(sinLut[th[0]]*0.001);
 
-		return k1*(g*m3*(L1*sinLut[th[0]]*0.001+L2*sinLut[th[1]]*0.001+L3*sinLut[th[2]]*0.001)+g*m2*(L1*sinLut[th[0]]*0.001+L2*sinLut[th[1]]*0.001)+g*L1*m1*sinLut[th[0]]*0.001);
+		return k1*(g*m3*(L1*sinLut[th[0]]*0.001+L2*sinLut[th[0]+th[1]]*0.001+L3*sinLut[th[0]+th[1]+th[2]]*0.001)+g*m2*(L1*sinLut[th[0]]*0.001+L2*sinLut[th[0]+th[1]]*0.001)+g*L1*m1*sinLut[th[0]]*0.001);
 	}else if(i.id == 1){
-		return k2*(g*m3*(L2*sinLut[th[1]]*0.001+L3*sinLut[th[2]]*0.001)+g*L2*m2*sinLut[th[1]]*0.001);
+		return k2*(g*m3*(L2*sinLut[th[0]+th[1]]*0.001+L3*sinLut[th[0]+th[1]+th[2]]*0.001)+g*L2*m2*sinLut[th[0]+th[1]]*0.001);
 	}else if(i.id == 2){
 		Serial.print("Theta values ");
 		Serial.print(i.id);
 		Serial.print(": ");
+		Serial.print(th[0]);
+		Serial.print(',');
+		Serial.print(th[1]);
+		Serial.print(',');
 		Serial.println(th[2]);
-		return k3*(g*L3*m3*sinLut[th[2]]*0.001);
+		int theta2 = th[0]+th[1]+th[2];
+		if(theta2>360){
+			theta2 = theta2-360;
+		}
+		Serial.print("wrap around: ");
+		Serial.println(theta2);
+		return k3*(g*L3*m3*sinLut[theta2]*0.001);
 	}else{
 		Serial.print("NO JOINT ID AVAILABLE FOR GRAVITY COMPENSATION");
 		return 0;
