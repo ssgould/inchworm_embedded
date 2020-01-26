@@ -165,10 +165,10 @@ void JointMotor2::updateSpeed(int gc) {
 	sumError = sumError + error;
 	double changeError = error - lastError;
 
-	//int speed = (kP * error) + (kI * sumError) + (kD * changeError);
-	
-	int speed = gc;
-	Serial.print("GC speed of angle "); 
+	int speed = (kP * error) + (kI * sumError) + (kD * changeError)+gc;
+
+	// int speed = gc;
+	Serial.print("speed of angle "); 
 	Serial.print(id); 
 	Serial.print(": "); 
 	Serial.println(speed);
