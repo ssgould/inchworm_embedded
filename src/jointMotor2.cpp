@@ -31,7 +31,7 @@ JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, in
 	lastPubAng=0;
 	id=id_input;
 
-	debug = true;
+	debug = false;
 }
 JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd, double kp2, double ki2, double kd2, double ang_offset, bool encoder_clockwise, int id_input) {
 	//Pin Configuration
@@ -77,7 +77,7 @@ JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, in
 * Takes speed -255 - 255 and moves motor
 */
 void JointMotor2::setSpeed(int speed) {
-	double maxPercent = 0.75;
+	double maxPercent = 0.9;
 	if (speed < -255 * maxPercent) { speed = -255 * maxPercent; }
 	else if (speed > 255 * maxPercent) { speed = 255 * maxPercent; }
 	changeDirection(speed);

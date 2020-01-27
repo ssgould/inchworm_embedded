@@ -24,9 +24,9 @@ float L3 = 0.1048;
 
 float g = 9.81;
 
-float k1 = -145;
-float k2 = -250;
-float k3 = -125;
+float k1 = -124;
+float k2 = -210;
+float k3 = -106;
 
 //Serial Buffer
 const int len = 16;
@@ -47,6 +47,8 @@ int previousGripperState1 = -1;
 int previousGripperState2 = -1;
 int gripperStatusSerial1;
 int gripperStatusSerial2;
+
+double lastPubAng = 0;
 
 int gripperSelect = 0; //idle (No gripper selected)
 int gripperState = 0; //idle (No gripper action)
@@ -69,7 +71,7 @@ void setup() {
 		// jointMotor[1] = JointMotor(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 50, .12, 70, 50, .1, 50, 10, 2, .8);
 		// jointMotor[2] = JointMotor(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 10, .12, 50, 60, 0.12, 60, 10, 3, 0.8);
 
-		jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 0, 0, 0, 10, 0.1, 5, 27.81, true,0);
+		jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 8.4, 0.1, 2.2, 10, 0.1, 5, 27.81, true,0);
 		jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 8.4, 0.1, 2.2, 124.38, true,1);
 		jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 8, 0.1, 2.2, 0, 0, 0, 27.81, false,2);
 		
@@ -180,6 +182,13 @@ void loop() {
 		gripperFinished2 = gripper[gripperSelect-1].setGripper(gripperState);
 		//Serial.println("Gripper yellow moving");
 	 }
+
+	 	// 		if (millis()-lastPubAng>2000)
+        //  {
+        //    Serial.print("gripper 0  is Engaged: "); Serial.print(gripper[0].isE);
+		// 	Serial.print("; Gripper 1: "); Serial.println(gripper[1].isE);
+        //    lastPubAng=millis(); 
+        //  }
 
 
 	updateSpeeds();
