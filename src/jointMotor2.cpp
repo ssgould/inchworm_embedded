@@ -73,6 +73,20 @@ JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, in
 
 	debug = false;
 }
+
+/*
+* Print variable every 2000 millis
+*/
+void JointMotor2::debugPrint(char vName[3], double vInput){
+	if (millis()-lastPubAng>2000)
+    {
+    	Serial.print("joint id:"); Serial.print(id); 
+		Serial.print("/ variable "); Serial.print(vName);
+		Serial.print(": "); Serial.println(vInput);
+        lastPubAng=millis(); 
+    }
+}
+
 /*
 * Takes speed -255 - 255 and moves motor
 */
@@ -139,19 +153,21 @@ void JointMotor2::setAngle(double angle) {
 /*
 * Switch PID values for which joint is fixed
 */
-void JointMotor2::switchPID(int gripperEngagedSelect){ 
+bool JointMotor2::switchPID(int gripperEngagedSelect){ 
 
     if(gripperEngagedSelect == 1){
         kP = kP2;
         kI = kI2;
         kD = kD2;
+		Serial.println("In Switch PID 1");
+		return false;
     }else if(gripperEngagedSelect == 2){
         kP = kP3;
         kI = kI3;
         kD = kD3;
+		Serial.println("In Switch PID 2");
+		return true;
     }
-
-	Serial.println("In Switch PID");
 }
 /*
 * Update motor speed for PID
@@ -163,11 +179,20 @@ void JointMotor2::updateSpeed(int gc) {
 	if (abs(int(error)) > 180) { error = error + 360; }
 
 	sumError = sumError + error;
+
+	//Wrap around if error is big
+	if(sumError > 1000){
+		sumError = 1000;
+	}else if(sumError < -1000){
+		sumError = -1000;
+	}
+	//debugPrint("SE", sumError);
+
 	double changeError = error - lastError;
 
 	int speed = (kP * error) + (kI * sumError) + (kD * changeError)+gc;
 
-	// int speed = gc;
+	//int speed = gc;
 	// Serial.print("speed of angle "); 
 	// Serial.print(id); 
 	// Serial.print(": "); 

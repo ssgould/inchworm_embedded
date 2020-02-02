@@ -24,9 +24,9 @@ float L3 = 0.1048;
 
 float g = 9.81;
 
-float k1 = -124;
-float k2 = -210;
-float k3 = -106;
+float k1 = -210;
+float k2 = -275;
+float k3 = -206;
 
 //Serial Buffer
 const int len = 16;
@@ -71,7 +71,7 @@ void setup() {
 		// jointMotor[1] = JointMotor(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 50, .12, 70, 50, .1, 50, 10, 2, .8);
 		// jointMotor[2] = JointMotor(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 10, .12, 50, 60, 0.12, 60, 10, 3, 0.8);
 
-		jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 8.4, 0.1, 2.2, 10, 0.1, 5, 27.81, true,0);
+		jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 8.4, 0, 0, 10, 0.1, 5, 27.81, true,0);
 		jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 8.4, 0.1, 2.2, 124.38, true,1);
 		jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 8, 0.1, 2.2, 0, 0, 0, 27.81, false,2);
 		
@@ -156,6 +156,7 @@ void loop() {
 
 						signed int angle = sign*atoi(temp);
 						jointMotor[jointIndex].setAngle(angle);
+						// jointMotor[jointIndex].sumError = 0.0;
 						Serial.print(" angle: ");
 						Serial.println(angle);
 						jointIndex++;
@@ -202,12 +203,12 @@ void loop() {
 /*
 *	Calculate Gravity Compensation
 */
-int gravityCompensation(JointMotor2 i, int th[]){
+int gravityCompensation(JointMotor2 i, int th[], bool select){
 	int theta1 = th[0]+th[1];
 	int theta2 = th[0]+th[1]+th[2];
 
 
-		//Wrap around
+	//Wrap around
 	if(theta1>360){
 		theta1 = theta1-360;
 	}
@@ -215,7 +216,7 @@ int gravityCompensation(JointMotor2 i, int th[]){
 		theta2 = theta2-360;
 	}
 
-	
+
 	if(i.id == 0){
 		// Serial.print("Theta values ");
 		// Serial.print(i.id);
@@ -248,6 +249,7 @@ int gravityCompensation(JointMotor2 i, int th[]){
 		Serial.print("NO JOINT ID AVAILABLE FOR GRAVITY COMPENSATION");
 		return 0;
 	}
+	
 }
 
 /*
@@ -265,10 +267,15 @@ void updateSpeeds() {
 	int numMotors = 3;
 	int gc = 0;
 	for (int i = 0; i < numMotors; i++) {
+
+		// if(jointMotor[i].switchPID(gripperEngagedSelect)){
+
+		// }else{
+
+		// }
 		theta[i] = jointMotor[i].getAngleDegrees();
-		gc = gravityCompensation(jointMotor[i], theta);
+		gc = gravityCompensation(jointMotor[i], theta,true);
 		jointMotor[i].updateSpeed(gc);
-		//jointMotor[i].switchPID(gripperEngagedSelect);
 	}
 }
 

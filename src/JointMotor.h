@@ -36,6 +36,7 @@ class JointMotor {
         void    switchPID(int gripperEngagedSelect);
         void    updateSpeed();
         double  getAngleDegrees();
+
         // double getKP();
         // void setKP(double kpValue)
 

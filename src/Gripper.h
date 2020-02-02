@@ -43,7 +43,7 @@ class Gripper {
         bool setGripper(gripperState gState);
         bool setGripper(int gState);
 
-        bool isE;
+        bool isE; //Flag to know if gripper is enagaged or not
 
 };
 
