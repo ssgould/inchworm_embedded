@@ -15,8 +15,8 @@ JointMotor2 jointMotor[3];
 int theta[3];
 
 float m1 = 0.09;
-float m2 = 0.09;
-float m3 = 0.15;
+float m2 = 0.350; // with storing mechanism (with block 0.297 kg)
+float m3 = 0.201; // mass with new screwing mechanism
 
 float L1 = 0.1633;
 float L2 = 0.1633;
@@ -24,9 +24,9 @@ float L3 = 0.1048;
 
 float g = 9.81;
 
-float k1 = -210;
-float k2 = -275;
-float k3 = -206;
+float k1 = -130;
+float k2 = -170;
+float k3 = -200;
 
 //Serial Buffer
 const int len = 16;
@@ -37,7 +37,15 @@ char temp[int(len/4)+1];
 // Buttons have to be pull up
 // Pull up: one terminal on GND and the other
 //          attached to the analog pin.
-Button buttonGrip_1 = Button(A0, PULLUP);
+
+//Setup buttons for PID tunning, button gripper is used sometimes for gripper debug
+//          A0-A3 are avaibale analog pins
+//Button buttonGrip_1 = Button(A0, PULLUP);
+int jointSelectTune = A0;
+int pValue = A1;
+int iValue = A2;
+int dValue = A3;
+
 bool buttonState = true;
 bool triggerGrip = true;
 bool gripperFinished1 = true;
@@ -58,6 +66,7 @@ int gripperEngagedSelect = 0;
 // to controls grippers with buttons. Remember to set grippers current state.
 void gripperButtonTest(int currentState, Gripper grip, Button buttonGripper);
 void updateSpeeds();
+void pidTunning(int jointSelect, int potP, int potI, int potD);
 
 Gripper gripper[2];
 
@@ -71,9 +80,9 @@ void setup() {
 		// jointMotor[1] = JointMotor(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 50, .12, 70, 50, .1, 50, 10, 2, .8);
 		// jointMotor[2] = JointMotor(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 10, .12, 50, 60, 0.12, 60, 10, 3, 0.8);
 
-		jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 8.4, 0, 0, 10, 0.1, 5, 27.81, true,0);
-		jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 8.4, 0.1, 2.2, 124.38, true,1);
-		jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 8, 0.1, 2.2, 0, 0, 0, 27.81, false,2);
+		jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 8.42, 0, 0.5, 10, 0.1, 5, 27.81, true,0);
+		jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 20, 0, 1, 124.38, true,1);
+		jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 8.1, 0, 0.7, 0, 0, 0, 27.81, false,2);//works
 		
 		/* DEBUG */
 		jointMotor[0].setAngle(27.81);
@@ -197,24 +206,55 @@ void loop() {
 		// jointMotor[0].updateSpeed();
 		// jointMotor[1].updateSpeed();
 		// jointMotor[2].updateSpeed();
+	
+	//pidTunning(jointSelectTune, pValue, iValue, dValue);
 
+}
+
+/*
+* Print variable every 2000 millis
+*/
+void debugPrint(char jName[3], char pName[3],char iName[3],char dName[3], double pInput,double iInput,double dInput){
+	if (millis()-lastPubAng>2000)
+    {
+		Serial.print("--------"); Serial.println(jName);
+		Serial.print(pName); Serial.print(": "); Serial.println(pInput);
+		Serial.print(iName); Serial.print(": "); Serial.println(iInput);
+    	Serial.print(dName); Serial.print(": "); Serial.println(dInput);
+        lastPubAng=millis(); 
+    }
 }
 
 /*
 *	Calculate Gravity Compensation
 */
 int gravityCompensation(JointMotor2 i, int th[], bool select){
+	int theta0 = th[0];
 	int theta1 = th[0]+th[1];
 	int theta2 = th[0]+th[1]+th[2];
 
 
 	//Wrap around
-	if(theta1>360){
+	if(theta0>=360){
+		theta0 = theta0-360;
+	}
+	if(theta1>=360){
 		theta1 = theta1-360;
 	}
-	if(theta2>360){
+	if(theta2>=360){
 		theta2 = theta2-360;
 	}
+
+	if(theta0<=-360){
+		theta0 = theta0+360;
+	}
+	if(theta1<=-360){
+		theta1 = theta1+360;
+	}
+	if(theta2<=-360){
+		theta2 = theta2+360;
+	}
+
 
 
 	if(i.id == 0){
@@ -227,7 +267,7 @@ int gravityCompensation(JointMotor2 i, int th[], bool select){
 		// Serial.print(", decimal: ");
 		// Serial.println(sinLut[th[0]]*0.001);
 
-		return k1*(g*m3*(L1*sinLut[th[0]]*0.001+L2*sinLut[theta1]*0.001+L3*sinLut[theta2]*0.001)+g*m2*(L1*sinLut[th[0]]*0.001+L2*sinLut[theta1]*0.001)+g*L1*m1*sinLut[th[0]]*0.001);
+		return k1*(g*m3*(L1*sinLut[theta0]*0.001+L2*sinLut[theta1]*0.001+L3*sinLut[theta2]*0.001)+g*m2*(L1*sinLut[theta0]*0.001+L2*sinLut[theta1]*0.001)+g*L1*m1*sinLut[theta0]*0.001);
 	}else if(i.id == 1){
 		
 		return k2*(g*m3*(L2*sinLut[theta1]*0.001+L3*sinLut[theta2]*0.001)+g*L2*m2*sinLut[theta1]*0.001);
@@ -268,6 +308,7 @@ void updateSpeeds() {
 	int gc = 0;
 	for (int i = 0; i < numMotors; i++) {
 
+		//TODO: Implement the switching of the PID
 		// if(jointMotor[i].switchPID(gripperEngagedSelect)){
 
 		// }else{
@@ -283,26 +324,61 @@ void updateSpeeds() {
 * Enables to interface (engage and disengage) the grippers using buttons.
 * Buttons should be plugged into the Analog pins.
 */
-void gripperButtonTest(int currentState, Gripper grip, Button buttonGripper){
+// void gripperButtonTest(int currentState, Gripper grip, Button buttonGripper){
 
-		if(buttonGripper.isPressed() && buttonGripper.stateChanged() && buttonState){
-			buttonState = false;
-			if(currentState == 1){
-				Serial.println("disengage");
-				grip.setGripper(2);
-			}else{
-				Serial.println("engage");
-				grip.setGripper(1);
-			}
+// 		if(buttonGripper.isPressed() && buttonGripper.stateChanged() && buttonState){
+// 			buttonState = false;
+// 			if(currentState == 1){
+// 				Serial.println("disengage");
+// 				grip.setGripper(2);
+// 			}else{
+// 				Serial.println("engage");
+// 				grip.setGripper(1);
+// 			}
+// 		}
+// 		if(buttonGripper.isPressed() && buttonGripper.stateChanged() && !buttonState){
+// 			buttonState = true;
+// 			if(currentState == 1){
+// 				Serial.println("engage");
+// 				grip.setGripper(1);
+// 			}else{
+// 				Serial.println("disengage");
+// 				grip.setGripper(2);
+// 			}
+// 		}
+// }
+
+/*
+* For tunnning of PID values on the three diffrent joints using one button and 3 potentiometers
+*/
+void pidTunning(int jointSelect, int potP, int potI, int potD){
+	int js = analogRead(jointSelect);
+	int offset = 70;
+	double ratio = 0.01056;
+
+	if(js < 341){
+		if(js >170){
+			jointMotor[0].kP = (analogRead(potP)-offset)*ratio;
+			jointMotor[0].kI = (analogRead(potI)-offset)*ratio;
+			jointMotor[0].kD = (analogRead(potD)-offset)*ratio;
 		}
-		if(buttonGripper.isPressed() && buttonGripper.stateChanged() && !buttonState){
-			buttonState = true;
-			if(currentState == 1){
-				Serial.println("engage");
-				grip.setGripper(1);
-			}else{
-				Serial.println("disengage");
-				grip.setGripper(2);
-			}
+		debugPrint("J0", "KP", "KI","KD", jointMotor[0].kP,jointMotor[0].kI,jointMotor[0].kD);
+	}else if(js > 341 && js < 682){
+		if(js>511){
+			jointMotor[1].kP = (analogRead(potP)-offset)*ratio;
+			jointMotor[1].kI = (analogRead(potI)-offset)*ratio;
+			jointMotor[1].kD = (analogRead(potD)-offset)*ratio;
 		}
+		debugPrint("J1", "KP", "KI","KD", jointMotor[1].kP,jointMotor[1].kI,jointMotor[1].kD);
+	}else if( js > 682){
+		if(js > 852){
+			jointMotor[2].kP = (analogRead(potP)-offset)*ratio;
+			jointMotor[2].kI = (analogRead(potI)-offset)*ratio;
+			jointMotor[2].kD = (analogRead(potD)-offset)*ratio;
+		}
+		debugPrint("J2", "KP", "KI","KD", jointMotor[2].kP,jointMotor[2].kI,jointMotor[2].kD);
+	}
+	// Serial.print("Kp: ");
+	// Serial.println(jointMotor[0].kP);
 }
+

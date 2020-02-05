@@ -19,7 +19,6 @@ private:
 
 	//PID
 	double desiredAngle;
-	double kP, kI, kD;
 	double kP2, kI2, kD2;
 	double kP3, kI3, kD3;
 
@@ -28,12 +27,13 @@ private:
 	bool enc_clockwise; //1 if switch direction
 
 	double lastPubAng;
+	double sumError, lastError;
 
 
 public:
 	bool debug;
 	int id;
-	double sumError, lastError;
+	double kP, kI, kD; //TODO: whn values tunned, put this back into private variables
 
 	JointMotor2();
 	JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd, double ang_offset, bool encoder_clockwise,int id_input);
