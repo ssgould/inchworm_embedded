@@ -43,7 +43,7 @@ public:
 	void    changeDirection(int speed);
 	void    setAngle(double angle);
 	bool    switchPID(int gripperEngagedSelect);
-	void    updateSpeed(int gc);
+	int    	calcSpeed(int gc);
 	double  getAngleDegrees();
 	void debugPrint(char vName[3], double vInput);
 	// float gravityCompensation(int th);

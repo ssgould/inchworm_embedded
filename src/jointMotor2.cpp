@@ -170,9 +170,9 @@ bool JointMotor2::switchPID(int gripperEngagedSelect){
     }
 }
 /*
-* Update motor speed for PID
+* calculate motor speed for PID
 */
-void JointMotor2::updateSpeed(int gc) {
+int JointMotor2::calcSpeed(int gc) {
 	double currentAngle = getAngleDegrees();
 
 	double error = desiredAngle - currentAngle;
@@ -198,7 +198,7 @@ void JointMotor2::updateSpeed(int gc) {
 	// Serial.print(": "); 
 	// Serial.println(speed);
            
-	setSpeed(speed);
+	// setSpeed(speed);
 
 	// Serial.println(error);
 	// Serial.println(sumError);
@@ -209,5 +209,5 @@ void JointMotor2::updateSpeed(int gc) {
 	// Serial.println(speed);
 
 	lastError = error;
-	return;
+	return speed;
 }

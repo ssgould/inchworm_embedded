@@ -318,6 +318,7 @@ void updateSpeeds() {
 
 	int numMotors = 3;
 	int gc = 0;
+	int speeds = {0,0,0};
 	for (int i = 0; i < numMotors; i++) {
 
 		//TODO: Implement the switching of the PID
@@ -327,8 +328,13 @@ void updateSpeeds() {
 
 		// }
 		theta[i] = jointMotor[i].getAngleDegrees();
-		gc = gravityCompensation(jointMotor[i], theta,true);
-		jointMotor[i].updateSpeed(gc);
+		gc = gravityCompensation(jointMotor[i], theta, true);
+		speeds[i] = jointMotor[i].calcSpeed(gc);
+	}
+	// jointMotor speed should be updated after all gcs are calculated to 
+	// minimize delay between each joint movement
+	for (int i = 0; i < numMotors; i++){
+		jointMotor[i].setSpeed(speeds[i]);
 	}
 }
 
