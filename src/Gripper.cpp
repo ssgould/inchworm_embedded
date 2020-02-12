@@ -25,7 +25,7 @@ Gripper::Gripper(int pin, bool directionCW, bool isEngaged, int zeroPosition = 0
     zeroPosition = zeroPosition;
     threshold = threshold;
     medianPulse = 1500; //motor stops at this pulse width
-    isE = isEngaged;
+    isEngaged = false;
 
     if(directionCW){
       maxSpeedCCW = -255;
@@ -40,6 +40,18 @@ Gripper::Gripper(int pin, bool directionCW, bool isEngaged, int zeroPosition = 0
     }
 
     grip.attach(pin);
+}
+
+/*
+* Set gripper flag to engaged or disengaged
+*/
+
+void Gripper::setEngaged(bool e){
+  isEngaged = e;
+}
+
+bool Gripper::getEngaged(void){
+  return isEngaged;
 }
 
 /*
@@ -80,7 +92,7 @@ bool Gripper::setGripper(gripperState gState){
         write(0);
         resetTime = true;
         gripperFinished = true;
-        isE = true;
+        setEngaged(true);
       }
         break;
     case disengage: //disengage gripper
@@ -92,7 +104,7 @@ bool Gripper::setGripper(gripperState gState){
         write(0);
         resetTime = true;
         gripperFinished = true;
-        isE = false;
+        setEngaged(false);
       }
         break;
     default: //if none are selected
@@ -126,7 +138,7 @@ bool Gripper::setGripper(int gState){
         write(0);
         resetTime = true;
         gripperFinished = true;
-        isE = true;
+        setEngaged(true);
       }
         break;
     case 2: //disengage gripper
@@ -138,7 +150,7 @@ bool Gripper::setGripper(int gState){
         write(0);
         resetTime = true;
         gripperFinished = true;
-        isE = false;
+        setEngaged(false);
       }
         break;
     default: //if none are selected
@@ -148,6 +160,4 @@ bool Gripper::setGripper(int gState){
   }
 
   return gripperFinished;
-
 }
-
