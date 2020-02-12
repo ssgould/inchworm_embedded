@@ -226,12 +226,12 @@ int JointMotor2::calcSpeed(int gc)
 	double changeError = error - lastError;
 
 	double pid_error = (kP * error) + (kI * sumError) + (kD * changeError);
-	int speed = pid_error + gc;
-	Serial.print("pidddd: ");
-	Serial.println(pid_error);
-	Serial.println(gc);
+	// int speed = pid_error + gc;
+	// Serial.print("pidddd: ");
+	// Serial.println(pid_error);
+	// Serial.println(gc);
 
-	// int speed = gc;
+	int speed = gc;
 	// Serial.print("speed of angle ");
 	// Serial.print(id);
 	// Serial.print(": ");

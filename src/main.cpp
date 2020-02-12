@@ -17,13 +17,13 @@ Storage storage;
 int sMotor;
 int theta[3];
 
-float m1 = 0.2;   // 0.09  CAD value: 0.183
-float m2 = 0.74;  // with storing mechanism (with block 0.297 kg) Old: 0.357
-float m3 = 0.197; // mass with new screwing mechanism // Old: 0.201
+float m1 = 0.281; // 0.09  CAD value: 0.183
+float m2 = 0.495; // with storing mechanism (with block 0.297 kg) Old: 0.357
+float m3 = 0.207; // mass with new screwing mechanism // Old: 0.201
 
-float L1 = 0.055; // Old: 0.1633
-float L2 = 0.11;  // Old: 0.1633
-float L3 = 0.064; // Old: 0.1048
+float L1 = 0.1633; // Old: 0.1633
+float L2 = 0.1633; // Old: 0.1633
+float L3 = 0.1048; // Old: 0.1048
 float Lblock = 0.145;
 float mblock = 0.365;
 
@@ -33,9 +33,9 @@ float LCoM3 = 0.064;
 
 float g = 9.81;
 
-float k1 = -130;
-float k2 = -200;
-float k3 = -200;
+float k1 = -200; // -130
+float k2 = 0;	//-200
+float k3 = 0;	//-200
 
 //Serial Buffer
 const int len = 16;
