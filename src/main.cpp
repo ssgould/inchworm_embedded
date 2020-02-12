@@ -24,6 +24,12 @@ float m3 = 0.197; // mass with new screwing mechanism // Old: 0.201
 float L1 = 0.055; // Old: 0.1633
 float L2 = 0.11;  // Old: 0.1633
 float L3 = 0.064; // Old: 0.1048
+float Lblock = 0.145;
+float mblock = 0.365;
+
+float LCoM1 = 0.055;
+float LCoM2 = 0.082;
+float LCoM3 = 0.064;
 
 float g = 9.81;
 
@@ -281,15 +287,15 @@ int gravityCompensation(JointMotor2 i, int th[], bool select)
 	//Wrap around
 	if (theta0 >= 360)
 	{
-		theta0 = theta0 - 360;
+		theta0 %= 360;
 	}
 	if (theta1 >= 360)
 	{
-		theta1 = theta1 - 360;
+		theta1 %= 360;
 	}
 	if (theta2 >= 360)
 	{
-		theta2 = theta2 - 360;
+		theta2 %= 360;
 	}
 
 	// if(theta0<=-360){
@@ -313,12 +319,16 @@ int gravityCompensation(JointMotor2 i, int th[], bool select)
 		// Serial.print(", decimal: ");
 		// Serial.println(sinLut[th[0]]*0.001);
 
-		return k1 * (g * m3 * (L1 * sinLut[theta0] * 0.001 + L2 * sinLut[theta1] * 0.001 + L3 * sinLut[theta2] * 0.001) + g * m2 * (L1 * sinLut[theta0] * 0.001 + L2 * sinLut[theta1] * 0.001) + g * L1 * m1 * sinLut[theta0] * 0.001);
+		// return k1 * (g * m3 * (L1 * sinLut[theta0] * 0.001 + L2 * sinLut[theta1] * 0.001 + L3 * sinLut[theta2] * 0.001) + g * m2 * (L1 * sinLut[theta0] * 0.001 + L2 * sinLut[theta1] * 0.001) + g * L1 * m1 * sinLut[theta0] * 0.001);
+
+		return k1 * (g * m3 * (L1 * sinLut[theta0] + L2 * sinLut[theta0 + theta1] + LCoM3 * sinLut[theta0 + theta1 + theta2]) + g * m2 * (L1 * sinLut[theta0] + LCoM2 * sinLut[theta0 + theta1]) + g * LCoM1 * m1 * sinLut[theta0] + g * mblock * (L1 * sinLut[theta0] + Lblock * sinLut[theta0 + theta1]));
 	}
 	else if (i.id == 1)
 	{
 
-		return k2 * (g * m3 * (L2 * sinLut[theta1] * 0.001 + L3 * sinLut[theta2] * 0.001) + g * L2 * m2 * sinLut[theta1] * 0.001);
+		// return k2 * (g * m3 * (L2 * sinLut[theta1] * 0.001 + L3 * sinLut[theta2] * 0.001) + g * L2 * m2 * sinLut[theta1] * 0.001);
+
+		return k2 * (g * m3 * (L2 * sinLut[theta0 + theta1] + LCoM3 * sinLut[theta0 + theta1 + theta2]) + g * LCoM2 * m2 * sinLut[theta1 + theta0] + g * mblock * Lblock * sinLut[theta1 + theta0]);
 	}
 	else if (i.id == 2)
 	{
@@ -333,7 +343,9 @@ int gravityCompensation(JointMotor2 i, int th[], bool select)
 
 		// Serial.print("wrap around (sum of all Angles): ");
 		// Serial.println(theta1);
-		return k3 * (g * L3 * m3 * sinLut[theta2] * 0.001);
+		// return k3 * (g * L3 * m3 * sinLut[theta2] * 0.001);
+
+		return k3 * (g * m3 * LCoM3 * sinLut[theta2 + theta1 + theta0]);
 	}
 	else
 	{
