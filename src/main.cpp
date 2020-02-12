@@ -14,7 +14,7 @@
 // JointMotor jointMotor[3];
 JointMotor2 jointMotor[3];
 Storage storage;
-int sMotor;
+int sMotor = 1;
 int theta[3];
 
 float m1 = 0.281; // 0.09  CAD value: 0.183
@@ -25,7 +25,7 @@ float L1 = 0.1633; // Old: 0.1633
 float L2 = 0.1633; // Old: 0.1633
 float L3 = 0.1048; // Old: 0.1048
 float Lblock = 0.145;
-float mblock = 0.365;
+float mblock = 0.365; //0.365
 
 float LCoM1 = 0.055;
 float LCoM2 = 0.082;
@@ -33,9 +33,9 @@ float LCoM3 = 0.064;
 
 float g = 9.81;
 
-float k1 = -200; // -130
-float k2 = 0;	//-200
-float k3 = 0;	//-200
+float k1 = -0.089; // -130 //-0.12 new
+float k2 = -0.13;  //-200 //-0.2 new
+float k3 = -0.10;  //-200 //-0.07 new
 
 //Serial Buffer
 const int len = 16;
@@ -92,9 +92,9 @@ void setup()
 	// jointMotor[1] = JointMotor(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 50, .12, 70, 50, .1, 50, 10, 2, .8);
 	// jointMotor[2] = JointMotor(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 10, .12, 50, 60, 0.12, 60, 10, 3, 0.8);
 
-	jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 8.42, 0, 0.5, 10, 0.1, 5, 27.81, true, 0);
-	jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 27, 0, 1, 124.38, true, 1);
-	jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 8.1, 0, 0.7, 0, 0, 0, 27.81, false, 2); //works
+	jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 8.5, 0.01, 0.5, 10, 0.1, 5, 27.81, true, 0);
+	jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 27, 0.05, 1, 124.38, true, 1);
+	jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 8.85, 0.07, 0.7, 0, 0, 0, 27.81, false, 2); //works
 
 	storage = Storage(STORAGE_MOTOR_LC);
 
@@ -281,8 +281,8 @@ void debugPrint(char jName[3], char pName[3], char iName[3], char dName[3], doub
 int gravityCompensation(JointMotor2 i, int th[], bool select)
 {
 	int theta0 = th[0];
-	int theta1 = th[0] + th[1];
-	int theta2 = th[0] + th[1] + th[2];
+	int theta1 = th[1];
+	int theta2 = th[2];
 
 	//Wrap around
 	if (theta0 >= 360)
@@ -374,7 +374,7 @@ void updateSpeeds()
 
 	int numMotors = 3;
 	int gc = 0;
-	int speeds[numMotors] = {0, 0, 0};
+	double speeds[numMotors] = {0, 0, 0};
 	for (int i = 0; i < numMotors; i++)
 	{
 

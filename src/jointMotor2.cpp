@@ -96,7 +96,7 @@ void JointMotor2::debugPrint(char vName[3], double vInput)
 /*
 * Takes speed -255 - 255 and moves motor
 */
-void JointMotor2::setSpeed(int speed)
+void JointMotor2::setSpeed(double speed)
 {
 	double maxPercent = 0.9;
 	if (speed < -255 * maxPercent)
@@ -114,7 +114,7 @@ void JointMotor2::setSpeed(int speed)
 /*
 * Changes motor direction pin states based on sign of speed
 */
-void JointMotor2::changeDirection(int speed)
+void JointMotor2::changeDirection(double speed)
 {
 	if (speed < 0)
 	{
@@ -200,7 +200,7 @@ bool JointMotor2::switchPID(int gripperEngagedSelect)
 /*
 * calculate motor speed for PID
 */
-int JointMotor2::calcSpeed(int gc)
+double JointMotor2::calcSpeed(int gc)
 {
 	double currentAngle = getAngleDegrees();
 
@@ -231,7 +231,7 @@ int JointMotor2::calcSpeed(int gc)
 	// Serial.println(pid_error);
 	// Serial.println(gc);
 
-	int speed = gc;
+	double speed = gc;
 	// Serial.print("speed of angle ");
 	// Serial.print(id);
 	// Serial.print(": ");
