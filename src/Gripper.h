@@ -10,13 +10,6 @@
 #include <Servo.h>
 #include <Arduino.h>
 
-
-typedef enum{ // Used globaly as states for gripper functions
-    engage,   //0
-    disengage,//1
-    idle,     //2
-    }gripperState;
-
 class Gripper {
     private:
         int pin, zeroPosition, threshold;
@@ -30,20 +23,30 @@ class Gripper {
         bool resetTime = true;
         bool gripperFinished;
 
+        int time = 30000; //Time is takes for gripper to engage/disengage
+
         Servo grip;
+
+        typedef enum{ // Used globaly as states for gripper functions
+            idle,     //0
+            engage,   //1
+            disengage,//2
+        }gripperState;
 
     public:
 
         Gripper(); //default constructor
-        Gripper(int pin, bool directionCW, int zeroPosition = 0, int threshold = 5); //contructor with values
+        Gripper(int pin, bool directionCW, bool isEngaged, int zeroPosition = 0, int threshold = 5); //contructor with values
 
         void setEngaged(bool e);
         bool getEngaged(void);
         // Writes the pulsewidth specified to the motorcontroller and maps the values.
         void write(int power);
         // Sets gripper state to engage or disengage. Time is in milliseconds (1000 milliseconds = 1 sec)
-        bool setGripper(gripperState gState, int time);
-        bool setGripper(int gState, int time);
+        bool setGripper(gripperState gState);
+        bool setGripper(int gState);
+
+        bool isE; //Flag to know if gripper is enagaged or not
 
 };
 
