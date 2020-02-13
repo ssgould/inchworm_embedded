@@ -242,20 +242,26 @@ void loop()
 	}
 
 	// Switching PID values for joint motors
-	if (gripper[0].isEngaged && gripperEngagedSelect != 1) // Gripper 1 just engaged
+	if (gripper[0].isEngaged) // Gripper 1 just engaged
 	{
-		gripperEngagedSelect = 1;
-		for (int i = 0; i < NUM_MOTORS; i++) // Switches PID values for joint motors
+		if (gripperEngagedSelect != 1)
 		{
-			jointMotor[i].switchPID(gripperEngagedSelect);
+			gripperEngagedSelect = 1;
+			for (int i = 0; i < NUM_MOTORS; i++) // Switches PID values for joint motors
+			{
+				jointMotor[i].switchPID(gripperEngagedSelect);
+			}
 		}
 	}
-	else if (gripper[1].isEngaged && gripperEngagedSelect != 2) // Gripper 2 just engaged
+	else if (gripper[1].isEngaged) // Gripper 2 just engaged
 	{
-		gripperEngagedSelect = 2;
-		for (int i = 0; i < NUM_MOTORS; i++) // Switches PID values for joint motors
+		if (gripperEngagedSelect != 2)
 		{
-			jointMotor[i].switchPID(gripperEngagedSelect);
+			gripperEngagedSelect = 2;
+			for (int i = 0; i < NUM_MOTORS; i++) // Switches PID values for joint motors
+			{
+				jointMotor[i].switchPID(gripperEngagedSelect);
+			}
 		}
 	}
 	else
@@ -358,14 +364,14 @@ int gravityCompensation(JointMotor2 i, int th[], bool select)
 
 		// return k1 * (g * m3 * (L1 * sinLut[theta0] * 0.001 + L2 * sinLut[theta1] * 0.001 + L3 * sinLut[theta2] * 0.001) + g * m2 * (L1 * sinLut[theta0] * 0.001 + L2 * sinLut[theta1] * 0.001) + g * L1 * m1 * sinLut[theta0] * 0.001);
 
-		return k1 * (g * m3 * (L1 * sinLut[theta0] + L2 * sinLut[theta0 + theta1] + LCoM3 * sinLut[theta0 + theta1 + theta2]) + g * m2 * (L1 * sinLut[theta0] + LCoM2 * sinLut[theta0 + theta1]) + g * LCoM1 * m1 * sinLut[theta0] + g * mblock * (L1 * sinLut[theta0] + Lblock * sinLut[theta0 + theta1]));
+		return k1 * (g * m3 * (L1 * sinLut[theta0] + L2 * sinLut[theta0 + theta1] + (L3 - LCoM3) * sinLut[theta0 + theta1 + theta2]) + g * m2 * (L1 * sinLut[theta0] + (L2 - (L2 - LCoM2)) * sinLut[theta0 + theta1]) + g * (L1 - LCoM1) * m1 * sinLut[theta0] + g * mblock * (L1 * sinLut[theta0] + Lblock * sinLut[theta0 + theta1]));
 	}
 	else if (i.id == 1)
 	{
 
 		// return k2 * (g * m3 * (L2 * sinLut[theta1] * 0.001 + L3 * sinLut[theta2] * 0.001) + g * L2 * m2 * sinLut[theta1] * 0.001);
 
-		return k2 * (g * m3 * (L2 * sinLut[theta0 + theta1] + LCoM3 * sinLut[theta0 + theta1 + theta2]) + g * LCoM2 * m2 * sinLut[theta1 + theta0] + g * mblock * Lblock * sinLut[theta1 + theta0]);
+		return k2 * (g * m3 * (L2 * sinLut[theta0 + theta1] + (L3 - LCoM3) * sinLut[theta0 + theta1 + theta2]) + g * (L2 - LCoM2) * m2 * sinLut[theta1 + theta0] + g * mblock * Lblock * sinLut[theta1 + theta0]);
 	}
 	else if (i.id == 2)
 	{
@@ -382,7 +388,7 @@ int gravityCompensation(JointMotor2 i, int th[], bool select)
 		// Serial.println(theta1);
 		// return k3 * (g * L3 * m3 * sinLut[theta2] * 0.001);
 
-		return k3 * (g * m3 * LCoM3 * sinLut[theta2 + theta1 + theta0]);
+		return k3 * (g * m3 * (L3 - LCoM3) * sinLut[theta2 + theta1 + theta0]);
 	}
 	else
 	{

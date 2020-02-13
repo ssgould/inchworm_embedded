@@ -19,7 +19,7 @@ Gripper::Gripper()
 //Constructor to added object properties. Two arguments are optional, zeroposition:
 //sets the middle value for the range of values that are mapped. Threshold is not used
 //but could serve to implement the write to motor function.
-Gripper::Gripper(int pin, bool directionCW, bool isEngaged, int zeroPosition = 0, int threshold = 5)
+Gripper::Gripper(int pin, bool directionCW, bool isE, int zeroPosition = 0, int threshold = 5)
 {
 
   pin = pin;
@@ -27,7 +27,7 @@ Gripper::Gripper(int pin, bool directionCW, bool isEngaged, int zeroPosition = 0
   zeroPosition = zeroPosition;
   threshold = threshold;
   medianPulse = 1500; //motor stops at this pulse width
-  isEngaged = isEngaged;
+  isEngaged = isE;
 
   if (directionCW)
   {

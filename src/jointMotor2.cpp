@@ -150,9 +150,9 @@ double JointMotor2::getAngleDegrees()
 		{
 			if (millis() - lastPubAng > 2000)
 			{
-				Serial.print("angle ");
+				Serial.print("angle[");
 				Serial.print(id);
-				Serial.print(": ");
+				Serial.print("]: ");
 				Serial.println(calibrated_angle);
 				lastPubAng = millis();
 			}
