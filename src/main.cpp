@@ -12,7 +12,8 @@
 
 //Variables
 // JointMotor jointMotor[3];
-JointMotor2 jointMotor[3];
+const int NUM_MOTORS = 3;
+JointMotor2 jointMotor[NUM_MOTORS];
 Storage storage;
 int sMotor = 1;
 int theta[3];
@@ -38,11 +39,11 @@ float k2 = -0.13;  //-200 //-0.2 new
 float k3 = -0.10;  //-200 //-0.07 new
 
 //Serial Buffer
-const int MOTOR_PKT_LEN = 8; 	// motor packet example: "-123.32_" (ending in space)
-const int CONTROL_PKT_LEN = 4;	// control packet example: "0131"
+const int MOTOR_PKT_LEN = 8;   // motor packet example: "-123.32_" (ending in space)
+const int CONTROL_PKT_LEN = 4; // control packet example: "0131"
 const int len = MOTOR_PKT_LEN * 3 + CONTROL_PKT_LEN;
 char serialBuffer[len];
-const int PARSE_PKT_LEN = 4
+const int PARSE_PKT_LEN = 4;
 char temp[PARSE_PKT_LEN];
 
 unsigned long start_time;
@@ -139,7 +140,6 @@ void loop()
 		float tempAngle = 0;
 		boolean motorPktCompleted = true;
 
-
 		if (serialBuffer[0] == '-' || serialBuffer[0] == '0')
 		{
 			// Serial.println("____________Robot GO____________");
@@ -169,7 +169,8 @@ void loop()
 							{
 								gripperFinished2 = false;
 							}
-							else{	// both gripper selected
+							else
+							{ // both gripper selected
 								gripperFinished1 = false;
 								gripperFinished2 = false;
 							}
@@ -178,31 +179,34 @@ void loop()
 					}
 					else
 					{ //Joint angles
-						if(motorPktCompleted){ 	// receiving first half of an angle value
+						if (motorPktCompleted)
+						{							   // receiving first half of an angle value
 							motorPktCompleted = false; // flip the flag to false
-							if (temp[0] == '-'){
+							if (temp[0] == '-')
+							{
 								temp[0] = '0';
 								tempAngle = -1 * atoi(temp);
 							}
-							else{
+							else
+							{
 								tempAngle = atoi(temp);
 							}
 						}
-						else{					// receiving second half of an angle value
+						else
+						{							  // receiving second half of an angle value
 							motorPktCompleted = true; // flip the flag to true
 							temp[0] = '0';
-							temp[PARSE_PKT_LEN-1] = '0';
+							temp[PARSE_PKT_LEN - 1] = '0';
 							tempAngle += (atof(temp) / 1000.0); // divide by 1000 to compensate for the extra 0
 							jointMotor[jointIndex].setAngle(tempAngle);
 							// jointMotor[jointIndex].sumError = 0.0;
 							Serial.print("Setting angle[");
-							Serial.print(jointIndex+1);
+							Serial.print(jointIndex + 1);
 							Serial.print("]: ");
 							Serial.println(tempAngle);
 							jointIndex++;
 						}
 					}
-					
 				}
 			}
 		}
@@ -235,6 +239,28 @@ void loop()
 	if (!gripperFinished2 && gripperSelect == 2)
 	{
 		gripperFinished2 = gripper[gripperSelect - 1].setGripper(gripperState);
+	}
+
+	// Switching PID values for joint motors
+	if (gripper[0].isEngaged && gripperEngagedSelect != 1) // Gripper 1 just engaged
+	{
+		gripperEngagedSelect = 1;
+		for (int i = 0; i < NUM_MOTORS; i++) // Switches PID values for joint motors
+		{
+			jointMotor[i].switchPID(gripperEngagedSelect);
+		}
+	}
+	else if (gripper[1].isEngaged && gripperEngagedSelect != 2) // Gripper 2 just engaged
+	{
+		gripperEngagedSelect = 2;
+		for (int i = 0; i < NUM_MOTORS; i++) // Switches PID values for joint motors
+		{
+			jointMotor[i].switchPID(gripperEngagedSelect);
+		}
+	}
+	else
+	{
+		gripperEngagedSelect = 0;
 	}
 
 	// pending support for controlling both grippers
@@ -370,36 +396,17 @@ int gravityCompensation(JointMotor2 i, int th[], bool select)
 */
 void updateSpeeds()
 {
-	if (gripper[0].isE)
-	{
-		gripperEngagedSelect = 1;
-	}
-	else if (gripper[1].isE)
-	{
-		gripperEngagedSelect = 2;
-	}
-	else
-	{
-		gripperEngagedSelect = 0;
-	}
-
-	int numMotors = 3;
 	int gc = 0;
-	double speeds[numMotors] = {0, 0, 0};
-	for (int i = 0; i < numMotors; i++)
+	double speeds[NUM_MOTORS] = {0, 0, 0};
+	for (int i = 0; i < NUM_MOTORS; i++)
 	{
-		if(jointMotor[i].switchPID(gripperEngagedSelect)){ // true when gripper 2 is engaged
-
-		}else{	// gripper 1 is engaged
-
-		}
 		theta[i] = jointMotor[i].getAngleDegrees();
 		gc = gravityCompensation(jointMotor[i], theta, true);
 		speeds[i] = jointMotor[i].calcSpeed(gc);
 	}
 	// jointMotor speed should be updated after all gcs are calculated to
 	// minimize delay between each joint movement
-	for (int i = 0; i < numMotors; i++)
+	for (int i = 0; i < NUM_MOTORS; i++)
 	{
 		jointMotor[i].setSpeed(speeds[i]);
 	}
