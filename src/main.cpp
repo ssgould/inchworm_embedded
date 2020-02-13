@@ -38,9 +38,12 @@ float k2 = -0.13;  //-200 //-0.2 new
 float k3 = -0.10;  //-200 //-0.07 new
 
 //Serial Buffer
-const int len = 16;
+const int MOTOR_PKT_LEN = 8; 	// motor packet example: "-123.32_" (ending in space)
+const int CONTROL_PKT_LEN = 4;	// control packet example: "0131"
+const int len = MOTOR_PKT_LEN * 3 + CONTROL_PKT_LEN;
 char serialBuffer[len];
-char temp[int(len / 4) + 1];
+const int PARSE_PKT_LEN = 4
+char temp[PARSE_PKT_LEN];
 
 unsigned long start_time;
 
@@ -133,6 +136,9 @@ void loop()
 		Serial.readBytesUntil('\n', serialBuffer, len);
 		int tempIndex = 0;
 		int jointIndex = 0;
+		float tempAngle = 0;
+		boolean motorPktCompleted = true;
+
 
 		if (serialBuffer[0] == '-' || serialBuffer[0] == '0')
 		{
@@ -140,28 +146,16 @@ void loop()
 
 			for (int i = 0; i < len; i++)
 			{
-				// Serial.print("Iteration: ");
-				// Serial.println(i);
-
 				temp[tempIndex] = serialBuffer[i];
-
-				// Serial.print("temp properties: ");
-				// Serial.print(tempIndex);
-				// Serial.print(" ");
-				// Serial.print(temp[tempIndex]);
-				// Serial.print(" ");
-				// Serial.println(atoi(temp));
-
 				if (tempIndex < 3)
 				{
 					tempIndex++;
 				}
 				else
 				{
-
+					tempIndex = 0;
 					if (jointIndex > 2)
 					{ //Gripper
-						// Serial.println("Moving Gripper");
 						if ((temp[2] - '0' == 1) || (temp[2] - '0' == 2))
 						{
 							gripperSelect = (temp[2] - '0');
@@ -180,25 +174,31 @@ void loop()
 					}
 					else
 					{ //Joint angles
-						int sign = 1;
-						if (temp[0] == '-')
-						{
-							sign = -1;
+						if(motorPktCompleted){ 	// receiving first half of an angle value
+							motorPktCompleted = false; // flip the flag to false
+							if (temp[0] == '-'){
+								temp[0] = '0';
+								tempAngle = -1 * atoi(temp);
+							}
+							else{
+								tempAngle = atoi(temp);
+							}
 						}
-
-						temp[0] = '0';
-
-						// Serial.print("joint ");
-						// Serial.print(jointIndex);
-
-						signed int angle = sign * atoi(temp);
-						jointMotor[jointIndex].setAngle(angle);
-						// jointMotor[jointIndex].sumError = 0.0;
-						Serial.print(" angle: ");
-						Serial.println(angle);
-						jointIndex++;
+						else{					// receiving second half of an angle value
+							motorPktCompleted = true; // flip the flag to true
+							temp[0] = '0';
+							temp[PARSE_PKT_LEN-1] = '0';
+							tempAngle += (atof(temp) / 1000.0); // divide by 1000 to compensate for the extra 0
+							jointMotor[jointIndex].setAngle(tempAngle);
+							// jointMotor[jointIndex].sumError = 0.0;
+							Serial.print("Setting angle[");
+							Serial.print(jointIndex+1);
+							Serial.print("]: ");
+							Serial.println(tempAngle);
+							jointIndex++;
+						}
 					}
-					tempIndex = 0;
+					
 				}
 			}
 		}
