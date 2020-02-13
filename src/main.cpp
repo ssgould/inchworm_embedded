@@ -34,9 +34,13 @@ float LCoM3 = 0.064;
 
 float g = 9.81;
 
-float k1 = -0.089; // -130 //-0.12 new
-float k2 = -0.13;  //-200 //-0.2 new
-float k3 = -0.10;  //-200 //-0.07 new
+float k1_a = -0.089; // -130 //-0.12 new
+float k2_a = -0.13;  //-200 //-0.2 new
+float k3_a = -0.10;  //-200 //-0.07 new
+
+float k1_d = -0.089;
+float k2_d = -0.13;
+float k3_d = -0.10;
 
 //Serial Buffer
 const int MOTOR_PKT_LEN = 8;   // motor packet example: "-123.32_" (ending in space)
@@ -351,49 +355,45 @@ int gravityCompensation(JointMotor2 i, int th[], bool select)
 	// 	theta2 = theta2+360;
 	// }
 
-	if (i.id == 0)
-	{
-		// Serial.print("Theta values ");
-		// Serial.print(i.id);
-		// Serial.print(": ");
-		// Serial.println(th[0]);
-		// Serial.print(", sin value: ");
-		// Serial.print(sinLut[th[0]]);
-		// Serial.print(", decimal: ");
-		// Serial.println(sinLut[th[0]]*0.001);
-
-		// return k1 * (g * m3 * (L1 * sinLut[theta0] * 0.001 + L2 * sinLut[theta1] * 0.001 + L3 * sinLut[theta2] * 0.001) + g * m2 * (L1 * sinLut[theta0] * 0.001 + L2 * sinLut[theta1] * 0.001) + g * L1 * m1 * sinLut[theta0] * 0.001);
-
-		return k1 * (g * m3 * (L1 * sinLut[theta0] + L2 * sinLut[theta0 + theta1] + (L3 - LCoM3) * sinLut[theta0 + theta1 + theta2]) + g * m2 * (L1 * sinLut[theta0] + (L2 - (L2 - LCoM2)) * sinLut[theta0 + theta1]) + g * (L1 - LCoM1) * m1 * sinLut[theta0] + g * mblock * (L1 * sinLut[theta0] + Lblock * sinLut[theta0 + theta1]));
-	}
-	else if (i.id == 1)
-	{
-
-		// return k2 * (g * m3 * (L2 * sinLut[theta1] * 0.001 + L3 * sinLut[theta2] * 0.001) + g * L2 * m2 * sinLut[theta1] * 0.001);
-
-		return k2 * (g * m3 * (L2 * sinLut[theta0 + theta1] + (L3 - LCoM3) * sinLut[theta0 + theta1 + theta2]) + g * (L2 - LCoM2) * m2 * sinLut[theta1 + theta0] + g * mblock * Lblock * sinLut[theta1 + theta0]);
-	}
-	else if (i.id == 2)
-	{
-		// Serial.print("Theta values ");
-		// Serial.print(i.id);
-		// Serial.print(": ");
-		// Serial.print(th[0]);
-		// Serial.print(',');
-		// Serial.print(th[1]);
-		// Serial.print(',');
-		// Serial.println(th[2]);
-
-		// Serial.print("wrap around (sum of all Angles): ");
-		// Serial.println(theta1);
-		// return k3 * (g * L3 * m3 * sinLut[theta2] * 0.001);
-
-		return k3 * (g * m3 * (L3 - LCoM3) * sinLut[theta2 + theta1 + theta0]);
+	if (gripperEngagedSelect == 2)
+	{ // D link gripper engaged (block on current link)
+		if (i.id == 0)
+		{
+			return k1_d * (g * m3 * (L1 * sinLut[theta0] + L2 * sinLut[theta0 + theta1] + (L3 - LCoM3) * sinLut[theta0 + theta1 + theta2]) + g * m2 * (L1 * sinLut[theta0] + (L2 - (L2 - LCoM2)) * sinLut[theta0 + theta1]) + g * (L1 - LCoM1) * m1 * sinLut[theta0] + g * mblock * (L1 * sinLut[theta0] + Lblock * sinLut[theta0 + theta1]));
+		}
+		else if (i.id == 1)
+		{
+			return k2_d * (g * m3 * (L2 * sinLut[theta0 + theta1] + (L3 - LCoM3) * sinLut[theta0 + theta1 + theta2]) + g * (L2 - LCoM2) * m2 * sinLut[theta1 + theta0] + g * mblock * Lblock * sinLut[theta1 + theta0]);
+		}
+		else if (i.id == 2)
+		{
+			return k3_d * (g * m3 * (L3 - LCoM3) * sinLut[theta2 + theta1 + theta0]);
+		}
+		else
+		{
+			Serial.print("NO JOINT ID AVAILABLE FOR GRAVITY COMPENSATION");
+			return 0;
+		}
 	}
 	else
-	{
-		Serial.print("NO JOINT ID AVAILABLE FOR GRAVITY COMPENSATION");
-		return 0;
+	{ // A link gripper engaged (block on opposite link)
+		if (i.id == 0)
+		{
+			return k1_a * (g * m3 * (L1 * sinLut[theta0] + L2 * sinLut[theta0 + theta1] + LCoM3 * sinLut[theta0 + theta1 + theta2]) + g * m2 * (L1 * sinLut[theta0] + LCoM2 * sinLut[theta0 + theta1]) + g * LCoM1 * m1 * sinLut[theta0] + g * mblock * (L1 * sinLut[theta0] + Lblock * sinLut[theta0 + theta1]));
+		}
+		else if (i.id == 1)
+		{
+			return k2_a * (g * m3 * (L2 * sinLut[theta0 + theta1] + LCoM3 * sinLut[theta0 + theta1 + theta2]) + g * LCoM2 * m2 * sinLut[theta1 + theta0] + g * mblock * Lblock * sinLut[theta1 + theta0]);
+		}
+		else if (i.id == 2)
+		{
+			return k3_a * (g * m3 * LCoM3 * sinLut[theta2 + theta1 + theta0]);
+		}
+		else
+		{
+			Serial.print("NO JOINT ID AVAILABLE FOR GRAVITY COMPENSATION");
+			return 0;
+		}
 	}
 }
 
