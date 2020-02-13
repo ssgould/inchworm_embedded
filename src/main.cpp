@@ -38,9 +38,9 @@ float k1_a = -0.089; // -130 //-0.12 new
 float k2_a = -0.13;  //-200 //-0.2 new
 float k3_a = -0.10;  //-200 //-0.07 new
 
-float k1_d = -0.089;
-float k2_d = -0.13;
-float k3_d = -0.10;
+float k1_d = -0.089; //a link
+float k2_d = -0.125;
+float k3_d = -0.037;
 
 //Serial Buffer
 const int MOTOR_PKT_LEN = 8;   // motor packet example: "-123.32_" (ending in space)
@@ -355,11 +355,12 @@ int gravityCompensation(JointMotor2 i, int th[], bool select)
 	// 	theta2 = theta2+360;
 	// }
 
-	if (gripperEngagedSelect == 2)
+	if (gripperEngagedSelect == 0)
 	{ // D link gripper engaged (block on current link)
+		Serial.println("here");
 		if (i.id == 0)
 		{
-			return k1_d * (g * m3 * (L1 * sinLut[theta0] + L2 * sinLut[theta0 + theta1] + (L3 - LCoM3) * sinLut[theta0 + theta1 + theta2]) + g * m2 * (L1 * sinLut[theta0] + (L2 - (L2 - LCoM2)) * sinLut[theta0 + theta1]) + g * (L1 - LCoM1) * m1 * sinLut[theta0] + g * mblock * (L1 * sinLut[theta0] + Lblock * sinLut[theta0 + theta1]));
+			return k1_d * (g * m3 * (L3 - LCoM3) * sinLut[theta2 + theta1 + theta0]);
 		}
 		else if (i.id == 1)
 		{
@@ -367,7 +368,7 @@ int gravityCompensation(JointMotor2 i, int th[], bool select)
 		}
 		else if (i.id == 2)
 		{
-			return k3_d * (g * m3 * (L3 - LCoM3) * sinLut[theta2 + theta1 + theta0]);
+			return k3_d * (g * m3 * (L1 * sinLut[theta0] + L2 * sinLut[theta0 + theta1] + (L3 - LCoM3) * sinLut[theta0 + theta1 + theta2]) + g * m2 * (L1 * sinLut[theta0] + (L2 - (L2 - LCoM2)) * sinLut[theta0 + theta1]) + g * (L1 - LCoM1) * m1 * sinLut[theta0] + g * mblock * (L1 * sinLut[theta0] + Lblock * sinLut[theta0 + theta1]));
 		}
 		else
 		{
