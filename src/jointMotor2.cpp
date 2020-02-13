@@ -176,16 +176,16 @@ void JointMotor2::setAngle(double angle)
 }
 /*
 * Switch PID values for which joint is fixed
+* Returns false if gripper 1 is engaged and true if gripper 2
 */
 bool JointMotor2::switchPID(int gripperEngagedSelect)
 {
-
 	if (gripperEngagedSelect == 1)
 	{
 		kP = kP2;
 		kI = kI2;
 		kD = kD2;
-		Serial.println("In Switch PID 1");
+		Serial.println("Switching to PID 1");
 		return false;
 	}
 	else if (gripperEngagedSelect == 2)
@@ -193,7 +193,7 @@ bool JointMotor2::switchPID(int gripperEngagedSelect)
 		kP = kP3;
 		kI = kI3;
 		kD = kD3;
-		Serial.println("In Switch PID 2");
+		Serial.println("Switching to PID 2");
 		return true;
 	}
 }

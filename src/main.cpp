@@ -156,7 +156,7 @@ void loop()
 					tempIndex = 0;
 					if (jointIndex > 2)
 					{ //Gripper
-						if ((temp[2] - '0' == 1) || (temp[2] - '0' == 2))
+						if ((temp[2] - '0' == 1) || (temp[2] - '0' == 2) || (temp[2] - '0' == 3))
 						{
 							gripperSelect = (temp[2] - '0');
 							gripperState = (temp[3] - '0');
@@ -167,6 +167,10 @@ void loop()
 							}
 							else if (gripperSelect == 2)
 							{
+								gripperFinished2 = false;
+							}
+							else{	// both gripper selected
+								gripperFinished1 = false;
 								gripperFinished2 = false;
 							}
 						}
@@ -232,6 +236,13 @@ void loop()
 	{
 		gripperFinished2 = gripper[gripperSelect - 1].setGripper(gripperState);
 	}
+
+	// pending support for controlling both grippers
+	// if (!gripperFinished1 && !gripperFinished2 && gripperSelect == 3)
+	// {
+	// 	gripperFinished1 = gripper[gripperSelect - 1].setGripper(gripperState);
+	// 	gripperFinished2 = gripper[gripperSelect - 1].setGripper(gripperState);
+	// }
 
 	// 		if (millis()-lastPubAng>2000)
 	//  {
@@ -377,13 +388,11 @@ void updateSpeeds()
 	double speeds[numMotors] = {0, 0, 0};
 	for (int i = 0; i < numMotors; i++)
 	{
+		if(jointMotor[i].switchPID(gripperEngagedSelect)){ // true when gripper 2 is engaged
 
-		//TODO: Implement the switching of the PID
-		// if(jointMotor[i].switchPID(gripperEngagedSelect)){
+		}else{	// gripper 1 is engaged
 
-		// }else{
-
-		// }
+		}
 		theta[i] = jointMotor[i].getAngleDegrees();
 		gc = gravityCompensation(jointMotor[i], theta, true);
 		speeds[i] = jointMotor[i].calcSpeed(gc);
