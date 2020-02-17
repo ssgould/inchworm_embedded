@@ -99,7 +99,7 @@ bool Gripper::setGripper(gripperState gState)
     {
       write(maxSpeedCCW);
       gripperFinished = false;
-      isEngaged = true;
+      // isEngaged = true;
     }
     else
     {
@@ -114,7 +114,7 @@ bool Gripper::setGripper(gripperState gState)
     {
       write(maxSpeedCW);
       gripperFinished = false;
-      isEngaged = false;
+      // isEngaged = false;
     }
     else
     {
@@ -153,7 +153,7 @@ bool Gripper::setGripper(int gState)
     {
       write(maxSpeedCCW);
       gripperFinished = false;
-      isEngaged = true;
+      // isEngaged = true;
     }
     else
     {
@@ -168,7 +168,7 @@ bool Gripper::setGripper(int gState)
     {
       write(maxSpeedCW);
       gripperFinished = false;
-      isEngaged = false;
+      // isEngaged = false;
     }
     else
     {

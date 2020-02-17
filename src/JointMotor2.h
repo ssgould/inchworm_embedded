@@ -28,6 +28,7 @@ private:
 	bool enc_clockwise;			  //1 if switch direction
 
 	double lastPubAng;
+	double lastPubAng2;
 	double sumError, lastError;
 
 public:
@@ -43,7 +44,7 @@ public:
 	void changeDirection(double speed);
 	void setAngle(double angle);
 	bool switchPID(int gripperEngagedSelect);
-	double calcSpeed(int gc);
+	double calcSpeed(int gc, int useGravityComp);
 	double getAngleDegrees();
 	void debugPrint(char vName[3], double vInput);
 	// float gravityCompensation(int th);

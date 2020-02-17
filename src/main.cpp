@@ -34,14 +34,15 @@ float LCoM3 = 0.064;
 
 float g = 9.81;
 
-float k1_a = -0.089; // -130 //-0.12 new
-float k2_a = -0.13;  //-200 //-0.2 new
-float k3_a = -0.10;  //-200 //-0.07 new
+float k1_a = -0.116; // -130 //-0.089 new
+float k2_a = -0.129; //-200 //-0.13 new
+float k3_a = -0.15;  //-200 //-0.1 new
 
 float k1_d = -0.089; //a link
-float k2_d = -0.125;
+float k2_d = -0.1325;
 float k3_d = -0.037;
 
+float gc_complimentary_filter = 1.0;
 //Serial Buffer
 const int MOTOR_PKT_LEN = 8;   // motor packet example: "-123.32_" (ending in space)
 const int CONTROL_PKT_LEN = 4; // control packet example: "0131"
@@ -81,6 +82,7 @@ int gripperSelect = 0; //idle (No gripper selected)
 int gripperState = 0;  //idle (No gripper action)
 int gripperEngagedSelect = 0;
 
+int useGravityComp = 1;
 // FUNCTION DEFINITIONS
 // to controls grippers with buttons. Remember to set grippers current state.
 void gripperButtonTest(int currentState, Gripper grip, Button buttonGripper);
@@ -94,16 +96,21 @@ void setup()
 	Serial.begin(9600); //Debug Serial
 	Wire.begin();		//begin I2C
 
-	Serial.println("Robot intializing....");
+	Serial.println("Robot fintializing....");
 	temp[int(len / 4)] = '\n'; //you need this
-	// jointMotor[0] = JointMotor(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 50, .12, 10, 10, 0.1, 20, 10, 1, 0.8);
-	// jointMotor[1] = JointMotor(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 50, .12, 70, 50, .1, 50, 10, 2, .8);
-	// jointMotor[2] = JointMotor(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 10, .12, 50, 60, 0.12, 60, 10, 3, 0.8);
+	// jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 9.2, 0.034, 0.5, 8.5, 0.01, 0.5, 27.81, true, 0);
+	// jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 27, 0.05, 0, 27, 0.05, 0, 124.38, true, 1);
+	// jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 8.85, 0.07, 0.7, 8.85, 0.07, 0, 27.81, false, 2); //works
 
-	jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 8.5, 0.01, 0.5, 10, 0.1, 5, 27.81, true, 0);
-	jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 27, 0.05, 1, 124.38, true, 1);
-	jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 8.85, 0.07, 0.7, 0, 0, 0, 27.81, false, 2); //works
+	jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 40., 0.1, 2.4, 8.4, 0.1, 2.4, 27.81, true, 0);
+	jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 8.4, 0.1, 3.2, 8.4, 0.1, 3.2, 124.38, true, 1);
+	jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 8, 0.1, 2.6, 8, 0.1, 2.6, 27.81, false, 2); //works
 
+	// 0030.00 0084.00 0067.00 0100
+	// 0045.00 0090.00 0045.00 0100
+
+	//D link fixed
+	// 0067.00 0084.00 0030.00 0100
 	storage = Storage(STORAGE_MOTOR_LC);
 
 	/* DEBUG */
@@ -202,6 +209,7 @@ void loop()
 							temp[0] = '0';
 							temp[PARSE_PKT_LEN - 1] = '0';
 							tempAngle += (atof(temp) / 1000.0); // divide by 1000 to compensate for the extra 0
+							useGravityComp = 1;
 							jointMotor[jointIndex].setAngle(tempAngle);
 							// jointMotor[jointIndex].sumError = 0.0;
 							Serial.print("Setting angle[");
@@ -245,6 +253,12 @@ void loop()
 		gripperFinished2 = gripper[gripperSelect - 1].setGripper(gripperState);
 	}
 
+	//
+	if (gripperFinished1 && gripperFinished2)
+	{
+		useGravityComp = 1;
+	}
+
 	// Switching PID values for joint motors
 	if (gripper[0].isEngaged) // Gripper 1 just engaged
 	{
@@ -254,6 +268,7 @@ void loop()
 			for (int i = 0; i < NUM_MOTORS; i++) // Switches PID values for joint motors
 			{
 				jointMotor[i].switchPID(gripperEngagedSelect);
+				useGravityComp = 0;
 			}
 		}
 	}
@@ -265,12 +280,14 @@ void loop()
 			for (int i = 0; i < NUM_MOTORS; i++) // Switches PID values for joint motors
 			{
 				jointMotor[i].switchPID(gripperEngagedSelect);
+				useGravityComp = 0;
 			}
 		}
 	}
 	else
 	{
 		gripperEngagedSelect = 0;
+		useGravityComp = 1;
 	}
 
 	// pending support for controlling both grippers
@@ -355,9 +372,8 @@ int gravityCompensation(JointMotor2 i, int th[], bool select)
 	// 	theta2 = theta2+360;
 	// }
 
-	if (gripperEngagedSelect == 0)
-	{ // D link gripper engaged (block on current link)
-		Serial.println("here");
+	if (gripperEngagedSelect == 2) // TODO change back to 2
+	{							   // D link gripper engaged (block on current link)
 		if (i.id == 0)
 		{
 			return k1_d * (g * m3 * (L3 - LCoM3) * sinLut[theta2 + theta1 + theta0]);
@@ -408,8 +424,12 @@ void updateSpeeds()
 	for (int i = 0; i < NUM_MOTORS; i++)
 	{
 		theta[i] = jointMotor[i].getAngleDegrees();
-		gc = gravityCompensation(jointMotor[i], theta, true);
-		speeds[i] = jointMotor[i].calcSpeed(gc);
+		gc = gravityCompensation(jointMotor[i], theta, true) * gc_complimentary_filter;
+		speeds[i] = jointMotor[i].calcSpeed(gc, useGravityComp);
+		// Serial.print("\nGravity Comp:");
+		// Serial.print(gc);
+		// Serial.print("\nPID: ");
+		// Serial.println(speeds[i] - gc);
 	}
 	// jointMotor speed should be updated after all gcs are calculated to
 	// minimize delay between each joint movement

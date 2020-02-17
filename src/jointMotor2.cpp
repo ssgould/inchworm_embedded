@@ -81,15 +81,16 @@ JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, in
 */
 void JointMotor2::debugPrint(char vName[3], double vInput)
 {
-	if (millis() - lastPubAng > 2000)
+	double currentTime = millis();
+	if (currentTime - lastPubAng2 > 2000)
 	{
 		Serial.print("joint id:");
 		Serial.print(id);
-		Serial.print("/ variable ");
+		Serial.print(" --> ");
 		Serial.print(vName);
 		Serial.print(": ");
 		Serial.println(vInput);
-		lastPubAng = millis();
+		lastPubAng2 = currentTime;
 	}
 }
 
@@ -102,13 +103,17 @@ void JointMotor2::setSpeed(double speed)
 	if (speed < -255 * maxPercent)
 	{
 		speed = -255 * maxPercent;
+		// digitalWrite(pinPWM, HIGH);
 	}
 	else if (speed > 255 * maxPercent)
 	{
 		speed = 255 * maxPercent;
+		// digitalWrite(pinPWM, HIGH);
 	}
-	changeDirection(speed);
+	// else {
 	analogWrite(pinPWM, abs(speed));
+	// }
+	changeDirection(speed);
 	return;
 }
 /*
@@ -171,7 +176,7 @@ void JointMotor2::setAngle(double angle)
 {
 	desiredAngle = angle;
 	lastError = 0;
-	sumError = 0;
+	// sumError = 0;
 	return;
 }
 /*
@@ -180,7 +185,13 @@ void JointMotor2::setAngle(double angle)
 */
 bool JointMotor2::switchPID(int gripperEngagedSelect)
 {
-	if (gripperEngagedSelect == 1)
+
+	//TODO: set error to zero, offset angles with current value, set flag to turn off motors
+
+	sumError = 0;
+	angle_offset += desiredAngle - getAngleDegrees();
+
+	if (gripperEngagedSelect == 1) // TODO switch back to 1
 	{
 		kP = kP2;
 		kI = kI2;
@@ -188,7 +199,7 @@ bool JointMotor2::switchPID(int gripperEngagedSelect)
 		Serial.println("Switching to PID 1");
 		return false;
 	}
-	else if (gripperEngagedSelect == 2)
+	else if (gripperEngagedSelect == 2) // TODO switch back to 2
 	{
 		kP = kP3;
 		kI = kI3;
@@ -200,53 +211,67 @@ bool JointMotor2::switchPID(int gripperEngagedSelect)
 /*
 * calculate motor speed for PID
 */
-double JointMotor2::calcSpeed(int gc)
+double JointMotor2::calcSpeed(int gc, int useGravityComp)
 {
-	double currentAngle = getAngleDegrees();
 
-	double error = desiredAngle - currentAngle;
-	if (abs(int(error)) > 180)
+	/**
+	 * TODO:
+	 *if inHomePosition:
+	 	setSpeed(0) 
+	 *
+	 */
+	double speed = 0;
+	if (useGravityComp == 0)
 	{
-		error = error + 360;
+		setSpeed(0);
+		return 0;
 	}
-
-	sumError = sumError + error;
-
-	//Wrap around if error is big
-	if (sumError > 1000)
+	else
 	{
-		sumError = 1000;
+		double currentAngle = getAngleDegrees();
+
+		double error = desiredAngle - currentAngle;
+		// if (abs(int(error)) > 180)
+		// {
+		// 	error = error + 360;
+		// }
+
+		sumError = sumError + error;
+
+		//Wrap around if error is big
+		if (sumError > 1000)
+		{
+			sumError = 1000;
+		}
+		else if (sumError < -1000)
+		{
+			sumError = -1000;
+		}
+
+		double changeError = error - lastError;
+
+		double pid_error = (kP2 * error) + (kI2 * sumError) + (kD2 * changeError); // change constants back to kP kI kD
+		speed = pid_error + (gc * useGravityComp);
+		// speed = pid_error;
+		// debugPrint("GC", gc);
+		debugPrint("Speed", speed);
+		// double speed = gc;
+		// Serial.print("speed of angle ");
+		// Serial.print(id);
+		// Serial.print(": ");
+		// Serial.println(speed);
+
+		// setSpeed(speed);
+
+		// Serial.println(error);
+		// Serial.println(sumError);
+		// Serial.println(changeError);
+		// Serial.println(kP);
+		// Serial.println(kI);
+		// Serial.println(kD);
+		// Serial.println(speed);
+
+		lastError = error;
+		return speed;
 	}
-	else if (sumError < -1000)
-	{
-		sumError = -1000;
-	}
-	//debugPrint("SE", sumError);
-
-	double changeError = error - lastError;
-
-	double pid_error = (kP * error) + (kI * sumError) + (kD * changeError);
-	// int speed = pid_error + gc;
-	// Serial.print("pidddd: ");
-	// Serial.println(pid_error);
-	// Serial.println(gc);
-
-	double speed = gc;
-	// Serial.print("speed of angle ");
-	// Serial.print(id);
-	// Serial.print(": ");
-	// Serial.println(speed);
-
-	// setSpeed(speed);
-
-	// Serial.println(error);
-	// Serial.println(sumError);
-	// Serial.println(changeError);
-	// Serial.println(kP);
-	// Serial.println(kI);
-	// Serial.println(kD);
-	// Serial.println(speed);
-
-	lastError = error;
-	return speed;
 }
