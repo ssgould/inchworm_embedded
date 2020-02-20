@@ -53,19 +53,19 @@ JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, in
 
 	encoder.setZeroReg(); //Zero Encoders
 
-	//PID
-	kP = kp;
-	kI = ki;
-	kD = kd;
+	//Variables to store PID values
+	kP1 = kp;
+	kI1 = ki;
+	kD1 = kd;
 
 	kP2 = kp2;
 	kI2 = ki2;
 	kD2 = kd2;
 
-	//Variable to store both PID values
-	kP3 = kp;
-	kI3 = ki;
-	kD3 = kd;
+	//Variable for PID values that is currently using
+	kP = kp;
+	kI = ki;
+	kD = kd;
 
 	angle_offset = ang_offset;
 	enc_clockwise = encoder_clockwise;
@@ -102,17 +102,17 @@ void JointMotor2::setSpeed(double speed)
 	double maxPercent = 0.9;
 	if (speed < -255 * maxPercent)
 	{
-		speed = -255 * maxPercent;
-		// digitalWrite(pinPWM, HIGH);
+		// speed = -255 * maxPercent;
+		digitalWrite(pinPWM, HIGH);
 	}
 	else if (speed > 255 * maxPercent)
 	{
-		speed = 255 * maxPercent;
-		// digitalWrite(pinPWM, HIGH);
+		// speed = 255 * maxPercent;
+		digitalWrite(pinPWM, HIGH);
 	}
-	// else {
+	else {
 	analogWrite(pinPWM, abs(speed));
-	// }
+	}
 	changeDirection(speed);
 	return;
 }
@@ -193,17 +193,17 @@ bool JointMotor2::switchPID(int gripperEngagedSelect)
 
 	if (gripperEngagedSelect == 1) // TODO switch back to 1
 	{
-		kP = kP2;
-		kI = kI2;
-		kD = kD2;
+		kP = kP1;
+		kI = kI1;
+		kD = kD1;
 		Serial.println("Switching to PID 1");
 		return false;
 	}
 	else if (gripperEngagedSelect == 2) // TODO switch back to 2
 	{
-		kP = kP3;
-		kI = kI3;
-		kD = kD3;
+		kP = kP2;
+		kI = kI2;
+		kD = kD2;
 		Serial.println("Switching to PID 2");
 		return true;
 	}
@@ -250,7 +250,7 @@ double JointMotor2::calcSpeed(int gc, int useGravityComp)
 
 		double changeError = error - lastError;
 
-		double pid_error = (kP2 * error) + (kI2 * sumError) + (kD2 * changeError); // change constants back to kP kI kD
+		double pid_error = (kP * error) + (kI * sumError) + (kD * changeError); // change constants back to kP kI kD
 		speed = pid_error + (gc * useGravityComp);
 		// speed = pid_error;
 		// debugPrint("GC", gc);

@@ -26,7 +26,7 @@ float L1 = 0.1633; // Old: 0.1633
 float L2 = 0.1633; // Old: 0.1633
 float L3 = 0.1048; // Old: 0.1048
 float Lblock = 0.145;
-float mblock = 0.365; //0.365
+float mblock = 0; //0.365
 
 float LCoM1 = 0.055;
 float LCoM2 = 0.082;
@@ -102,12 +102,16 @@ void setup()
 	// jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 27, 0.05, 0, 27, 0.05, 0, 124.38, true, 1);
 	// jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 8.85, 0.07, 0.7, 8.85, 0.07, 0, 27.81, false, 2); //works
 
-	jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 40., 0.1, 2.4, 8.4, 0.1, 2.4, 27.81, true, 0);
-	jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 8.4, 0.1, 3.2, 8.4, 0.1, 3.2, 124.38, true, 1);
-	jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 8, 0.1, 2.6, 8, 0.1, 2.6, 27.81, false, 2); //works
+	jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 9, 0.2, 1, 8.4, 0.1, 2.4, 27.81, true, 0);
+	jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 8.4, 0.2, 4.2, 8.4, 0.1, 3.2, 124.38, true, 1);
+	jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 10, 0, 15, 8, 0.1, 2.6, 27.81, false, 2); //works
 
 	// 0030.00 0084.00 0067.00 0100
 	// 0045.00 0090.00 0045.00 0100
+
+// 	0005.21 0116.44 0058.30 0100
+// 0029.71 0083.71 0066.53 0100
+// 0044.96 0090.08 0044.91 0100
 
 	//D link fixed
 	// 0067.00 0084.00 0030.00 0100
