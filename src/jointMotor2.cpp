@@ -74,6 +74,7 @@ JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, in
 	id = id_input;
 
 	debug = false;
+	// error_idx = 0;
 }
 
 /*
@@ -110,8 +111,9 @@ void JointMotor2::setSpeed(double speed)
 		// speed = 255 * maxPercent;
 		digitalWrite(pinPWM, HIGH);
 	}
-	else {
-	analogWrite(pinPWM, abs(speed));
+	else
+	{
+		analogWrite(pinPWM, abs(speed));
 	}
 	changeDirection(speed);
 	return;
@@ -236,25 +238,64 @@ double JointMotor2::calcSpeed(int gc, int useGravityComp)
 		// 	error = error + 360;
 		// }
 
-		sumError = sumError + error;
+		// sumError = (sumError + error) * 0.5;
+		// sumError = sumError * 0.8 + error;
+		if (error > 1 || error < -1)
+		{
+			// error_idx++;
+			// sumError = sumError + error - last_errors[(error_idx - 1) % num_last_errors];
+			// last_errors[error_idx % num_last_errors] = error;
+			sumError += error;
+		}
+
+		// debugPrint("sumError", sumError);
 
 		//Wrap around if error is big
-		if (sumError > 1000)
-		{
-			sumError = 1000;
-		}
-		else if (sumError < -1000)
-		{
-			sumError = -1000;
-		}
+		// if (sumError > 1000)
+		// {
+		// 	sumError = 1000;
+		// }
+		// else if (sumError < -1000)
+		// {
+		// 	sumError = -1000;
+		// }
+
+		sumError = constrain(sumError, -1000, 1000);
 
 		double changeError = error - lastError;
 
 		double pid_error = (kP * error) + (kI * sumError) + (kD * changeError); // change constants back to kP kI kD
 		speed = pid_error + (gc * useGravityComp);
+		if (speed < -5)
+		{
+			speed = constrain(speed, -180, -15);
+		}
+		else if (speed > 5)
+		{
+			speed = constrain(speed, 15, 180);
+		}
 		// speed = pid_error;
 		// debugPrint("GC", gc);
-		debugPrint("Speed", speed);
+
+		// if (speed > -50 && speed < -20)
+		// {
+		// 	speed += -10;
+		// }
+		// if (speed < 50 && speed > 20)
+		// {
+		// 	speed += 10;
+		// }
+
+		// speed = constrain(speed, -150, 150);
+		// debugPrint("Error", pid_error);
+
+		// Serial.print("ID: ");
+		// Serial.println(id);
+		// Serial.print("PID: ");
+		// Serial.println(pid_error);
+		// Serial.print("Speed: ");
+		// Serial.println(speed);
+		// Serial.println("\n");
 		// double speed = gc;
 		// Serial.print("speed of angle ");
 		// Serial.print(id);
@@ -270,7 +311,7 @@ double JointMotor2::calcSpeed(int gc, int useGravityComp)
 		// Serial.println(kI);
 		// Serial.println(kD);
 		// Serial.println(speed);
-
+		// speed *= 0.5;
 		lastError = error;
 		return speed;
 	}

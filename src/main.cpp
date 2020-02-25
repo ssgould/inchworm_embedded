@@ -42,7 +42,8 @@ float k1_d = -0.089; //a link
 float k2_d = -0.1325;
 float k3_d = -0.037;
 
-float gc_complimentary_filter = 1.0;
+// TODO: reenable gravity compensation
+float gc_complimentary_filter = 0.0;
 //Serial Buffer
 const int MOTOR_PKT_LEN = 8;   // motor packet example: "-123.32_" (ending in space)
 const int CONTROL_PKT_LEN = 4; // control packet example: "0131"
@@ -90,6 +91,7 @@ void updateSpeeds();
 void pidTunning(int jointSelect, int potP, int potI, int potD);
 
 Gripper gripper[2];
+double previous_time;
 
 void setup()
 {
@@ -102,16 +104,24 @@ void setup()
 	// jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 27, 0.05, 0, 27, 0.05, 0, 124.38, true, 1);
 	// jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 8.85, 0.07, 0.7, 8.85, 0.07, 0, 27.81, false, 2); //works
 
-	jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 9, 0.2, 1, 8.4, 0.1, 2.4, 27.81, true, 0);
-	jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 8.4, 0.2, 4.2, 8.4, 0.1, 3.2, 124.38, true, 1);
-	jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 10, 0, 15, 8, 0.1, 2.6, 27.81, false, 2); //works
+	// jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 10, 0.15, 0, 8.4, 0.1, 2.4, 27.81, true, 0);
+	// jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 10, 0.14, 0, 8.4, 0.1, 3.2, 124.38, true, 1);
+	// jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 8, 0.02, 0, 8, 0.1, 2.6, 27.81, false, 2); //works original as of Feb 25
+
+	jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 20, 0.15, 0, 8.4, 0.1, 2.4, 27.81, true, 0);
+	jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 15, 0.15, 0, 8.4, 0.1, 3.2, 124.38, true, 1);
+	jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 8, 0.02, 0, 8, 0.1, 2.6, 27.81, false, 2);
+
+	// jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 10, 0, 0, 0, 0, 0, 27.81, true, 0);
+	// jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 6, 0, 0, 0, 0, 0, 124.38, true, 1);
+	// jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 10, 0, 0, 0, 0, 2.6, 27.81, false, 2); //works
 
 	// 0030.00 0084.00 0067.00 0100
 	// 0045.00 0090.00 0045.00 0100
 
-// 	0005.21 0116.44 0058.30 0100
-// 0029.71 0083.71 0066.53 0100
-// 0044.96 0090.08 0044.91 0100
+	// 	0005.21 0116.44 0058.30 0100
+	// 0029.71 0083.71 0066.53 0100
+	// 0044.96 0090.08 0044.91 0100
 
 	//D link fixed
 	// 0067.00 0084.00 0030.00 0100
@@ -134,6 +144,10 @@ void setup()
 	// Timer1.initialize(500000);
 	// Timer1.attachInterrupt(updateSpeeds);
 	// interrupts();
+
+	previous_time = millis();
+	// TCCR2B = TCCR2B & B11111000 | B00000100; // for PWM frequency of 490.20 Hz for pins 3, 11
+	// TCCR0B = TCCR0B & B11111000 | B00000001; // for PWM frequency of 62500.00 Hz for Pin 6
 }
 
 void loop()
@@ -148,7 +162,11 @@ void loop()
 	if (Serial.available() > 0)
 	{
 		// start_time = millis();
+		double current_time = millis();
 		Serial.println("Message received");
+		Serial.println((current_time - previous_time) / 1000);
+		previous_time = current_time;
+		// digitalWrite(13, HIGH);
 		Serial.readBytesUntil('\n', serialBuffer, len);
 		int tempIndex = 0;
 		int jointIndex = 0;
@@ -234,6 +252,7 @@ void loop()
 				Serial.read();
 			}
 		}
+		// digitalWrite(13, LOW);
 	}
 
 	//Block storage control
@@ -309,6 +328,8 @@ void loop()
 	//  }
 
 	updateSpeeds();
+	// delayMicroseconds(500);
+	// delay(1000);
 	// unsigned long final_time = millis();
 
 	// Serial.print("Elapsed time of loop: ");

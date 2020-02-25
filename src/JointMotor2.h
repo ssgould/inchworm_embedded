@@ -22,7 +22,6 @@ private:
 	double desiredAngle;
 	double kP2, kI2, kD2;
 	double kP1, kI1, kD1;
-	
 
 	double last_calibrated_angle; //angle of joint
 	double angle_offset;		  // offset of angle in calibration position
@@ -30,13 +29,17 @@ private:
 
 	double lastPubAng;
 	double lastPubAng2;
+
 	double sumError, lastError;
+
+	// const static int num_last_errors = 5;
+	// double last_errors[num_last_errors];
+	// int error_idx;
 
 public:
 	double kP, kI, kD; //TODO: whn values tunned, put this back into private variables
 	bool debug;
 	int id;
-	
 
 	JointMotor2();
 	JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd, double ang_offset, bool encoder_clockwise, int id_input);

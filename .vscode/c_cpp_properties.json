@@ -105,7 +105,7 @@
             },
             "defines": [
                 "F_CPU=16000000L",
-                "PLATFORMIO=40200",
+                "PLATFORMIO=40201",
                 "ARDUINO_AVR_UNO",
                 "ARDUINO_ARCH_AVR",
                 "ARDUINO=10620",
