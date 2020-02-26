@@ -35,7 +35,8 @@ JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, in
 
 	debug = false;
 
-	myRA.clear();
+	sumError = 0;
+	// myRA.clear();
 }
 JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd, double kp2, double ki2, double kd2, double ang_offset, bool encoder_clockwise, int id_input)
 {
@@ -77,8 +78,10 @@ JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, in
 
 	debug = false;
 
-	myRA.clear();
+	// myRA.clear();
 	// error_idx = 0;
+
+	sumError = 0;
 }
 
 /*
@@ -87,7 +90,7 @@ JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, in
 void JointMotor2::debugPrint(char vName[3], double vInput)
 {
 	double currentTime = millis();
-	if (currentTime - lastPubAng2 > 2000)
+	if (currentTime - lastPubAng2 > 200)
 	{
 		Serial.print("joint id:");
 		Serial.print(id);
@@ -96,6 +99,21 @@ void JointMotor2::debugPrint(char vName[3], double vInput)
 		Serial.print(": ");
 		Serial.println(vInput);
 		lastPubAng2 = currentTime;
+	}
+}
+
+void JointMotor2::debugPrint2(char vName[3], double vInput)
+{
+	double currentTime = millis();
+	if (currentTime - lastPubAng3 > 200)
+	{
+		Serial.print("joint id:");
+		Serial.print(id);
+		Serial.print(" --> ");
+		Serial.print(vName);
+		Serial.print(": ");
+		Serial.println(vInput);
+		lastPubAng3 = currentTime;
 	}
 }
 
@@ -131,31 +149,32 @@ void JointMotor2::setSpeed(double speed)
 
 	changeDirection(speed);
 	int absSpeed = abs(speed);
-	if (absSpeed > maxSpeed * maxPercent)
-	{
-		if (digWrite)
-		{
-			digitalWrite(pinPWM, HIGH);
-		}
-		else
-		{
-			absSpeed = maxSpeed * maxPercent;
-			analogWrite(pinPWM, absSpeed);
-		}
-	}
-	else
-	{
-		//Deadband
-		if (absSpeed < deadMin)
-		{
-			absSpeed = 0;
-		}
-		else if (absSpeed >= deadMin && absSpeed < deadMax)
-		{
-			absSpeed = deadMax;
-		}
-		analogWrite(pinPWM, absSpeed);
-	}
+	analogWrite(pinPWM, absSpeed);
+	// if (absSpeed > maxSpeed * maxPercent)
+	// {
+	// 	if (digWrite)
+	// 	{
+	// 		digitalWrite(pinPWM, HIGH);
+	// 	}
+	// 	else
+	// 	{
+	// 		absSpeed = maxSpeed * maxPercent;
+	// 		analogWrite(pinPWM, absSpeed);
+	// 	}
+	// }
+	// else
+	// {
+	// 	//Deadband
+	// 	if (absSpeed < deadMin)
+	// 	{
+	// 		absSpeed = 0;
+	// 	}
+	// 	else if (absSpeed >= deadMin && absSpeed < deadMax)
+	// 	{
+	// 		absSpeed = deadMax;
+	// 	}
+	// 	analogWrite(pinPWM, absSpeed);
+	// }
 	return;
 }
 /*
@@ -201,6 +220,10 @@ double JointMotor2::getAngleDegrees()
 				Serial.print(id);
 				Serial.print("]: ");
 				Serial.println(calibrated_angle);
+				Serial.print("Actual Angle");
+				Serial.println(angle);
+				Serial.print("Offset");
+				Serial.println(angle_offset);
 				lastPubAng = millis();
 			}
 		}
@@ -231,7 +254,7 @@ bool JointMotor2::switchPID(int gripperEngagedSelect)
 	//TODO: set error to zero, offset angles with current value, set flag to turn off motors
 
 	// sumError = 0;
-	myRA.clear();
+	// myRA.clear();
 	angle_offset += desiredAngle - getAngleDegrees();
 
 	if (gripperEngagedSelect == 1) // TODO switch back to 1
@@ -264,12 +287,12 @@ double JointMotor2::calcSpeed(int gc, int useGravityComp)
 	 *
 	 */
 	double speed = 0;
-	if (useGravityComp == 0)
-	{
-		setSpeed(0);
-		return 0;
-	}
-	else
+	// if (useGravityComp == 0)
+	// {
+	// 	setSpeed(0);
+	// 	return 0;
+	// }
+	// else
 	{
 		double currentAngle = getAngleDegrees();
 
@@ -289,19 +312,19 @@ double JointMotor2::calcSpeed(int gc, int useGravityComp)
 		// 	sumError += error;
 		// }
 
-		if (abs(error) < 8 && abs(error) > 1)
-		{
-			sumError += error;
-		}
-		else if (abs(error) < 2)
-		{
-			sumError;
-		}
-		else
-		{
-			myRA.addValue(error);
-			sumError = myRA.getAverage();
-		}
+		// if (abs(error) < 8 && abs(error) > 1)
+		// {
+		sumError += error;
+		// }
+		// if (abs(error) < 2)
+		// {
+		// 	sumError;
+		// }
+		// else
+		// {
+		// 	myRA.addValue(error);
+		// 	sumError = myRA.getAverage();
+		// }
 
 		// if (abs(error) >= 8)
 		// {
@@ -329,22 +352,47 @@ double JointMotor2::calcSpeed(int gc, int useGravityComp)
 		// 	sumError = -1000;
 		// }
 
-		sumError = constrain(sumError, -1000, 1000);
+		sumError = constrain(sumError, -2000, 2000);
 
 		double changeError = error - lastError;
 
 		double pid_error = (kP * error) + (kI * sumError) + (kD * changeError); // change constants back to kP kI kD
-		speed = pid_error + (gc * useGravityComp);
-		if (speed < -5)
+		double deadbandScale = 20.0;
+
+		if (pid_error < 0)
 		{
-			speed = constrain(speed, -180, -15);
+			speed = pid_error - deadbandScale;
 		}
-		else if (speed > 5)
+		else
 		{
-			speed = constrain(speed, 15, 180);
+			speed = pid_error + deadbandScale;
 		}
+		// speed = pid_error;														//+ (gc * useGravityComp);
+		// if (id == 1)
+		// {
+		// 	Serial.print(currentAngle);
+		// 	Serial.print('\t');
+		// 	Serial.print(error);
+		// 	Serial.print('\t');
+		// 	Serial.print(sumError);
+		// 	Serial.print('\t');
+		// 	Serial.print(changeError);
+		// 	Serial.print('\t');
+		// 	Serial.print(pid_error);
+		// 	Serial.print('\n');
+		// }
+
+		// if (speed < -5)
+		// {
+		// 	speed = constrain(speed, -180, -15);
+		// }
+		// else if (speed > 5)
+		// {
+		// 	speed = constrain(speed, 15, 180);
+		// }
 		// speed = pid_error;
-		// debugPrint("GC", gc);
+		// debugPrint("Error", error);
+		// debugPrint2("Sum", sumError);
 
 		// if (speed > -50 && speed < -20)
 		// {

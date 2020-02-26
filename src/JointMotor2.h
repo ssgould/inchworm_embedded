@@ -30,8 +30,9 @@ private:
 
 	double lastPubAng;
 	double lastPubAng2;
+	double lastPubAng3;
 
-	RunningAverage myRA = RunningAverage(30);
+	// RunningAverage myRA = RunningAverage(30);
 	// RunningAverage myRA(10);
 
 	// const static int num_last_errors = 5;
@@ -56,6 +57,7 @@ public:
 	double calcSpeed(int gc, int useGravityComp);
 	double getAngleDegrees();
 	void debugPrint(char vName[3], double vInput);
+	void debugPrint2(char vName[3], double vInput);
 	// float gravityCompensation(int th);
 	// double getKP();
 	// void setKP(double kpValue)

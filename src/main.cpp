@@ -119,28 +119,14 @@ void setup()
 
 	Serial.println("Robot fintializing....");
 	temp[int(len / 4)] = '\n'; //you need this
-	// jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 9.2, 0.034, 0.5, 8.5, 0.01, 0.5, 27.81, true, 0);
-	// jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 27, 0.05, 0, 27, 0.05, 0, 124.38, true, 1);
-	// jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 8.85, 0.07, 0.7, 8.85, 0.07, 0, 27.81, false, 2); //works
-
-	// jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 10, 0.15, 0, 8.4, 0.1, 2.4, 27.81, true, 0);
-	// jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 10, 0.14, 0, 8.4, 0.1, 3.2, 124.38, true, 1);
-	// jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 8, 0.02, 0, 8, 0.1, 2.6, 27.81, false, 2); //works original as of Feb 25
 
 	jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 17, 0.15, 5, 8.4, 0.1, 2.4, 27.81, true, 0);
 	jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 15, 0.15, 5, 8.4, 0.1, 3.2, 124.38, true, 1);
 	jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 6, 0.02, 1, 8, 0.1, 2.6, 27.81, false, 2);
 
-	// jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 10, 0, 0, 0, 0, 0, 27.81, true, 0);
-	// jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 6, 0, 0, 0, 0, 0, 124.38, true, 1);
-	// jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 10, 0, 0, 0, 0, 2.6, 27.81, false, 2); //works
-
-	// 0030.00 0084.00 0067.00 0100
-	// 0045.00 0090.00 0045.00 0100
-
-	// 0005.21 0116.44 0058.30 0100
-	// 0029.71 0083.71 0066.53 0100
-	// 0044.96 0090.08 0044.91 0100
+	// 0005.21 0116.44 0058.30 0100 Trevor use this one [FIRST WAYPOINT]
+	// 0030.00 0084.00 0067.00 0100 //Try this after [SECOND WAYPOINT]
+	// 0045.00 0090.00 0045.00 0100 [THIRD WAYPOINT]
 
 	//D link fixed
 	// 0067.00 0084.00 0030.00 0100
@@ -165,8 +151,8 @@ void setup()
 	// interrupts();
 
 	previous_time = millis();
-	// TCCR2B = TCCR2B & B11111000 | B00000100; // for PWM frequency of 490.20 Hz for pins 3, 11
-	// TCCR0B = TCCR0B & B11111000 | B00000001; // for PWM frequency of 62500.00 Hz for Pin 6
+	TCCR2B = TCCR2B & B11111000 | B00000011; // for PWM frequency of 980.39 Hz for pins 3, 11
+	TCCR0B = TCCR0B & B11111000 | B00000010; // for PWM frequency of 7812.50 Hz for Pin 6
 }
 
 void loop()
@@ -400,77 +386,77 @@ void debugPrint(char jName[3], char pName[3], char iName[3], char dName[3], doub
 /*
 *	Calculate Gravity Compensation
 */
-int gravityCompensation(JointMotor2 i, int th[], bool select)
-{
-	int theta0 = th[0];
-	int theta1 = th[1];
-	int theta2 = th[2];
+// int gravityCompensation(JointMotor2 i, int th[], bool select)
+// {
+// 	int theta0 = th[0];
+// 	int theta1 = th[1];
+// 	int theta2 = th[2];
 
-	//Wrap around
-	if (theta0 >= 360)
-	{
-		theta0 %= 360;
-	}
-	if (theta1 >= 360)
-	{
-		theta1 %= 360;
-	}
-	if (theta2 >= 360)
-	{
-		theta2 %= 360;
-	}
+// 	//Wrap around
+// 	if (theta0 >= 360)
+// 	{
+// 		theta0 %= 360;
+// 	}
+// 	if (theta1 >= 360)
+// 	{
+// 		theta1 %= 360;
+// 	}
+// 	if (theta2 >= 360)
+// 	{
+// 		theta2 %= 360;
+// 	}
 
-	// if(theta0<=-360){
-	// 	theta0 = theta0+360;
-	// }
-	// if(theta1<=-360){
-	// 	theta1 = theta1+360;
-	// }
-	// if(theta2<=-360){
-	// 	theta2 = theta2+360;
-	// }
+// 	// if(theta0<=-360){
+// 	// 	theta0 = theta0+360;
+// 	// }
+// 	// if(theta1<=-360){
+// 	// 	theta1 = theta1+360;
+// 	// }
+// 	// if(theta2<=-360){
+// 	// 	theta2 = theta2+360;
+// 	// }
 
-	if (gripperEngagedSelect == 2) // TODO change back to 2
-	{							   // D link gripper engaged (block on current link)
-		if (i.id == 0)
-		{
-			return k1_d * (g * m3 * (L3 - LCoM3) * sinLut[theta2 + theta1 + theta0]);
-		}
-		else if (i.id == 1)
-		{
-			return k2_d * (g * m3 * (L2 * sinLut[theta0 + theta1] + (L3 - LCoM3) * sinLut[theta0 + theta1 + theta2]) + g * (L2 - LCoM2) * m2 * sinLut[theta1 + theta0] + g * mblock * Lblock * sinLut[theta1 + theta0]);
-		}
-		else if (i.id == 2)
-		{
-			return k3_d * (g * m3 * (L1 * sinLut[theta0] + L2 * sinLut[theta0 + theta1] + (L3 - LCoM3) * sinLut[theta0 + theta1 + theta2]) + g * m2 * (L1 * sinLut[theta0] + (L2 - (L2 - LCoM2)) * sinLut[theta0 + theta1]) + g * (L1 - LCoM1) * m1 * sinLut[theta0] + g * mblock * (L1 * sinLut[theta0] + Lblock * sinLut[theta0 + theta1]));
-		}
-		else
-		{
-			Serial.print("NO JOINT ID AVAILABLE FOR GRAVITY COMPENSATION");
-			return 0;
-		}
-	}
-	else
-	{ // A link gripper engaged (block on opposite link)
-		if (i.id == 0)
-		{
-			return k1_a * (g * m3 * (L1 * sinLut[theta0] + L2 * sinLut[theta0 + theta1] + LCoM3 * sinLut[theta0 + theta1 + theta2]) + g * m2 * (L1 * sinLut[theta0] + LCoM2 * sinLut[theta0 + theta1]) + g * LCoM1 * m1 * sinLut[theta0] + g * mblock * (L1 * sinLut[theta0] + Lblock * sinLut[theta0 + theta1]));
-		}
-		else if (i.id == 1)
-		{
-			return k2_a * (g * m3 * (L2 * sinLut[theta0 + theta1] + LCoM3 * sinLut[theta0 + theta1 + theta2]) + g * LCoM2 * m2 * sinLut[theta1 + theta0] + g * mblock * Lblock * sinLut[theta1 + theta0]);
-		}
-		else if (i.id == 2)
-		{
-			return k3_a * (g * m3 * LCoM3 * sinLut[theta2 + theta1 + theta0]);
-		}
-		else
-		{
-			Serial.print("NO JOINT ID AVAILABLE FOR GRAVITY COMPENSATION");
-			return 0;
-		}
-	}
-}
+// 	if (gripperEngagedSelect == 2) // TODO change back to 2
+// 	{							   // D link gripper engaged (block on current link)
+// 		if (i.id == 0)
+// 		{
+// 			return k1_d * (g * m3 * (L3 - LCoM3) * sinLut[theta2 + theta1 + theta0]);
+// 		}
+// 		else if (i.id == 1)
+// 		{
+// 			return k2_d * (g * m3 * (L2 * sinLut[theta0 + theta1] + (L3 - LCoM3) * sinLut[theta0 + theta1 + theta2]) + g * (L2 - LCoM2) * m2 * sinLut[theta1 + theta0] + g * mblock * Lblock * sinLut[theta1 + theta0]);
+// 		}
+// 		else if (i.id == 2)
+// 		{
+// 			return k3_d * (g * m3 * (L1 * sinLut[theta0] + L2 * sinLut[theta0 + theta1] + (L3 - LCoM3) * sinLut[theta0 + theta1 + theta2]) + g * m2 * (L1 * sinLut[theta0] + (L2 - (L2 - LCoM2)) * sinLut[theta0 + theta1]) + g * (L1 - LCoM1) * m1 * sinLut[theta0] + g * mblock * (L1 * sinLut[theta0] + Lblock * sinLut[theta0 + theta1]));
+// 		}
+// 		else
+// 		{
+// 			Serial.print("NO JOINT ID AVAILABLE FOR GRAVITY COMPENSATION");
+// 			return 0;
+// 		}
+// 	}
+// 	else
+// 	{ // A link gripper engaged (block on opposite link)
+// 		if (i.id == 0)
+// 		{
+// 			return k1_a * (g * m3 * (L1 * sinLut[theta0] + L2 * sinLut[theta0 + theta1] + LCoM3 * sinLut[theta0 + theta1 + theta2]) + g * m2 * (L1 * sinLut[theta0] + LCoM2 * sinLut[theta0 + theta1]) + g * LCoM1 * m1 * sinLut[theta0] + g * mblock * (L1 * sinLut[theta0] + Lblock * sinLut[theta0 + theta1]));
+// 		}
+// 		else if (i.id == 1)
+// 		{
+// 			return k2_a * (g * m3 * (L2 * sinLut[theta0 + theta1] + LCoM3 * sinLut[theta0 + theta1 + theta2]) + g * LCoM2 * m2 * sinLut[theta1 + theta0] + g * mblock * Lblock * sinLut[theta1 + theta0]);
+// 		}
+// 		else if (i.id == 2)
+// 		{
+// 			return k3_a * (g * m3 * LCoM3 * sinLut[theta2 + theta1 + theta0]);
+// 		}
+// 		else
+// 		{
+// 			Serial.print("NO JOINT ID AVAILABLE FOR GRAVITY COMPENSATION");
+// 			return 0;
+// 		}
+// 	}
+// }
 
 /*
 * Update Speed of all joint motor for PWM
@@ -490,7 +476,7 @@ void updateSpeeds()
 		// Serial.print("\nPID: ");
 		// Serial.println(speeds[i] - gc);
 	}
-	// jointMotor speed should be updated after all gcs are calculated to
+	// jointMotor speed should be updated after all gcs are calculated tol
 	// minimize delay between each joint movement
 	for (int i = 0; i < NUM_MOTORS; i++)
 	{
