@@ -35,7 +35,7 @@ JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, in
 
 	debug = false;
 
-	moving_average_integral.clear();
+	myRA.clear();
 }
 JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd, double kp2, double ki2, double kd2, double ang_offset, bool encoder_clockwise, int id_input)
 {
@@ -77,7 +77,7 @@ JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, in
 
 	debug = false;
 
-	moving_average_integral.clear();
+	myRA.clear();
 	// error_idx = 0;
 }
 
@@ -104,22 +104,58 @@ void JointMotor2::debugPrint(char vName[3], double vInput)
 */
 void JointMotor2::setSpeed(double speed)
 {
-	double maxPercent = 0.9;
-	if (speed < -255 * maxPercent)
+	// double maxPercent = 0.9;
+	// if (speed < -255 * maxPercent)
+	// {
+	// 	// speed = -255 * maxPercent;
+	// 	digitalWrite(pinPWM, HIGH);
+	// }
+	// else if (speed > 255 * maxPercent)
+	// {
+	// 	// speed = 255 * maxPercent;
+	// 	digitalWrite(pinPWM, HIGH);
+	// }
+	// else
+	// {
+	// 	analogWrite(pinPWM, abs(speed));
+	// }
+	// changeDirection(speed);
+	int maxSpeed = 255;		 //Maximum PWM output
+	double maxPercent = 0.9; //Max PWM output (percent of maxSpeed)
+	bool digWrite = false;   //If true if abs(Speed) >= speed pin will be set HIGH
+	int deadMinPer = 8;		 //min deadband in percentage of max speed
+	int deadMaxPer = 12;	 //max deadband in percentage of max speed
+
+	int deadMin = int((maxSpeed / 100) * deadMinPer); //min deadband in percentage of max speed
+	int deadMax = int((maxSpeed / 100) * deadMaxPer); //max deadband in percentage of max speed
+
+	changeDirection(speed);
+	int absSpeed = abs(speed);
+	if (absSpeed > maxSpeed * maxPercent)
 	{
-		// speed = -255 * maxPercent;
-		digitalWrite(pinPWM, HIGH);
-	}
-	else if (speed > 255 * maxPercent)
-	{
-		// speed = 255 * maxPercent;
-		digitalWrite(pinPWM, HIGH);
+		if (digWrite)
+		{
+			digitalWrite(pinPWM, HIGH);
+		}
+		else
+		{
+			absSpeed = maxSpeed * maxPercent;
+			analogWrite(pinPWM, absSpeed);
+		}
 	}
 	else
 	{
-		analogWrite(pinPWM, abs(speed));
+		//Deadband
+		if (absSpeed < deadMin)
+		{
+			absSpeed = 0;
+		}
+		else if (absSpeed >= deadMin && absSpeed < deadMax)
+		{
+			absSpeed = deadMax;
+		}
+		analogWrite(pinPWM, absSpeed);
 	}
-	changeDirection(speed);
 	return;
 }
 /*
@@ -194,7 +230,8 @@ bool JointMotor2::switchPID(int gripperEngagedSelect)
 
 	//TODO: set error to zero, offset angles with current value, set flag to turn off motors
 
-	sumError = 0;
+	// sumError = 0;
+	myRA.clear();
 	angle_offset += desiredAngle - getAngleDegrees();
 
 	if (gripperEngagedSelect == 1) // TODO switch back to 1
@@ -252,9 +289,35 @@ double JointMotor2::calcSpeed(int gc, int useGravityComp)
 		// 	sumError += error;
 		// }
 
-		moving_average_integral.addValue(error);
-		sumError = moving_average_integral.getAverage();
-		// debugPrint("sumError", sumError);
+		if (abs(error) < 8 && abs(error) > 1)
+		{
+			sumError += error;
+		}
+		else if (abs(error) < 2)
+		{
+			sumError;
+		}
+		else
+		{
+			myRA.addValue(error);
+			sumError = myRA.getAverage();
+		}
+
+		// if (abs(error) >= 8)
+		// {
+		// 	myRA.addValue(error);
+		// 	sumError = myRA.getAverage();
+		// }
+		// else if (abs(error) > 7 && abs(error) < 8)
+		// {
+		// 	// sumError += error;
+		// 	myRA.clear();
+		// 	sumError = 0;
+		// }
+		// else
+		// {
+		// 	sumError += error;
+		// }
 
 		//Wrap around if error is big
 		// if (sumError > 1000)

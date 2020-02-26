@@ -31,15 +31,16 @@ private:
 	double lastPubAng;
 	double lastPubAng2;
 
-	double sumError, lastError;
-	RunningAverage moving_average_integral = RunningAverage(10);
-	// RunningAverage moving_average_integral(10);
+	RunningAverage myRA = RunningAverage(30);
+	// RunningAverage myRA(10);
 
 	// const static int num_last_errors = 5;
 	// double last_errors[num_last_errors];
 	// int error_idx;
 
 public:
+	double sumError, lastError;
+
 	double kP, kI, kD; //TODO: whn values tunned, put this back into private variables
 	bool debug;
 	int id;
