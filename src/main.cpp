@@ -54,6 +54,11 @@ char temp[PARSE_PKT_LEN];
 
 unsigned long start_time;
 
+// String test_angles[3] = {"0005.21 0116.44 0058.30 0100", "0029.71 0083.71 0066.53 0100", "0044.96 0090.08 0044.91 0100"};
+double test_angles[3][3] = {{5.21, 116.44, 58.3}, {29.71, 83.71, 66.53}, {44.96, 90.08, 44.91}};
+int test_angles_idx = 0;
+unsigned long test_angle_time = 0;
+
 /*DEBUG*/
 // Buttons have to be pull up
 // Pull up: one terminal on GND and the other
@@ -108,9 +113,9 @@ void setup()
 	// jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 10, 0.14, 0, 8.4, 0.1, 3.2, 124.38, true, 1);
 	// jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 8, 0.02, 0, 8, 0.1, 2.6, 27.81, false, 2); //works original as of Feb 25
 
-	jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 20, 0.15, 0, 8.4, 0.1, 2.4, 27.81, true, 0);
-	jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 15, 0.15, 0, 8.4, 0.1, 3.2, 124.38, true, 1);
-	jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 8, 0.02, 0, 8, 0.1, 2.6, 27.81, false, 2);
+	jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 20, 0.15, 1, 8.4, 0.1, 2.4, 27.81, true, 0);
+	jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 15, 0.15, 1, 8.4, 0.1, 3.2, 124.38, true, 1);
+	jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 6, 0.02, 1, 8, 0.1, 2.6, 27.81, false, 2);
 
 	// jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 10, 0, 0, 0, 0, 0, 27.81, true, 0);
 	// jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 6, 0, 0, 0, 0, 0, 124.38, true, 1);
@@ -119,7 +124,7 @@ void setup()
 	// 0030.00 0084.00 0067.00 0100
 	// 0045.00 0090.00 0045.00 0100
 
-	// 	0005.21 0116.44 0058.30 0100
+	// 0005.21 0116.44 0058.30 0100
 	// 0029.71 0083.71 0066.53 0100
 	// 0044.96 0090.08 0044.91 0100
 
@@ -327,7 +332,20 @@ void loop()
 	//    lastPubAng=millis();
 	//  }
 
+	// if (millis() - test_angle_time > 5000)
+	// {
+	// 	jointMotor[0].setAngle(test_angles[test_angles_idx % 3][0]);
+	// 	jointMotor[1].setAngle(test_angles[test_angles_idx % 3][1]);
+	// 	jointMotor[2].setAngle(test_angles[test_angles_idx % 3][2]);
+	// 	test_angle_time = millis();
+	// 	test_angles_idx++;
+	// 	jointMotor[0].sumError = 0;
+	// 	jointMotor[1].sumError = 0;
+	// 	jointMotor[2].sumError = 0;
+	// }
+
 	updateSpeeds();
+
 	// delayMicroseconds(500);
 	// delay(1000);
 	// unsigned long final_time = millis();

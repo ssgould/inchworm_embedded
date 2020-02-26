@@ -10,7 +10,7 @@
 #endif
 
 #include "ams_as5048b.h"
-#include "Filters/RunningAverage.h"
+#include "RunningAverage.h"
 //#include <Servor.h>
 
 class JointMotor2
@@ -32,7 +32,8 @@ private:
 	double lastPubAng2;
 
 	double sumError, lastError;
-	RunningAverage moving_average_integral(10);
+	RunningAverage moving_average_integral = RunningAverage(10);
+	// RunningAverage moving_average_integral(10);
 
 	// const static int num_last_errors = 5;
 	// double last_errors[num_last_errors];
@@ -42,7 +43,6 @@ public:
 	double kP, kI, kD; //TODO: whn values tunned, put this back into private variables
 	bool debug;
 	int id;
-
 
 	JointMotor2();
 	JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd, double ang_offset, bool encoder_clockwise, int id_input);

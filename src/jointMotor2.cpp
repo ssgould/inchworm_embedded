@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include "JointMotor2.h"
 
-
 JointMotor2::JointMotor2()
 {
 }
