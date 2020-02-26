@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "JointMotor2.h"
 
+
 JointMotor2::JointMotor2()
 {
 }
@@ -34,6 +35,8 @@ JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, in
 	id = id_input;
 
 	debug = false;
+
+	moving_average_integral.clear();
 }
 JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd, double kp2, double ki2, double kd2, double ang_offset, bool encoder_clockwise, int id_input)
 {
@@ -74,6 +77,8 @@ JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, in
 	id = id_input;
 
 	debug = false;
+
+	moving_average_integral.clear();
 	// error_idx = 0;
 }
 
@@ -240,14 +245,16 @@ double JointMotor2::calcSpeed(int gc, int useGravityComp)
 
 		// sumError = (sumError + error) * 0.5;
 		// sumError = sumError * 0.8 + error;
-		if (error > 1 || error < -1)
-		{
-			// error_idx++;
-			// sumError = sumError + error - last_errors[(error_idx - 1) % num_last_errors];
-			// last_errors[error_idx % num_last_errors] = error;
-			sumError += error;
-		}
+		// if (error > 1 || error < -1)
+		// {
+		// 	// error_idx++;
+		// 	// sumError = sumError + error - last_errors[(error_idx - 1) % num_last_errors];
+		// 	// last_errors[error_idx % num_last_errors] = error;
+		// 	sumError += error;
+		// }
 
+		moving_average_integral.addValue(error);
+		sumError = moving_average_integral.getAverage();
 		// debugPrint("sumError", sumError);
 
 		//Wrap around if error is big
