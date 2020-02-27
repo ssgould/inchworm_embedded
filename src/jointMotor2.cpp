@@ -277,7 +277,7 @@ bool JointMotor2::switchPID(int gripperEngagedSelect)
 /*
 * calculate motor speed for PID
 */
-double JointMotor2::calcSpeed(int gc, int useGravityComp)
+double JointMotor2::calcSpeed(int gc, int useGravityComp, velocity_term)
 {
 
 	/**
@@ -367,6 +367,7 @@ double JointMotor2::calcSpeed(int gc, int useGravityComp)
 		{
 			speed = pid_error + deadbandScale;
 		}
+		speed += velocity_term;
 		// speed = pid_error;														//+ (gc * useGravityComp);
 		// if (id == 1)
 		// {

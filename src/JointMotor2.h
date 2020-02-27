@@ -54,7 +54,7 @@ public:
 	void changeDirection(double speed);
 	void setAngle(double angle);
 	bool switchPID(int gripperEngagedSelect);
-	double calcSpeed(int gc, int useGravityComp);
+	double calcSpeed(int gc, int useGravityComp, double velocity_term);
 	double getAngleDegrees();
 	void debugPrint(char vName[3], double vInput);
 	void debugPrint2(char vName[3], double vInput);
