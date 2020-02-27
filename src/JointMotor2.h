@@ -39,6 +39,8 @@ private:
 	// double last_errors[num_last_errors];
 	// int error_idx;
 
+	double velocity_term;
+
 public:
 	double sumError, lastError;
 
@@ -54,7 +56,7 @@ public:
 	void changeDirection(double speed);
 	void setAngle(double angle);
 	bool switchPID(int gripperEngagedSelect);
-	double calcSpeed(int gc, int useGravityComp, double velocity_term);
+	double calcSpeed(int gc, int useGravityComp, int velocity_term_scale);
 	double getAngleDegrees();
 	void debugPrint(char vName[3], double vInput);
 	void debugPrint2(char vName[3], double vInput);

@@ -44,8 +44,7 @@ float k3_d = -0.037;
 
 // TODO: reenable gravity compensation
 float gc_complimentary_filter = 1.0;
-double velocity_term = 0;
-bool velocity_term_enable = false;
+int velocity_term_scale = false;
 
 //Serial Buffer
 const int MOTOR_PKT_LEN = 8;   // motor packet example: "-123.32_" (ending in space)
@@ -217,11 +216,8 @@ void loop()
 						// 	}
 						// }
 						// sMotor = temp[1] - '0';
-						if(temp[0] == '1'){
-							velocity_term_enable = true;
-						}
-						else{
-							velocity_term_enable = false;
+						if(temp[0] - '0' >= 0 && temp[0] - '0' <= 9){
+							velocity_term_scale = temp[0] - '0';
 						}
 					}
 					else
@@ -479,7 +475,7 @@ void updateSpeeds()
 		theta[i] = jointMotor[i].getAngleDegrees();
 		// gc = gravityCompensation(jointMotor[i], theta, true) * gc_complimentary_filter;
 		gc = 0; //TODO: Uncomment line above to add gravity comp back in
-		speeds[i] = jointMotor[i].calcSpeed(gc, useGravityComp, (double)(velocity_term * velocity_term_enable));
+		speeds[i] = jointMotor[i].calcSpeed(gc, useGravityComp, velocity_term_scale);
 		// Serial.print("\nGravity Comp:");
 		// Serial.print(gc);
 		// Serial.print("\nPID: ");

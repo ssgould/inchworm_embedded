@@ -36,6 +36,8 @@ JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, in
 	debug = false;
 
 	sumError = 0;
+ 	velocity_term = 0;
+
 	// myRA.clear();
 }
 JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, int encoderAddress, double kp, double ki, double kd, double kp2, double ki2, double kd2, double ang_offset, bool encoder_clockwise, int id_input)
@@ -82,6 +84,7 @@ JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, in
 	// error_idx = 0;
 
 	sumError = 0;
+	velocity_term = 0;
 }
 
 /*
@@ -277,7 +280,7 @@ bool JointMotor2::switchPID(int gripperEngagedSelect)
 /*
 * calculate motor speed for PID
 */
-double JointMotor2::calcSpeed(int gc, int useGravityComp, velocity_term)
+double JointMotor2::calcSpeed(int gc, int useGravityComp, int velocity_term_scale)
 {
 
 	/**
@@ -367,7 +370,7 @@ double JointMotor2::calcSpeed(int gc, int useGravityComp, velocity_term)
 		{
 			speed = pid_error + deadbandScale;
 		}
-		speed += velocity_term;
+		speed += velocity_term * velocity_term_scale;
 		// speed = pid_error;														//+ (gc * useGravityComp);
 		// if (id == 1)
 		// {
