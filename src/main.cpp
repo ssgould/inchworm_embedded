@@ -106,8 +106,8 @@ int gripperSelect = 0; //idle (No gripper selected)
 int gripperState = 0;  //idle (No gripper action)
 int gripperEngagedSelect = 0;
 
-int velocity_term = 0;
-bool velocity_term_enable = true;
+// int velocity_term = 0;
+// bool velocity_term_enable = true;
 
 // FUNCTION DEFINITIONS
 // to controls grippers with buttons. Remember to set grippers current state.
@@ -217,7 +217,7 @@ void loop()
 				{
 					tempIndex = 0;
 					if (jointIndex > 2)
-					{ //Gripper
+					{   //Gripper
 						// if ((temp[2] - '0' == 1) || (temp[2] - '0' == 2) || (temp[2] - '0' == 3))
 						// {
 						// 	gripperSelect = (temp[2] - '0');
@@ -246,10 +246,10 @@ void loop()
 						// 	testSpeed = -testSpeed;
 						// }
 
-						if (temp[0] - '0' >= 0 && temp[0] - '0' <= 9)
-						{
-							velocity_term_scale = temp[0] - '0';
-						}
+						// if (temp[0] - '0' >= 0 && temp[0] - '0' <= 9)
+						// {
+						// 	velocity_term_scale = temp[0] - '0';
+						// }
 					}
 					else
 					{ //Joint angles

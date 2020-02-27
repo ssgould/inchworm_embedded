@@ -375,7 +375,12 @@ double JointMotor2::calcSpeed(double currentAngle, int gc, int velocity_term_sca
 		// if (id == 0)
 		// speed = pid_error;														//+ (gc * useGravityComp);
 		// if (id == 1)
-		speed += velocity_term * velocity_term_scale;
+		double velocity_control = (velocity_term * double(velocity_term_scale));
+		// Serial.print("Vel: ");
+		// Serial.print(velocity_control);
+		// Serial.print("\tID: ");
+		// Serial.println(id);
+		speed += velocity_control;
 		// speed = pid_error;														//+ (gc * useGravityComp);
 		// if (id == 1)
 		// {
