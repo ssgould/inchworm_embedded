@@ -104,8 +104,7 @@ int gripperSelect = 0; //idle (No gripper selected)
 int gripperState = 0;  //idle (No gripper action)
 int gripperEngagedSelect = 0;
 
-int velocity_term = 0;
-bool velocity_term_enable = true;
+int velocity_term_scale = 0;
 
 // FUNCTION DEFINITIONS
 // to controls grippers with buttons. Remember to set grippers current state.
@@ -130,9 +129,9 @@ void setup()
 	temp[int(len / 4)] = '\n'; //you need this
 
 	// Without GC
-	jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 10, 0.15, 5, 8.4, 0.1, 2.4, 27.81, true, 0);
-	jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 10, 0.15, 5, 8.4, 0.1, 3.2, 124.38, true, 1);
-	jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 6, 0.02, 1, 8, 0.1, 2.6, 27.81, false, 2);
+	jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 10, 0.15, 5, 8.4, 0.1, 2.4, 27.81, true, 0, 0);
+	jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 10, 0.15, 5, 8.4, 0.1, 3.2, 124.38, true, 1, 0);
+	jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 6, 0.02, 1, 8, 0.1, 2.6, 27.81, false, 2, 0);
 
 	// jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 0, 0, 0, 8.4, 0.1, 2.4, 27.81, true, 0);
 	// jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 0, 0, 0, 8.4, 0.1, 3.2, 124.38, true, 1);
@@ -234,7 +233,7 @@ void loop()
 						// {
 						// 	velocity_term_enable = false;
 						// }
-						velocity_term = temp[0] - '0';
+						// velocity_term = temp[0] - '0';
 
 						// Code for testing motor PWM dead ban
 						// testSpeed = (double)((temp[1] - '0') * 100 + (temp[2] - '0') * 10 + (temp[3] - '0'));
@@ -242,6 +241,11 @@ void loop()
 						// {
 						// 	testSpeed = -testSpeed;
 						// }
+
+						if (temp[0] - '0' >= 0 && temp[0] - '0' <= 9)
+						{
+							velocity_term_scale = temp[0] - '0';
+						}
 					}
 					else
 					{ //Joint angles
@@ -478,7 +482,7 @@ void updateSpeeds()
 	{
 		gc = gravityCompensation(jointMotor[i], theta, true) * gc_complimentary_filter;
 		// gc = 0; //TODO: Uncomment line above to add gravity comp back in
-		speeds[i] = jointMotor[i].calcSpeed(theta[i], gc, useGravityComp);
+		speeds[i] = jointMotor[i].calcSpeed(theta[i], gc, useGravityComp, velocity_term_scale);
 
 		// Serial.print("\nGravity Comp:");
 		// Serial.print(gc);
@@ -510,9 +514,9 @@ void deadBanTest()
 	// 	// }
 	// }
 	theta[1] = jointMotor[1].getAngleDegrees();
-	speeds[1] = jointMotor[1].calcSpeed(theta[1], 0, useGravityComp);
+	speeds[1] = jointMotor[1].calcSpeed(theta[1], 0, useGravityComp, velocity_term_scale);
 	theta[2] = jointMotor[2].getAngleDegrees();
-	speeds[2] = jointMotor[2].calcSpeed(theta[2], 0, useGravityComp);
+	speeds[2] = jointMotor[2].calcSpeed(theta[2], 0, useGravityComp, velocity_term_scale);
 
 	jointMotor[0].setSpeed(testSpeed);
 	jointMotor[1].setSpeed(speeds[1]);
