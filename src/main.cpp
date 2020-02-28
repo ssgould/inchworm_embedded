@@ -17,7 +17,7 @@ JointMotor2 jointMotor[NUM_MOTORS];
 // Storage storage;
 // int sMotor = 1;
 double theta[3];
-
+// double via_point_theta[3];
 float m1 = 0.281; // 0.09  CAD value: 0.183
 float m2 = 0.297; // with storing mechanism (with block 0.297 kg) Old: 0.357
 float m3 = 0.207; // mass with new screwing mechanism // Old: 0.201
@@ -43,8 +43,8 @@ float k2_d = -0.1325;
 float k3_d = -0.037;
 
 // TODO: reenable gravity compensation
-float gc_complimentary_filter = 1.0;
-int useGravityComp = 1;
+float gc_complimentary_filter = 0.;
+int useGravityComp = 0;
 
 //Serial Buffer
 const int MOTOR_PKT_LEN = 8;   // motor packet example: "-123.32_" (ending in space)
@@ -129,9 +129,14 @@ void setup()
 	temp[int(len / 4)] = '\n'; //you need this
 
 	// Without GC
-	jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 10, 0.15, 5, 8.4, 0.1, 2.4, 27.81, true, 0, 0);
-	jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 10, 0.15, 5, 8.4, 0.1, 3.2, 124.38, true, 1, 0);
-	jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 6, 0.02, 1, 8, 0.1, 2.6, 27.81, false, 2, 0);
+	jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 20, 0.15, 5, 8.4, 0.1, 2.4, 27.81, true, 0, 0);
+	jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 17, 0.15, 5, 8.4, 0.1, 3.2, 124.38, true, 1, 0);
+	jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 12, 0.02, 1, 8, 0.1, 2.6, 27.81, false, 2, 0);
+
+	//Original good
+	// jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 10, 0.15, 5, 8.4, 0.1, 2.4, 27.81, true, 0, 0);
+	// 	jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 10, 0.15, 5, 8.4, 0.1, 3.2, 124.38, true, 1, 0);
+	// 	jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 6, 0.02, 1, 8, 0.1, 2.6, 27.81, false, 2, 0);
 
 	// jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 0, 0, 0, 8.4, 0.1, 2.4, 27.81, true, 0);
 	// jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 0, 0, 0, 8.4, 0.1, 3.2, 124.38, true, 1);
@@ -144,6 +149,9 @@ void setup()
 	//D link fixed
 	// 0067.00 0084.00 0030.00 0100
 	// storage = Storage(STORAGE_MOTOR_LC);
+
+	// 0030.00 0130.00 0030.00 0100
+	// 0028.00 0124.00 0028.00 0100
 
 	/* DEBUG */
 	jointMotor[0].setAngle(27.81);
@@ -477,9 +485,11 @@ void updateSpeeds()
 	for (int i = 0; i < NUM_MOTORS; i++)
 	{
 		theta[i] = jointMotor[i].getAngleDegrees();
+		// via_point_theta[i] = jointMotor[i].desiredAngle;
 	}
 	for (int i = 0; i < NUM_MOTORS; i++)
 	{
+
 		gc = gravityCompensation(jointMotor[i], theta, true) * gc_complimentary_filter;
 		// gc = 0; //TODO: Uncomment line above to add gravity comp back in
 		speeds[i] = jointMotor[i].calcSpeed(theta[i], gc, useGravityComp, velocity_term_scale);

@@ -20,7 +20,6 @@ private:
 	AMS_AS5048B encoder;
 
 	//PID
-	double desiredAngle;
 	double kP2, kI2, kD2;
 	double kP1, kI1, kD1;
 
@@ -43,6 +42,7 @@ private:
 
 public:
 	double sumError, lastError;
+	double desiredAngle;
 
 	double kP, kI, kD; //TODO: whn values tunned, put this back into private variables
 	bool debug;

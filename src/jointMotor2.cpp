@@ -354,8 +354,8 @@ double JointMotor2::calcSpeed(double currentAngle, int gc, int useGravityComp, i
 		// {
 		// 	sumError = -1000;
 		// }
-		// sumError = constrain(sumError, -4000, 4000);
-		sumError = constrain(sumError, -2000, 2000);
+		sumError = constrain(sumError, -4000, 4000);
+		// sumError = constrain(sumError, -2000, 2000);
 
 		double changeError = error - lastError;
 
@@ -371,7 +371,15 @@ double JointMotor2::calcSpeed(double currentAngle, int gc, int useGravityComp, i
 			speed = pid_error + deadbandScale + (gc * useGravityComp);
 		}
 
-		speed += (velocity_term * velocity_term_scale);
+		if (speed < 0)
+		{
+			speed -= (velocity_term * velocity_term_scale);
+		}
+		else
+		{
+			speed += (velocity_term * velocity_term_scale);
+		}
+
 		// speed = pid_error + (gc * useGravityComp);
 		// if (id == 0)
 		// {
