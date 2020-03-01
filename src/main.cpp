@@ -276,7 +276,7 @@ void loop()
 							motorPktCompleted = true; // flip the flag to true
 							temp[0] = '0';
 							temp[PARSE_PKT_LEN - 1] = '0';
-							tempAngle += (atof(temp) / 1000.0); // divide by 1000 to compensate for the extra 0
+							tempAngle += (atof(temp)*0.001); // divide by 1000 to compensate for the extra 0
 							useGravityComp = 1;
 							jointMotor[jointIndex].setAngle(tempAngle);
 							// jointMotor[jointIndex].sumError = 0.0;
