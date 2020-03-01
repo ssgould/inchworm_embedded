@@ -14,6 +14,8 @@ JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, in
 	pinMode(pinDirectionA, OUTPUT);
 	pinMode(pinDirectionB, OUTPUT);
 	pinMode(pinPWM, OUTPUT);
+	digitalWrite(pinPWM, HIGH);
+
 	//Encoder Setup
 	encoder = AMS_AS5048B(encoderAddress);
 	encoder.begin();	  //Encoder Constructor
@@ -49,6 +51,7 @@ JointMotor2::JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1, in
 	pinMode(pinDirectionA, OUTPUT);
 	pinMode(pinDirectionB, OUTPUT);
 	pinMode(pinPWM, OUTPUT);
+	digitalWrite(pinPWM, HIGH);
 
 	//Encoder Setup
 	encoder = AMS_AS5048B(encoderAddress);
@@ -152,7 +155,9 @@ void JointMotor2::setSpeed(double speed)
 
 	changeDirection(speed);
 	// int absSpeed = abs();
-	analogWrite(pinPWM, abs(speed));
+
+	// analogWrite(pinPWM,abs(speed));
+	
 	// if (absSpeed > maxSpeed * maxPercent)
 	// {
 	// 	if (digWrite)
@@ -185,15 +190,45 @@ void JointMotor2::setSpeed(double speed)
 */
 void JointMotor2::changeDirection(double speed)
 {
+	//CONFIG 1
+	// if (speed < 0)
+	// {
+	// 	// digitalWrite(pinDirectionA, HIGH);
+	// 	// digitalWrite(pinDirectionB, LOW);
+
+	// 	//NEW 2 PWM
+	// 	analogWrite(pinDirectionA, 0);
+	// 	// digitalWrite(pinDirectionB, LOW);
+	// 	analogWrite(pinDirectionB, abs(speed));
+		
+	// }
+	// else
+	// {
+	// 	// digitalWrite(pinDirectionA, LOW);
+	// 	// digitalWrite(pinDirectionB, HIGH);
+
+	// 	//NEW 2 PWM
+	// 	analogWrite(pinDirectionB, 0);
+	// 	analogWrite(pinDirectionA, abs(speed));		
+	// }
+
+	//CONFIG 2
 	if (speed < 0)
 	{
-		digitalWrite(pinDirectionA, HIGH);
-		digitalWrite(pinDirectionB, LOW);
+		//NEW 2 PWM
+		analogWrite(pinDirectionB, 0);
+		// digitalWrite(pinDirectionB, LOW);
+		analogWrite(pinDirectionA, abs(speed));
+		
 	}
 	else
 	{
-		digitalWrite(pinDirectionA, LOW);
-		digitalWrite(pinDirectionB, HIGH);
+		// digitalWrite(pinDirectionA, LOW);
+		// digitalWrite(pinDirectionB, HIGH);
+
+		//NEW 2 PWM
+		analogWrite(pinDirectionA, 0);
+		analogWrite(pinDirectionB, abs(speed));		
 	}
 	return;
 }
@@ -210,7 +245,7 @@ double JointMotor2::getAngleDegrees()
 	if (angle >= 0 && angle <= 360)
 	{ //don't return "I2C Error" as angle
 		calibrated_angle = angle + angle_offset;
-		if (calibrated_angle > 360)
+		if (calibrated_angle > 180)
 		{
 			calibrated_angle = calibrated_angle - 360;
 		}
