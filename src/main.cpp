@@ -4,7 +4,7 @@
 //#include "JointMotor.h"
 #include "JointMotor2.h"
 #include "pins.h"
-//#include "Gripper.h"
+#include "Gripper.h"
 //#include "Button.h"
 #include "scLookUp.h"
 // #include "Storage.h"
@@ -117,7 +117,7 @@ double testSpeed = 0;
 
 // void pidTunning(int jointSelect, int potP, int potI, int potD);
 
-//Gripper gripper[2];
+Gripper gripper[2];
 double previous_time;
 
 void setup()
@@ -129,9 +129,9 @@ void setup()
 	temp[int(len / 4)] = '\n'; //you need this
 
 	// Without GC
-	jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 20, 0.15, 5, 8.4, 0.1, 2.4, 27.81, true, 0, 0);
-	jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 17, 0.15, 5, 8.4, 0.1, 3.2, 124.38, true, 1, 0);
-	jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 12, 0.02, 1, 8, 0.1, 2.6, 27.81, false, 2, 0);
+	jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 20, 0.15, 5, 20, 0.15, 5, 27.81, true, 0, 0);
+	jointMotor[1] = JointMotor2(JOINT_MOTOR2_1, JOINT_MOTOR2_2, JOINT_MOTOR2_PWM, JOINT_MOTOR2_ADR, 17, 0.15, 5, 17, 0.15, 5, 124.38, true, 1, 0);
+	jointMotor[2] = JointMotor2(JOINT_MOTOR3_1, JOINT_MOTOR3_2, JOINT_MOTOR3_PWM, JOINT_MOTOR3_ADR, 12, 0.02, 1, 12, 0.02, 1, 27.81, false, 2, 0);
 
 	//Original good
 	// jointMotor[0] = JointMotor2(JOINT_MOTOR1_1, JOINT_MOTOR1_2, JOINT_MOTOR1_PWM, JOINT_MOTOR1_ADR, 10, 0.15, 5, 8.4, 0.1, 2.4, 27.81, true, 0, 0);
@@ -152,6 +152,7 @@ void setup()
 
 	// 0030.00 0130.00 0030.00 0100
 	// 0028.00 0124.00 0028.00 0100
+	// 0028.00 000 0124.00 000 0028.00 000 0100
 
 	/* DEBUG */
 	jointMotor[0].setAngle(27.81);
@@ -162,8 +163,8 @@ void setup()
 	jointMotor[1].debug = true;
 	jointMotor[2].debug = true;
 
-	// gripper[0] = Gripper(GRIPPER_MOTOR_1, false, false); //yellow gripper
-	// gripper[1] = Gripper(GRIPPER_MOTOR_2, true, false);  //red gripper
+	gripper[0] = Gripper(GRIPPER_MOTOR_1, false, false); //yellow gripper
+	gripper[1] = Gripper(GRIPPER_MOTOR_2, true, false);  //red gripper
 	Serial.println("Done");
 
 	//Timer1 Interupt
@@ -215,25 +216,25 @@ void loop()
 					tempIndex = 0;
 					if (jointIndex > 2)
 					{ //Gripper
-						// if ((temp[2] - '0' == 1) || (temp[2] - '0' == 2) || (temp[2] - '0' == 3))
-						// {
-						// 	gripperSelect = (temp[2] - '0');
-						// 	gripperState = (temp[3] - '0');
+						if ((temp[2] - '0' == 1) || (temp[2] - '0' == 2) || (temp[2] - '0' == 3))
+						{
+							gripperSelect = (temp[2] - '0');
+							gripperState = (temp[3] - '0');
 
-						// 	if (gripperSelect == 1)
-						// 	{
-						// 		gripperFinished1 = false;
-						// 	}
-						// 	else if (gripperSelect == 2)
-						// 	{
-						// 		gripperFinished2 = false;
-						// 	}
-						// 	else
-						// 	{ // both gripper selected
-						// 		gripperFinished1 = false;
-						// 		gripperFinished2 = false;
-						// 	}
-						// }
+							if (gripperSelect == 1)
+							{
+								gripperFinished1 = false;
+							}
+							else if (gripperSelect == 2)
+							{
+								gripperFinished2 = false;
+							}
+							else
+							{ // both gripper selected
+								gripperFinished1 = false;
+								gripperFinished2 = false;
+							}
+						}
 						// sMotor = temp[1] - '0';
 
 						// Parsing velocity term
@@ -311,15 +312,15 @@ void loop()
 	// }
 
 	//Gripper Actuation
-	// if (!gripperFinished1 && gripperSelect == 1)
-	// {
-	// 	gripperFinished1 = gripper[gripperSelect - 1].setGripper(gripperState);
-	// }
+	if (!gripperFinished1 && gripperSelect == 1)
+	{
+		gripperFinished1 = gripper[gripperSelect - 1].setGripper(gripperState);
+	}
 
-	// if (!gripperFinished2 && gripperSelect == 2)
-	// {
-	// 	gripperFinished2 = gripper[gripperSelect - 1].setGripper(gripperState);
-	// }
+	if (!gripperFinished2 && gripperSelect == 2)
+	{
+		gripperFinished2 = gripper[gripperSelect - 1].setGripper(gripperState);
+	}
 
 	//
 	if (gripperFinished1 && gripperFinished2)
@@ -328,35 +329,35 @@ void loop()
 	}
 
 	// Switching PID values for joint motors
-	// if (gripper[0].isEngaged) // Gripper 1 just engaged
-	// {
-	// 	if (gripperEngagedSelect != 1)
-	// 	{
-	// 		gripperEngagedSelect = 1;
-	// 		for (int i = 0; i < NUM_MOTORS; i++) // Switches PID values for joint motors
-	// 		{
-	// 			jointMotor[i].switchPID(gripperEngagedSelect);
-	// 			useGravityComp = 0;
-	// 		}
-	// 	}
-	// }
-	// else if (gripper[1].isEngaged) // Gripper 2 just engaged
-	// {
-	// 	if (gripperEngagedSelect != 2)
-	// 	{
-	// 		gripperEngagedSelect = 2;
-	// 		for (int i = 0; i < NUM_MOTORS; i++) // Switches PID values for joint motors
-	// 		{
-	// 			jointMotor[i].switchPID(gripperEngagedSelect);
-	// 			useGravityComp = 0;
-	// 		}
-	// 	}
-	// }
-	// else
-	// {
-	// 	gripperEngagedSelect = 0;
-	// 	useGravityComp = 1;
-	// }
+	if (gripper[0].isEngaged) // Gripper 1 just engaged
+	{
+		if (gripperEngagedSelect != 1)
+		{
+			gripperEngagedSelect = 1;
+			for (int i = 0; i < NUM_MOTORS; i++) // Switches PID values for joint motors
+			{
+				jointMotor[i].switchPID(gripperEngagedSelect);
+				useGravityComp = 0;
+			}
+		}
+	}
+	else if (gripper[1].isEngaged) // Gripper 2 just engaged
+	{
+		if (gripperEngagedSelect != 2)
+		{
+			gripperEngagedSelect = 2;
+			for (int i = 0; i < NUM_MOTORS; i++) // Switches PID values for joint motors
+			{
+				jointMotor[i].switchPID(gripperEngagedSelect);
+				useGravityComp = 0;
+			}
+		}
+	}
+	else
+	{
+		gripperEngagedSelect = 0;
+		useGravityComp = 1;
+	}
 
 	// pending support for controlling both grippers
 	// if (!gripperFinished1 && !gripperFinished2 && gripperSelect == 3)

@@ -23,7 +23,8 @@ private:
     bool resetTime = true;
     bool gripperFinished;
 
-    int time = 30000; //Time is takes for gripper to engage/disengage
+    int engage_time = 30000;         //Time is takes for gripper to engage/disengage
+    uint64_t disengage_time = 40000; //Time is takes for gripper to engage/disengage
 
     Servo grip;
 

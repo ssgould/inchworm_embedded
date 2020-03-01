@@ -73,6 +73,7 @@ void Gripper::write(int power)
 
   pulseWidth = map(power, maxSpeedCCW, maxSpeedCW, maxPulse, minPulse);
   grip.writeMicroseconds(pulseWidth);
+  // grip.write(pulseWidth);
 }
 
 /*
@@ -95,7 +96,7 @@ bool Gripper::setGripper(gripperState gState)
     gripperFinished = true;
     break;
   case engage: //engage gripper
-    if ((int)(millis() - startTime) < time)
+    if ((int)(millis() - startTime) < engage_time)
     {
       write(maxSpeedCCW);
       gripperFinished = false;
@@ -110,7 +111,7 @@ bool Gripper::setGripper(gripperState gState)
     }
     break;
   case disengage: //disengage gripper
-    if ((int)(millis() - startTime) < time)
+    if ((int)(millis() - startTime) < disengage_time)
     {
       write(maxSpeedCW);
       gripperFinished = false;
@@ -149,7 +150,7 @@ bool Gripper::setGripper(int gState)
     gripperFinished = true;
     break;
   case 1: //engage gripper
-    if ((int)(millis() - startTime) < time)
+    if ((int)(millis() - startTime) < engage_time)
     {
       write(maxSpeedCCW);
       gripperFinished = false;
@@ -164,7 +165,7 @@ bool Gripper::setGripper(int gState)
     }
     break;
   case 2: //disengage gripper
-    if ((int)(millis() - startTime) < time)
+    if ((int)(millis() - startTime) < disengage_time)
     {
       write(maxSpeedCW);
       gripperFinished = false;

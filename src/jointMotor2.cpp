@@ -210,7 +210,7 @@ double JointMotor2::getAngleDegrees()
 	if (angle >= 0 && angle <= 360)
 	{ //don't return "I2C Error" as angle
 		calibrated_angle = angle + angle_offset;
-		if (calibrated_angle > 360)
+		if (calibrated_angle > 180)
 		{
 			calibrated_angle = calibrated_angle - 360;
 		}
