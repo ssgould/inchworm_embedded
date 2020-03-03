@@ -10,44 +10,45 @@
 #include <Servo.h>
 #include <Arduino.h>
 
-class Gripper {
-    private:
-        int pin, zeroPosition, threshold;
-        int maxSpeedCCW, maxSpeedCW;
-        int maxPulse, minPulse, medianPulse;
-        bool directionCW;
-        bool isEngaged;
+class Gripper
+{
+private:
+    int pin, zeroPosition, threshold;
+    int maxSpeedCCW, maxSpeedCW;
+    int maxPulse, minPulse, medianPulse;
+    bool directionCW;
+    bool isEngaged;
 
-        int lastUpdate = 0; //increment for motor move interval
-        int startTime = 0;
-        bool resetTime = true;
-        bool gripperFinished;
+    int lastUpdate = 0; //increment for motor move interval
+    int startTime = 0;
+    bool resetTime = true;
+    bool gripperFinished;
 
-        int time = 30000; //Time is takes for gripper to engage/disengage
+    int time = 30000; //Time is takes for gripper to engage/disengage
 
-        Servo grip;
+    Servo grip;
 
-        typedef enum{ // Used globaly as states for gripper functions
-            idle,     //0
-            engage,   //1
-            disengage,//2
-        }gripperState;
+public:
+    Gripper();                                                                                   //default constructor
+    Gripper(int pin, bool directionCW, bool isEngaged, int zeroPosition = 0, int threshold = 5); //contructor with values
 
-    public:
+    void setEngaged(bool e);
+    bool getEngaged(void);
+    // Writes the pulsewidth specified to the motorcontroller and maps the values.
+    void write(int power);
 
-        Gripper(); //default constructor
-        Gripper(int pin, bool directionCW, bool isEngaged, int zeroPosition = 0, int threshold = 5); //contructor with values
+    bool isE; //Flag to know if gripper is enagaged or not
 
-        void setEngaged(bool e);
-        bool getEngaged(void);
-        // Writes the pulsewidth specified to the motorcontroller and maps the values.
-        void write(int power);
-        // Sets gripper state to engage or disengage. Time is in milliseconds (1000 milliseconds = 1 sec)
-        bool setGripper(gripperState gState);
-        bool setGripper(int gState);
+    typedef enum
+    {              // Used globaly as states for gripper functions
+        idle,      //0
+        engage,    //1
+        disengage, //2
+    } gripperState;
 
-        bool isE; //Flag to know if gripper is enagaged or not
-
+    // Sets gripper state to engage or disengage. Time is in milliseconds (1000 milliseconds = 1 sec)
+    bool setGripper(gripperState gState);
+    bool setGripper(int gState);
 };
 
 #endif

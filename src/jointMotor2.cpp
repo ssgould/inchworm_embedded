@@ -2,7 +2,8 @@
 #include "config.h"
 
 JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
-						 uint8_t encoderAddress, double kp, double ki, double kd,
+						 uint8_t encoderAddress, double kp_a_link_fixed, double ki_a_link_fixed, double kd_a_link_fixed,
+						 double kp_d_link_fixed, double ki_d_link_fixed, double kd_d_link_fixed,
 						 double ang_offset, bool encoder_clockwise, uint8_t id_input)
 {
 	//Pin Configuration
@@ -19,9 +20,13 @@ JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
 	encoder.setZeroReg(); //Zero Encoders
 
 	//PID
-	kP = kp;
-	kI = ki;
-	kD = kd;
+	kP = kP1 = kp_a_link_fixed;
+	kI = kI1 = ki_a_link_fixed;
+	kD = kD1 = kd_a_link_fixed;
+
+	kP2 = kp_d_link_fixed;
+	kI2 = ki_d_link_fixed;
+	kD2 = kd_d_link_fixed;
 
 	angle_offset = ang_offset;
 	enc_clockwise = encoder_clockwise;
@@ -126,4 +131,36 @@ int JointMotor2::CalcEffort(void)
 	lastError = error;
 
 	return effort;
+}
+
+/*
+* Switch PID values for which joint is fixed
+* Returns false if gripper 1 is engaged and true if gripper 2
+*/
+bool JointMotor2::SwitchPID(uint8_t gripperEngagedSelect)
+{
+	angle_offset += targetAngle - getAngleDegrees();
+
+	if (fixed_link == d_link_engaged && gripperEngagedSelect == a_link_engaged) // TODO switch to a_link_engaged
+	{
+		kP = kP1;
+		kI = kI1;
+		kD = kD1;
+		Serial.println("Switching to PID 1");
+		fixed_link = a_link_engaged;
+		return false;
+	}
+	else if (fixed_link == a_link_engaged && gripperEngagedSelect == d_link_engaged) // TODO switch to d_link_engaged
+	{
+		kP = kP2;
+		kI = kI2;
+		kD = kD2;
+		Serial.println("Switching to PID 2");
+		fixed_link = d_link_engaged;
+		return true;
+	}
+	else
+	{
+		return;
+	}
 }
