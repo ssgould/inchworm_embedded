@@ -10,7 +10,8 @@
 //END EFFECTOR GRIPPER MOTORS
 #define GRIPPER_MOTOR_1 1 //red
 #define GRIPPER_MOTOR_2 2 //yellow
-
+#define GRIPPER_MOTOR_3 3 //a_link allen key
+#define GRIPPER_MOTOR_4 4 //d_link allen key
 //STORAGE MECHANISM
 // #define STRAGE_MOTOR_LC 5
 

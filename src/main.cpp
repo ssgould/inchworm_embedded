@@ -37,15 +37,17 @@ String inputBuffer; //String isn't the most efficient, but easier for I/O
 ////////////////////////////////////////////////////////////////
 // GRIPPER CONTROL
 ////////////////////////////////////////////////////////////////
-Gripper gripper[2];
+Gripper gripper[4];
 bool gripperFinished1 = true;
 bool gripperFinished2 = true;
+bool allenKeyFinished = true;
 int gripperStatus = 0;
 int gripperSelect = 0; //idle (No gripper selected)
 int gripperState = 0;  //idle (No gripper action)
 int gripperEngagedSelect = 0;
 uint8_t switchGrippers = 0;
-
+int allenKeySelect = 0;
+int allenKeyState = 0;
 ////////////////////////////////////////////////////////////////
 // TEST ANGLES
 ////////////////////////////////////////////////////////////////
@@ -110,6 +112,8 @@ void setup()
 	{
 		gripper[0] = Gripper(GRIPPER_MOTOR_1, false, false); //yellow gripper
 		gripper[1] = Gripper(GRIPPER_MOTOR_2, true, false);  //red gripper
+		gripper[2] = Gripper(GRIPPER_MOTOR_3, false, false); //yellow gripper
+		gripper[3] = Gripper(GRIPPER_MOTOR_4, true, false);  //red gripper
 		gripperSelect = jointMotor[0].fixed_link == jointMotor[0].a_link_engaged ? 1 : 2;
 		gripperState = gripper[0].engage;
 	}
@@ -316,6 +320,16 @@ void ReadAngleInputs()
 					{ //Gripper
 						if (USE_GRIPPERS)
 						{
+							// Allen Key Control
+							if ((temp[0] - '0' == 1) || (temp[0] - '0' == 2) || (temp[0] - '0' == 3))
+							{
+								allenKeySelect = (temp[0] - '0');
+								allenKeyState = (temp[1] - '0');
+
+								allenKeyFinished = false;
+							}
+
+							// Gripper Control
 							if ((temp[2] - '0' == 1) || (temp[2] - '0' == 2) || (temp[2] - '0' == 3))
 							{
 								gripperSelect = (temp[2] - '0');
@@ -373,18 +387,24 @@ void ReadAngleInputs()
 		}
 		else
 		{
-			//Serial.println("____________Why I am here____________");
 			for (int i = 0; i < len; i++)
 			{
 				Serial.read();
 			}
 		}
-		// digitalWrite(13, LOW);
 	}
 }
 
 void ActuateGrippers()
 {
+
+	// Allen Key Control Code
+	if (!allenKeyFinished && allenKeySelect == 1)
+	{
+		allenKeyFinished = gripper[allenKeySelect - 1 + 2].setGripper(gripperState);
+	}
+
+	// Gripper Control Code
 	if (!gripperFinished1 && gripperSelect == 1)
 	{
 		gripperFinished1 = gripper[gripperSelect - 1].setGripper(gripperState);
