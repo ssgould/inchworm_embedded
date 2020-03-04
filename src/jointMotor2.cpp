@@ -68,13 +68,18 @@ double JointMotor2::getAngleDegrees()
 	double angle = encoder.angleR(U_DEG, true);
 	double calibrated_angle = angle + angle_offset;
 
-	if (calibrated_angle > 360)
+	// if (calibrated_angle > 360)
+	// {
+	// 	calibrated_angle -= 360;
+	// }
+	// if (calibrated_angle < 0)
+	// {
+	// 	calibrated_angle += 360;
+	// }
+
+	if (calibrated_angle > 180)
 	{
 		calibrated_angle -= 360;
-	}
-	if (calibrated_angle < 0)
-	{
-		calibrated_angle += 360;
 	}
 
 	double delta = calibrated_angle - last_calibrated_angle;
@@ -139,6 +144,7 @@ int JointMotor2::CalcEffort(void)
 */
 bool JointMotor2::SwitchPID(uint8_t gripperEngagedSelect)
 {
+	// Serial.println("Switching the PID values");
 	angle_offset += targetAngle - getAngleDegrees();
 
 	if (fixed_link == d_link_engaged && gripperEngagedSelect == a_link_engaged) // TODO switch to a_link_engaged

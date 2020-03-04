@@ -4,7 +4,7 @@
 #include "config.h"
 #include "pins.h"
 #include "JointMotor2.h"
-#include "Gripper.h"
+// #include "Gripper.h"
 
 ////////////////////////////////////////////////////////////////
 // TUNABLE PARAMETERS
@@ -37,7 +37,7 @@ String inputBuffer; //String isn't the most efficient, but easier for I/O
 ////////////////////////////////////////////////////////////////
 // GRIPPER CONTROL
 ////////////////////////////////////////////////////////////////
-Gripper gripper[4];
+// Gripper gripper[4];
 bool gripperFinished1 = true;
 bool gripperFinished2 = true;
 bool allenKeyFinished = true;
@@ -48,6 +48,8 @@ int gripperEngagedSelect = 0;
 uint8_t switchGrippers = 0;
 int allenKeySelect = 0;
 int allenKeyState = 0;
+bool switchedPid_2 = false;
+
 ////////////////////////////////////////////////////////////////
 // TEST ANGLES
 ////////////////////////////////////////////////////////////////
@@ -58,6 +60,9 @@ int allenKeyState = 0;
 //D link fixed
 // 0067.00 0084.00 0030.00 0100
 // storage = Storage(STORAGE_MOTOR_LC);
+// 0058.30 0116.44 0005.21 0100
+// 0067.00 0084.00 0030.00 0100 //Try this after [SECOND WAYPOINT]
+// 0045.00 0090.00 0045.00 0100 [THIRD WAYPOINT]
 
 // 0030.00 0130.00 0030.00 0100
 // 0028.00 0124.00 0028.00 0100
@@ -96,11 +101,18 @@ void setup()
 	// 							JOINT_MOTOR3_ADR, 10, 0.3, 20, 27.81, false, 2);
 
 	jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN,
-								JOINT_MOTOR1_ADR, 20, 0.3, 20, 10, 0.3, 20, 27.81, true, 0);
+								JOINT_MOTOR1_ADR, 20, 0.3, 20, 5, 0.15, 15, 27.81, true, 0);
 	jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN,
-								JOINT_MOTOR2_ADR, 20, 0.3, 20, 20, 0.3, 20, 124.38, true, 1);
+								JOINT_MOTOR2_ADR, 20, 0.3, 20, 7, 0.25, 15, 124.38, true, 1);
 	jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN,
-								JOINT_MOTOR3_ADR, 10, 0.3, 20, 20, 0.3, 20, 27.81, false, 2);
+								JOINT_MOTOR3_ADR, 10, 0.3, 20, 15, 0.25, 15, 27.81, false, 2);
+
+	// jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN,
+	// 							JOINT_MOTOR1_ADR, 1, 0.1, 3, 20, 0.3, 20, 27.81, true, 0);
+	// jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN,
+	// 							JOINT_MOTOR2_ADR, 1, 0.1, 3, 20, 0.3, 20, 124.38, true, 1);
+	// jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN,
+	// 							JOINT_MOTOR3_ADR, 1, 0.1, 3, 10, 0.3, 20, 27.81, false, 2);
 
 	jointMotor[0].SetTarget(27.81);
 	jointMotor[1].SetTarget(124.38);
@@ -110,12 +122,12 @@ void setup()
 
 	if (USE_GRIPPERS)
 	{
-		gripper[0] = Gripper(GRIPPER_MOTOR_1, false, false); //yellow gripper
-		gripper[1] = Gripper(GRIPPER_MOTOR_2, true, false);  //red gripper
-		gripper[2] = Gripper(GRIPPER_MOTOR_3, false, false); //yellow gripper
-		gripper[3] = Gripper(GRIPPER_MOTOR_4, true, false);  //red gripper
-		gripperSelect = jointMotor[0].fixed_link == jointMotor[0].a_link_engaged ? 1 : 2;
-		gripperState = gripper[0].engage;
+		// gripper[0] = Gripper(GRIPPER_MOTOR_1, false, false); //yellow gripper
+		// gripper[1] = Gripper(GRIPPER_MOTOR_2, true, false);  //red gripper
+		// gripper[2] = Gripper(GRIPPER_MOTOR_3, false, false); //yellow gripper
+		// gripper[3] = Gripper(GRIPPER_MOTOR_4, true, false);  //red gripper
+		// gripperSelect = jointMotor[0].fixed_link == jointMotor[0].a_link_engaged ? 1 : 2;
+		// gripperState = gripper[0].engage;
 	}
 
 	Serial.println("Done");
@@ -132,10 +144,10 @@ void loop()
 	{
 		ReadAngleInputs();
 	}
-	if (USE_GRIPPERS)
-	{
-		ActuateGrippers();
-	}
+	// if (USE_GRIPPERS)
+	// {
+	ActuateGrippers();
+	// }
 	static uint32_t lastUpdateTime = millis();
 	uint32_t currTime = millis();
 	if (currTime - lastUpdateTime >= UPDATE_INTERVAL)
@@ -248,9 +260,20 @@ void UpdateMotors()
 
 	// jointMotor speed should be updated after all gcs are calculated to
 	// minimize delay between each joint movement
-	for (int i = 0; i < MOTOR_COUNT; i++)
+	if (switchedPid_2)
 	{
-		jointMotor[i].SendPWM(speeds[i]);
+		for (int i = MOTOR_COUNT - 1; i >= 0; i--)
+		{
+			switchedPid_2 = false;
+			jointMotor[i].SendPWM(speeds[i]);
+		}
+	}
+	else
+	{
+		for (int i = 0; i < MOTOR_COUNT; i++)
+		{
+			jointMotor[i].SendPWM(speeds[i]);
+		}
 	}
 }
 
@@ -337,14 +360,17 @@ void ReadAngleInputs()
 
 								if (gripperSelect == 1)
 								{
+									// Serial.println("Gripper select set to 1");
 									gripperFinished1 = false;
 								}
 								else if (gripperSelect == 2)
 								{
+									// Serial.println("Gripper select set to 2");
 									gripperFinished2 = false;
 								}
 								else
 								{ // both gripper selected
+									// Serial.println(gripperSelect);
 									gripperFinished1 = false;
 									gripperFinished2 = false;
 								}
@@ -399,24 +425,33 @@ void ActuateGrippers()
 {
 
 	// Allen Key Control Code
-	if (!allenKeyFinished && allenKeySelect == 1)
-	{
-		allenKeyFinished = gripper[allenKeySelect - 1 + 2].setGripper(gripperState);
-	}
+	// if (!allenKeyFinished && allenKeySelect == 1)
+	// {
+	// 	allenKeyFinished = gripper[allenKeySelect - 1 + 2].setGripper(gripperState);
+	// }
 
 	// Gripper Control Code
 	if (!gripperFinished1 && gripperSelect == 1)
 	{
-		gripperFinished1 = gripper[gripperSelect - 1].setGripper(gripperState);
+		// gripperFinished1 = gripper[gripperSelect - 1].setGripper(gripperState);
+		gripperFinished1 = true;
 	}
 
 	if (!gripperFinished2 && gripperSelect == 2)
 	{
-		gripperFinished2 = gripper[gripperSelect - 1].setGripper(gripperState);
+		// gripperFinished2 = gripper[gripperSelect - 1].setGripper(gripperState);
+		gripperFinished2 = true;
 	}
 
 	// Switching PID values for joint motors
-	if (gripper[0].getEngaged()) // A link gripper just engaged
+	// Serial.print("Gripper Finished 1: ");
+	// Serial.print(gripperFinished1);
+
+	// Serial.print("\tGripper Finished 2: ");
+	// Serial.print(gripperFinished1);
+
+	// Serial.print("\nGripper Select ");
+	if (gripperFinished1 && gripperSelect == 1 && gripperState == 1) // A link gripper just engaged
 	{
 
 		gripperEngagedSelect = jointMotor[0].a_link_engaged;
@@ -424,15 +459,18 @@ void ActuateGrippers()
 		{
 			jointMotor[i].SwitchPID(gripperEngagedSelect);
 		}
+		gripperSelect = 0;
 	}
-	else if (gripper[1].getEngaged()) // D link gripper just engaged
+	else if (gripperFinished2 && gripperSelect == 2 && gripperState == 1) // D link gripper just engaged
 	{
 
 		gripperEngagedSelect = jointMotor[0].d_link_engaged;
 		for (int i = 0; i < NUM_MOTORS; i++) // Switches PID values for joint motors
 		{
+			switchedPid_2 = true;
 			jointMotor[i].SwitchPID(gripperEngagedSelect);
 		}
+		gripperSelect = 0;
 	}
 	else
 	{
