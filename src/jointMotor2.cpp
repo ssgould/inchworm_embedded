@@ -135,6 +135,17 @@ int JointMotor2::CalcEffort(void)
 
 	lastError = error;
 
+	//TODO: REMOVE ME
+	double currentTime = millis();
+	if (currentTime - lastDebugUpdate >= 2000)
+	{
+		Serial.print("ID: ");
+		Serial.print(id);
+		Serial.print("\t Angle: ");
+		Serial.println(error);
+		lastDebugUpdate = currentTime;
+	}
+
 	return effort;
 }
 

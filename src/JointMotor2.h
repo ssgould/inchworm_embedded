@@ -27,6 +27,8 @@ private:
 	double sumError = 0;
 	double lastError = 0;
 
+	double lastDebugUpdate = 0;
+
 public:
 	JointMotor2() {}
 	JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1,

@@ -100,19 +100,29 @@ void setup()
 	// jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN,
 	// 							JOINT_MOTOR3_ADR, 10, 0.3, 20, 27.81, false, 2);
 
-	jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN,
-								JOINT_MOTOR1_ADR, 20, 0.3, 20, 5, 0.15, 15, 27.81, true, 0);
-	jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN,
-								JOINT_MOTOR2_ADR, 20, 0.3, 20, 7, 0.25, 15, 124.38, true, 1);
-	jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN,
-								JOINT_MOTOR3_ADR, 10, 0.3, 20, 15, 0.25, 15, 27.81, false, 2);
-
 	// jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN,
-	// 							JOINT_MOTOR1_ADR, 1, 0.1, 3, 20, 0.3, 20, 27.81, true, 0);
+	// 							JOINT_MOTOR1_ADR, 20, 0.3, 20, 5, 0.15, 15, 27.81, true, 0);
 	// jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN,
-	// 							JOINT_MOTOR2_ADR, 1, 0.1, 3, 20, 0.3, 20, 124.38, true, 1);
+	// 							JOINT_MOTOR2_ADR, 20, 0.3, 20, 7, 0.25, 15, 124.38, true, 1);
 	// jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN,
-	// 							JOINT_MOTOR3_ADR, 1, 0.1, 3, 10, 0.3, 20, 27.81, false, 2);
+	// 							JOINT_MOTOR3_ADR, 10, 0.3, 20, 15, 0.25, 15, 27.81, false, 2);
+
+	jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN,
+								JOINT_MOTOR1_ADR, 20, 0.3, 20, 30, 0.35, 20, 27.81, true, 0);
+	jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN,
+								JOINT_MOTOR2_ADR, 20, 0.3, 20, 15, 0.01, 0.8, 124.38, true, 1);
+	jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN,
+								JOINT_MOTOR3_ADR, 10, 0.3, 20, 17, 0.25, 8, 27.81, false, 2);
+
+	/**
+	 * Went into the hole on switched pid (d link engaged)
+	 */
+	// jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN,
+	// 							JOINT_MOTOR1_ADR, 20, 0.3, 20, 30, 0.35, 20, 27.81, true, 0);
+	// jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN,
+	// 							JOINT_MOTOR2_ADR, 20, 0.3, 20, 4, 0.05, 1, 124.38, true, 1);
+	// jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN,
+	// 							JOINT_MOTOR3_ADR, 10, 0.3, 20, 17, 0.25, 8, 27.81, false, 2);
 
 	jointMotor[0].SetTarget(27.81);
 	jointMotor[1].SetTarget(124.38);
@@ -425,9 +435,9 @@ void ActuateGrippers()
 {
 
 	// Allen Key Control Code
-	// if (!allenKeyFinished && allenKeySelect == 1)
+	// if (!allenKeyFinished && (allenKeySelect == 1 || allenKeySelect == 2)
 	// {
-	// 	allenKeyFinished = gripper[allenKeySelect - 1 + 2].setGripper(gripperState);
+	// 	allenKeyFinished = gripper[allenKeySelect - 1 + 2].setGripper(allenKeyState);
 	// }
 
 	// Gripper Control Code
