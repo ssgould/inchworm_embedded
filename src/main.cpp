@@ -78,13 +78,18 @@ void ReadAngleInputs(void);
 void RunPidTuningDebug(void);
 void ActuateGrippers(void);
 
+////////////////////////////////////////////////////////////////
+// SETUP METHOD
+////////////////////////////////////////////////////////////////
 void setup()
 {
-	Serial.begin(115200); //Debug Serial
 	Wire.begin();		  //begin I2C
+	Serial.begin(115200); //Debug Serial
 
+	pinMode(POWER_LED, OUTPUT);     // Power LED
+	digitalWrite(POWER_LED, HIGH);
+	temp[PARSE_PKT_LEN - 1] = '\n'; // Buffer for serial message (important)
 	Serial.println("Robot intializing....");
-	temp[PARSE_PKT_LEN - 1] = '\n'; //you need this
 
 	// jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN,
 	// 							JOINT_MOTOR1_ADR, 40, 0.3, 20, 27.81, true, 0);
@@ -109,10 +114,10 @@ void setup()
 
 	jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN,
 								JOINT_MOTOR1_ADR, 20, 0.3, 20, 30, 0.35, 20, 27.81, true, 0);
-	jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN,
-								JOINT_MOTOR2_ADR, 20, 0.3, 20, 15, 0.01, 0.8, 124.38, true, 1);
-	jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN,
-								JOINT_MOTOR3_ADR, 10, 0.3, 20, 17, 0.25, 8, 27.81, false, 2);
+	// jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN,
+	// 							JOINT_MOTOR2_ADR, 20, 0.3, 20, 15, 0.01, 0.8, 124.38, true, 1);
+	// jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN,
+	// 							JOINT_MOTOR3_ADR, 10, 0.3, 20, 17, 0.25, 8, 27.81, false, 2);
 
 	/**
 	 * Went into the hole on switched pid (d link engaged)
@@ -125,8 +130,8 @@ void setup()
 	// 							JOINT_MOTOR3_ADR, 10, 0.3, 20, 17, 0.25, 8, 27.81, false, 2);
 
 	jointMotor[0].SetTarget(27.81);
-	jointMotor[1].SetTarget(124.38);
-	jointMotor[2].SetTarget(27.81);
+	// jointMotor[1].SetTarget(124.38);
+	// jointMotor[2].SetTarget(27.81);
 
 	inputBuffer.reserve(24);
 
@@ -144,9 +149,13 @@ void setup()
 	previous_time = millis();
 }
 
+////////////////////////////////////////////////////////////////
+// MAIN LOOP
+////////////////////////////////////////////////////////////////
 void loop()
 {
-	if (TUNING)
+	// Update flag to tune PID value on Robot or Run Robot Normally
+	if (TUNING) 
 	{
 		RunPidTuningDebug();
 	}
@@ -154,10 +163,15 @@ void loop()
 	{
 		ReadAngleInputs();
 	}
-	// if (USE_GRIPPERS)
-	// {
-	ActuateGrippers();
-	// }
+
+	// Update flag to use grippers
+	if (USE_GRIPPERS)
+	{
+		ActuateGrippers();
+	}
+
+
+	// Move joint motors
 	static uint32_t lastUpdateTime = millis();
 	uint32_t currTime = millis();
 	if (currTime - lastUpdateTime >= UPDATE_INTERVAL)
@@ -173,6 +187,7 @@ void loop()
 		}
 	}
 
+	// Set vias between waypoints
 	if (currTime - lastViaUpdate >= VIA_INTERVAL)
 	{
 		if (state == ST_MOVING)
@@ -188,9 +203,32 @@ void loop()
 	}
 }
 
-/*
-* Use to tune PID values quickly and test small trajectories
-*/
+////////////////////////////////////////////////////////////////
+// FUNCTIONS
+////////////////////////////////////////////////////////////////
+
+/**
+ * Tunes PID values quickly and tests small trajectories
+ *  
+ * This method allows for the use of the Serial Terminal to tune 
+ * PID values separatly for when D or A link is fixed with the 
+ * Serial inputs shown below. 
+ * 
+ * 			> P0.1 //Controller term and then value
+ *  		> A    //Prints all PID values
+ * 
+ * Important: Once the PID values are tuned they can be printed 
+ * to Serial as they are volatile. 
+ * 
+ * To make tunning easier this method allows for the robot to be
+ * controlled by moving it down and up with two simple commands 
+ * shown below. This is a simple way of checking if the values 
+ * for the PID controller are tunned properly.
+ * 
+ * 			> M	// Move robot up
+ *    		> N // Move robot down
+ *  
+ */
 void RunPidTuningDebug()
 {
 	if (Serial.available())
@@ -202,18 +240,21 @@ void RunPidTuningDebug()
 
 		if (c == '\n')
 		{
+			// Move up 
 			if (inputBuffer[0] == 'M')
 			{
 				StartMove(0);
 				state = ST_MOVING;
 			}
 
+			// Move down
 			if (inputBuffer[0] == 'N')
 			{
 				StartMove(1);
 				state = ST_MOVING;
 			}
 
+			// Tune PID values
 			if (inputBuffer[0] == 'P')
 			{
 				float k = inputBuffer.substring(1).toFloat();
@@ -241,6 +282,15 @@ void RunPidTuningDebug()
 				}
 			}
 
+			// Print PID values
+			if (inputBuffer[0] == 'A')
+			{
+				for (int i = 0; i < MOTOR_COUNT; i++)
+				{
+					jointMotor[i].printPID();
+				}
+			}
+
 			// if (inputBuffer[0] == 'S')
 			// {
 			// 	switchGrippers = switchGrippers == 1 ? 2 : 1;
@@ -252,14 +302,14 @@ void RunPidTuningDebug()
 			// 	}
 			// }
 
-			inputBuffer = "";
+			inputBuffer = ""; // Reset buffer
 		}
 	}
 }
 
-/*
-* Update motor efforts
-*/
+/**
+ * Updates all motors on robot 
+ */
 void UpdateMotors()
 {
 	int speeds[MOTOR_COUNT];
@@ -287,6 +337,11 @@ void UpdateMotors()
 	}
 }
 
+
+/**
+ * Helper method to start robot movement when tunning PID values 
+ */
+
 float startAngles[MOTOR_COUNT];
 float targetAngles[MOTOR_COUNT];
 
@@ -307,6 +362,9 @@ void StartMove(bool dir)
 	state = ST_MOVING;
 }
 
+/**
+ * Configures vias between waypoints for robot to move
+ */
 void SetNewVias(void)
 {
 	uint32_t currTime = millis();
@@ -323,6 +381,13 @@ void SetNewVias(void)
 	}
 }
 
+/**
+ * Main method that reads control message form high level code
+ * 
+ * This method parses and organizes the serial control message
+ * to angle for each joint, gripper configuration, and allen 
+ * key actuation. 
+ */
 void ReadAngleInputs()
 {
 	if (Serial.available() > 0)
@@ -350,7 +415,7 @@ void ReadAngleInputs()
 					temp[PARSE_PKT_LEN - 1] = '\n'; //you need this
 					tempIndex = 0;
 					if (jointIndex > 2)
-					{ //Gripper
+					{   //Gripper
 						if (USE_GRIPPERS)
 						{
 							// Allen Key Control
@@ -388,7 +453,7 @@ void ReadAngleInputs()
 						}
 					}
 					else
-					{ //Joint angles
+					{   //Joint angles
 						if (motorPktCompleted)
 						{							   // receiving first half of an angle value
 							motorPktCompleted = false; // flip the flag to false
@@ -403,7 +468,7 @@ void ReadAngleInputs()
 							}
 						}
 						else
-						{							  // receiving second half of an angle value
+						{	// receiving second half of an angle value
 							motorPktCompleted = true; // flip the flag to true
 							temp[0] = '0';
 							temp[PARSE_PKT_LEN - 1] = '0';
@@ -431,6 +496,10 @@ void ReadAngleInputs()
 	}
 }
 
+
+/**
+ * Helper method to actuate grippers and allen key
+ */
 void ActuateGrippers()
 {
 

@@ -13,10 +13,10 @@ private:
 	uint8_t pwmForward, pwmReverse, pinEnable;
 	AMS_AS5048B encoder;
 
-	//PID
+	// PID
 	double kP2, kI2, kD2; //For when D link is fixed
 	double kP1, kI1, kD1; //For when A link is fixed
-	double kP, kI, kD;	//Params actually being used
+	double kP, kI, kD;	  //Params actually being used
 
 	double targetAngle;
 
@@ -44,6 +44,7 @@ public:
 	void SetKp(float k) { kP = k; }
 	void SetKi(float k) { kI = k; }
 	void SetKd(float k) { kD = k; }
+	void printPID();
 
 	typedef enum
 	{							 // Used globaly as states for pid selection

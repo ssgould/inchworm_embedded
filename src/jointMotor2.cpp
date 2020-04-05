@@ -142,7 +142,8 @@ int JointMotor2::CalcEffort(void)
 		Serial.print("ID: ");
 		Serial.print(id);
 		Serial.print("\t Angle: ");
-		Serial.println(error);
+		// Serial.println(error);
+		Serial.println(currentAngle);
 		lastDebugUpdate = currentTime;
 	}
 
@@ -180,4 +181,15 @@ bool JointMotor2::SwitchPID(uint8_t gripperEngagedSelect)
 	{
 		return;
 	}
+}
+
+void JointMotor2::printPID(void)
+{
+	Serial.println("Joint ");Serial.print(id);Serial.print(": ");
+	Serial.println("    ");Serial.print("P1: ");Serial.print(kP1);
+	Serial.println("    ");Serial.print("I1: ");Serial.print(kI1);
+	Serial.println("    ");Serial.print("D1: ");Serial.print(kD1);
+	Serial.println("    ");Serial.print("P2: ");Serial.print(kP2);
+	Serial.println("    ");Serial.print("I2: ");Serial.print(kI2);
+	Serial.println("    ");Serial.print("D2: ");Serial.print(kD2);
 }

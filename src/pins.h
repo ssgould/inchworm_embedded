@@ -7,40 +7,46 @@
 #ifndef GLOBAL_PINS
 #define GLOBAL_PINS
 
-//END EFFECTOR GRIPPER MOTORS
-#define GRIPPER_MOTOR_1 1 //red
-#define GRIPPER_MOTOR_2 2 //yellow
-#define GRIPPER_MOTOR_3 3 //a_link allen key
-#define GRIPPER_MOTOR_4 4 //d_link allen key
-//STORAGE MECHANISM
-// #define STRAGE_MOTOR_LC 5
+//LED PINS
+#define POWER_LED 13
+// #define STATUS_LED 4
 
-// //END EFFECTOR JOINT MOTORS
-// #define END_EFFECTOR_JOINT_1 9
-// #define END_EFFECTOR_JOINT_2 2
+//HALL EFFECT SENSORS
+#define HALL_EFFECT_A_LINK_1 0
+#define HALL_EFFECT_A_LINK_2 0
+#define HALL_EFFECT_D_LINK_1 0
+#define HALL_EFFECT_D_LINK_2 0
+
+//END EFFECTOR GRIPPER MOTORS
+#define GRIPPER_MOTOR_1 0 //red
+#define GRIPPER_MOTOR_2 0 //yellow
+#define GRIPPER_MOTOR_3 0 //a_link allen key
+#define GRIPPER_MOTOR_4 0 //d_link allen key
 
 //3-DOF INCHWORM JOINT MOTORS
-#define JOINT_MOTOR1_FWD 3
-#define JOINT_MOTOR1_REV 5
+#define JOINT_MOTOR1_FWD 2
+#define JOINT_MOTOR1_REV 3
 #define JOINT_MOTOR1_EN 4
 #define JOINT_MOTOR1_ADR 0x40
 
-#define JOINT_MOTOR2_FWD 6
-#define JOINT_MOTOR2_REV 9
+#define JOINT_MOTOR2_FWD 5
+#define JOINT_MOTOR2_REV 6
 #define JOINT_MOTOR2_EN 7
 #define JOINT_MOTOR2_ADR 0x41
 
-#define JOINT_MOTOR3_FWD 11
-#define JOINT_MOTOR3_REV 10
-#define JOINT_MOTOR3_EN 12
+#define JOINT_MOTOR3_FWD 8
+#define JOINT_MOTOR3_REV 9
+#define JOINT_MOTOR3_EN 10
 #define JOINT_MOTOR3_ADR 0x42
 
-//CONTROLLER
+// #define JOINT_MOTOR4_FWD 8
+// #define JOINT_MOTOR4_REV 9
+// #define JOINT_MOTOR4_EN 10
+// #define JOINT_MOTOR4_ADR 0x42
 
-//IMU
-
-//LED pins
-// #define LED_TRANSMITTING 7
-// #define LED_RECIEVING 4
+// #define JOINT_MOTOR5_FWD 8
+// #define JOINT_MOTOR5_REV 9
+// #define JOINT_MOTOR5_EN 10
+// #define JOINT_MOTOR5_ADR 0x42
 
 #endif
