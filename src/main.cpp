@@ -137,10 +137,10 @@ void setup()
 
 	if (USE_GRIPPERS)
 	{
-		// gripper[0] = Gripper(GRIPPER_MOTOR_1, false, false); //yellow gripper
-		// gripper[1] = Gripper(GRIPPER_MOTOR_2, true, false);  //red gripper
-		// gripper[2] = Gripper(GRIPPER_MOTOR_3, false, false); //yellow gripper
-		// gripper[3] = Gripper(GRIPPER_MOTOR_4, true, false);  //red gripper
+		// gripper[0] = Gripper(GRIPPER_MOTOR_1, false, false, GRIPPER_ROTATION_BUTTON_A_LINK); 
+		// gripper[1] = Gripper(GRIPPER_MOTOR_2, true, false, GRIPPER_ROTATION_BUTTON_D_LINK);  
+		// gripper[2] = Gripper(GRIPPER_MOTOR_3, false, false, GRIPPER_ROTATION_BUTTON_A_LINK); 
+		// gripper[3] = Gripper(GRIPPER_MOTOR_4, true, false, GRIPPER_ROTATION_BUTTON_D_LINK);  
 		// gripperSelect = jointMotor[0].fixed_link == jointMotor[0].a_link_engaged ? 1 : 2;
 		// gripperState = gripper[0].engage;
 	}

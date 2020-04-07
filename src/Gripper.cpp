@@ -2,75 +2,87 @@
 * Gripper library that allows to enagage and disengage the grippers
 * of the robot. This code is designed for the Vex 29 motor controllers.
 *
-* Nov 2019 - Josue Contreras and Trevor Rizzo, Swarm Construction MQP
+* April 2020 - Josue Contreras and Trevor Rizzo, Swarm Construction MQP
 ******************************************************************/
 
 #include "Gripper.h"
 
-/*
-* Gripper Constructors
-*/
+////////////////////////////////////////////////////////////////
+// CONSTRUCTOR
+////////////////////////////////////////////////////////////////
 
-//Empty contructor to build object
+/**
+ * Empty contructor to build object
+ **/
 Gripper::Gripper(){
 }
 
-//Constructor to added object properties. Two arguments are optional, zeroposition:
-//sets the middle value for the range of values that are mapped. Threshold is not used
-//but could serve to implement the write to motor function.
-Gripper::Gripper(int pin, bool directionCW, bool isEngaged, int zeroPosition = 0, int threshold = 5){
+/**
+ * Constructor to added object properties. Two arguments are optional, zeroposition:
+ * sets the middle value for the range of values that are mapped. Threshold is not used
+ * but could serve to implement the write to motor function.
+ **/
+Gripper::Gripper(int gripperPin, bool rotationDirection, bool isEngaged, int buttonPin, int threshold = 5){
 
-    pin = pin;
-    directionCW = directionCW;
-    zeroPosition = zeroPosition;
+    gripperPin = gripperPin;
+    buttonPin = buttonPin;
+
+    rotationDirection = rotationDirection;
     threshold = threshold;
     medianPulse = 1500; //motor stops at this pulse width
     isEngaged = false;
 
-    if(directionCW){
+    if(rotationDirection){
       maxSpeedCCW = -255;
       maxSpeedCW = 255;
       maxPulse = 2000; //unique value to VEX 29 motorcontrollers
       minPulse = 1000; //unique value to VEX 29 motorcontrollers
-    }else if(!directionCW){
+    }else if(!rotationDirection){
       maxSpeedCCW = 255;
       maxSpeedCW = -255;
       maxPulse = 1000; //unique value to VEX 29 motorcontrollers
       minPulse = 2000; //unique value to VEX 29 motorcontrollers
     }
 
-    grip.attach(pin);
+    grip.attach(gripperPin);
 }
 
-/*
-* Set gripper flag to engaged or disengaged
-*/
+////////////////////////////////////////////////////////////////
+// FUNCTIONS
+////////////////////////////////////////////////////////////////
 
-void Gripper::setEngaged(bool e){
-  isEngaged = e;
+/**
+ * Gripper screw turns functions
+ **/
+void Gripper::incrementIterator(void){
+  turnsItterator++;
 }
 
-bool Gripper::getEngaged(void){
-  return isEngaged;
+void Gripper::resetIterator(void){
+  turnsItterator = 0;
 }
 
-/*
-* Motor spins CW for pulse widths less than 1500 uS and CCW
-* for pulse widths greater than 1500. map() scales the power to a
-* pulse width.
-*/
+void Gripper::screwTurns(void){
+  if(analogRead(buttonPin)){
+    incrementIterator();
+  }
+}
+
+/**
+ * Motor spins CW for pulse widths less than 1500 uS and CCW
+ * for pulse widths greater than 1500. map() scales the power to a
+ * pulse width.
+ **/
 void Gripper::write(int power){
-
-    int pulseWidth;
 
     pulseWidth = map(power, maxSpeedCCW, maxSpeedCW, maxPulse, minPulse);
     grip.writeMicroseconds(pulseWidth);
 }
 
-/*
-* For gripper engagment and disengament
-* TODO: when current sensing added to gripper, add that sensng instead of the time delay.
-*/
+/**
+ * For gripper engagment and disengament
+ * TODO: when button added to gripper, add ticks instead of the time delay.
+ **/
 bool Gripper::setGripper(gripperState gState){
 
   if(resetTime){
