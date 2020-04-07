@@ -13,15 +13,15 @@
 
 //HALL EFFECT SENSORS
 #define HALL_EFFECT_A_LINK_1 0
-#define HALL_EFFECT_A_LINK_2 0
 #define HALL_EFFECT_D_LINK_1 0
-#define HALL_EFFECT_D_LINK_2 0
 
 //END EFFECTOR GRIPPER MOTORS
-#define GRIPPER_MOTOR_1 0 //red
-#define GRIPPER_MOTOR_2 0 //yellow
-#define GRIPPER_MOTOR_3 0 //a_link allen key
-#define GRIPPER_MOTOR_4 0 //d_link allen key
+#define GRIPPER_MOTOR_1 0           //red
+#define GRIPPER_MOTOR_2 0           //yellow
+#define GRIPPER_MOTOR_3 0           //a_link allen key
+#define GRIPPER_MOTOR_4 0           //d_link allen key
+#define GRIPPER_ROTATION_BUTTON_A_LINK 0 //rotation button
+#define GRIPPER_ROTATION_BUTTON_D_LINK 0 //rotation button
 
 //3-DOF INCHWORM JOINT MOTORS
 #define JOINT_MOTOR1_FWD 2
