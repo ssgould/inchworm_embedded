@@ -8,9 +8,9 @@
             "includePath": [
                 "c:/Users/Trevor/Documents/mqp/githubCode/inchworm_embedded/include",
                 "c:/Users/Trevor/Documents/mqp/githubCode/inchworm_embedded/src",
+                "C:/Users/Trevor/.platformio/lib/Servo_ID883/src",
                 "C:/Users/Trevor/.platformio/packages/framework-arduinoteensy/libraries/Wire",
                 "C:/Users/Trevor/.platformio/packages/framework-arduinoteensy/libraries/Wire/utility",
-                "C:/Users/Trevor/.platformio/lib/Servo_ID883/src",
                 "C:/Users/Trevor/.platformio/packages/framework-arduinoteensy/cores/teensy3",
                 "c:/Users/Trevor/Documents/mqp/githubCode/inchworm_embedded/lib/Button",
                 "c:/Users/Trevor/Documents/mqp/githubCode/inchworm_embedded/lib/ams_as5048b",
@@ -123,9 +123,9 @@
                 "path": [
                     "c:/Users/Trevor/Documents/mqp/githubCode/inchworm_embedded/include",
                     "c:/Users/Trevor/Documents/mqp/githubCode/inchworm_embedded/src",
+                    "C:/Users/Trevor/.platformio/lib/Servo_ID883/src",
                     "C:/Users/Trevor/.platformio/packages/framework-arduinoteensy/libraries/Wire",
                     "C:/Users/Trevor/.platformio/packages/framework-arduinoteensy/libraries/Wire/utility",
-                    "C:/Users/Trevor/.platformio/lib/Servo_ID883/src",
                     "C:/Users/Trevor/.platformio/packages/framework-arduinoteensy/cores/teensy3",
                     "c:/Users/Trevor/Documents/mqp/githubCode/inchworm_embedded/lib/Button",
                     "c:/Users/Trevor/Documents/mqp/githubCode/inchworm_embedded/lib/ams_as5048b",

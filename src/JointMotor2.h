@@ -46,6 +46,21 @@ public:
 	void SetKd(float k) { kD = k; }
 	void printPID();
 
+	//**********getters************
+	int get_pwmForwardPin();
+	int get_pwmReversePin();
+	int get_pinEnable();
+	int get_encoderAddress();
+	double get_kP();
+	double get_kI();
+	double get_kD();
+	double get_kP2();
+	double get_kI2();
+	double get_kD2();
+	double get_angle_offset();
+	uint8_t get_id();
+	//*****************************
+
 	typedef enum
 	{							 // Used globaly as states for pid selection
 		both_grippers_engaged,   //0
@@ -55,6 +70,7 @@ public:
 	} gripperSelect;
 
 	int fixed_link = a_link_engaged;
+
 };
 
 #endif

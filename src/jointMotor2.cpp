@@ -193,3 +193,43 @@ void JointMotor2::printPID(void)
 	Serial.println("    ");Serial.print("I2: ");Serial.print(kI2);
 	Serial.println("    ");Serial.print("D2: ");Serial.print(kD2);
 }
+
+////**********************GETTTERS**************************////
+
+//Pin Configuration
+int JointMotor2::get_pwmForwardPin() { 
+	return pwmForward; 
+}
+int JointMotor2::get_pwmReversePin() { 
+	return pwmReverse; 
+}
+int JointMotor2::get_pinEnable() {
+	return pinEnable;
+}
+int JointMotor2::get_encoderAddress() {
+	return encoder.get_chipAddress();
+}
+double JointMotor2::get_kP() {
+	return kP;
+}
+double JointMotor2::get_kI() {
+	return kI;
+}
+double JointMotor2::get_kD() {
+	return kD;
+}
+double JointMotor2::get_kP2() {
+	return kP2;
+}
+double JointMotor2::get_kI2() {
+	return kI2;
+}
+double JointMotor2::get_kD2() {
+	return kD2;
+}
+double JointMotor2::get_angle_offset() {
+	return angle_offset;
+}
+uint8_t JointMotor2::get_id() {
+	return id;
+}

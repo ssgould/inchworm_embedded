@@ -416,6 +416,9 @@ void AMS_AS5048B::resetMovingAvgExp(void) {
 	return;
 }
 
+uint8_t	AMS_AS5048B::get_chipAddress(void){
+	return _chipAddress;
+}
 
 /*========================================================================*/
 /*                           PRIVATE FUNCTIONS                            */

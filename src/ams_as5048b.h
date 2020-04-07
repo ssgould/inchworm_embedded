@@ -124,6 +124,8 @@ class AMS_AS5048B {
 	double		getMovingAvgExp(int unit = U_RAW); //get Exponential Moving Average calculation
 	void		resetMovingAvgExp(void); //reset Exponential Moving Average calculation values
 
+	uint8_t		get_chipAddress(void);
+
  private:
 	//variables
 	boolean		_debugFlag;
