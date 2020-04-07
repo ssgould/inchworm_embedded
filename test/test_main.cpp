@@ -1,14 +1,17 @@
+#ifdef UNIT_TEST
 
-#include <Arduino.h>
 #include <unity.h>
+#include <Arduino.h>
 
-#include "JointMotor2.h"
+
+#include "jointMotor2.h"
 #include "pins.h"
 
 void test_motor_init() {
-    JointMotor2 JointMotor = JointMotor2(0, 1, 2, 0xee, 20, 0.3, 20, 30, 0.35, 20, 27.81, true, 0);
-
-    TEST_ASSERT_EQUAL(JointMotor.get_pwmForwardPin(), (0));
+    // JointMotor2 JointMotor(0, 1, 2, 0xee, 20, 0.3, 20, 30, 0.35, 20, 27.81, true, 0);
+    JointMotor2 JointMotor(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN,
+								JOINT_MOTOR1_ADR, 20, 0.3, 20, 30, 0.35, 20, 27.81, true, 0);
+    TEST_ASSERT_EQUAL(JointMotor.get_pwmForwardPin(),0);
     TEST_ASSERT_EQUAL(JointMotor.get_pwmReversePin(), 1);
     TEST_ASSERT_EQUAL(JointMotor.get_pinEnable(), 2);
     TEST_ASSERT_EQUAL(JointMotor.get_encoderAddress(), 0xee);
@@ -32,3 +35,4 @@ void setup() {
 void loop() {
     UNITY_END();
 }
+#endif

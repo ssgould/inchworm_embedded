@@ -20,7 +20,7 @@
 #ifndef BUTTON_H
 #define BUTTON_H
 
-#include "WProgram.h"
+#include "Arduino.h"
 
 #define PULLUP HIGH
 #define PULLDOWN LOW
@@ -38,7 +38,7 @@ class Button{
     bool wasPressed();
     bool stateChanged();
 	bool uniquePress();
-  private: 
+  private:
     uint8_t pin;
     uint8_t mode;
     uint8_t state;
@@ -57,5 +57,3 @@ class Button{
 || | 1.0 2008-10-23 - Alexander Brevig : Initial Release
 || #
 */
-
-

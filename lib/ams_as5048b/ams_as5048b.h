@@ -58,7 +58,7 @@
 
 // OPERATIONS
 #define SERIAL_DEBUG_ENABLED
-#define USE_WIREBEGIN_ENABLED // to comment if Wire.begin() function is called in Setup() for instance. Usefull to manage one or several I2C devices in the same sketch
+// #define USE_WIREBEGIN_ENABLED // to comment if Wire.begin() function is called in Setup() for instance. Usefull to manage one or several I2C devices in the same sketch
 
 // Default addresses for AS5048B
 #define AS5048_ADDRESS 0x40 // 0b10000 + ( A1 & A2 to GND)
@@ -123,6 +123,8 @@ class AMS_AS5048B {
 	void		updateMovingAvgExp(void); //measure the current angle and feed the Exponential Moving Average calculation
 	double		getMovingAvgExp(int unit = U_RAW); //get Exponential Moving Average calculation
 	void		resetMovingAvgExp(void); //reset Exponential Moving Average calculation values
+
+	uint8_t		get_chipAddress(void);
 
  private:
 	//variables

@@ -1,9 +1,11 @@
+#ifndef UNIT_TEST
+
 #include <Arduino.h>
 #include <Wire.h>
 
 #include "config.h"
 #include "pins.h"
-#include "JointMotor2.h"
+#include "jointMotor2.h"
 // #include "Gripper.h"
 
 ////////////////////////////////////////////////////////////////
@@ -556,3 +558,5 @@ void ActuateGrippers()
 		gripperEngagedSelect = jointMotor[0].neither_gripper_engaged;
 	}
 }
+
+#endif

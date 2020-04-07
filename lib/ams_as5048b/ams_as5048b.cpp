@@ -416,6 +416,9 @@ void AMS_AS5048B::resetMovingAvgExp(void) {
 	return;
 }
 
+uint8_t	AMS_AS5048B::get_chipAddress(void){
+	return _chipAddress;
+}
 
 /*========================================================================*/
 /*                           PRIVATE FUNCTIONS                            */
@@ -448,7 +451,6 @@ uint16_t AMS_AS5048B::readReg16(uint8_t address) {
 	byte requestResult;
 	byte readArray[2];
 	uint16_t readValue = 0;
-	
 
 	Wire.beginTransmission(_chipAddress);
 	Wire.write(address);
