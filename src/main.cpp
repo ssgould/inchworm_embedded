@@ -6,14 +6,18 @@
 #include "config.h"
 #include "pins.h"
 #include "jointMotor2.h"
-// #include "Gripper.h"
+#include "Gripper.h"
 
 ////////////////////////////////////////////////////////////////
 // TUNABLE PARAMETERS
 ////////////////////////////////////////////////////////////////
 const bool DEBUG = false;
 const bool TUNING = false;
-const bool USE_GRIPPERS = true;
+const bool CHANGE_JOINTMOTORS_FREQUENCY = false; // Be careful when changing this constant (check the frequency)
+
+const bool USE_MOTORS = true;
+const bool USE_GRIPPERS = false;
+const bool USE_DEBUG_BUTTON = true;
 
 ////////////////////////////////////////////////////////////////
 // CONTROLLER CONSTANTS
@@ -32,6 +36,7 @@ const int MOTOR_PKT_LEN = 8;   // motor packet example: "-123.32_" (ending in sp
 const int CONTROL_PKT_LEN = 4; // control packet example: "0131"
 const int len = MOTOR_PKT_LEN * 3 + CONTROL_PKT_LEN;
 char serialBuffer[len];
+char tempSerialBuffer[len];
 const int PARSE_PKT_LEN = 5;
 char temp[PARSE_PKT_LEN];
 String inputBuffer; //String isn't the most efficient, but easier for I/O
@@ -39,7 +44,7 @@ String inputBuffer; //String isn't the most efficient, but easier for I/O
 ////////////////////////////////////////////////////////////////
 // GRIPPER CONTROL
 ////////////////////////////////////////////////////////////////
-// Gripper gripper[4];
+Gripper gripper[4];
 bool gripperFinished1 = true;
 bool gripperFinished2 = true;
 bool allenKeyFinished = true;
@@ -79,6 +84,7 @@ void StartMove(bool);
 void ReadAngleInputs(void);
 void RunPidTuningDebug(void);
 void ActuateGrippers(void);
+bool buttonPressed(void);
 
 ////////////////////////////////////////////////////////////////
 // SETUP METHOD
@@ -87,6 +93,15 @@ void setup()
 {
 	Wire.begin();		  //begin I2C
 	Serial.begin(115200); //Debug Serial
+
+	//Change frequncy at pins
+	if(CHANGE_JOINTMOTORS_FREQUENCY)
+	{
+		analogWriteFrequency(5,FREQUENCY_JOINT_MOTORS);
+		analogWriteFrequency(3,FREQUENCY_JOINT_MOTORS);
+		analogWriteFrequency(2,FREQUENCY_JOINT_MOTORS);
+	}
+
 
 	pinMode(POWER_LED, OUTPUT);     // Power LED
 	digitalWrite(POWER_LED, HIGH);
@@ -114,8 +129,9 @@ void setup()
 	// jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN,
 	// 							JOINT_MOTOR3_ADR, 10, 0.3, 20, 15, 0.25, 15, 27.81, false, 2);
 
-	jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN,
-								JOINT_MOTOR1_ADR, 20, 0.3, 20, 30, 0.35, 20, 27.81, true, 0);
+	// THIS one have been tested for d_link gripped
+	// jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN,
+	// 							JOINT_MOTOR1_ADR, 17, 0.3, 20, 30, 0.35, 20, 27.81, true, 0);
 	// jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN,
 	// 							JOINT_MOTOR2_ADR, 20, 0.3, 20, 15, 0.01, 0.8, 124.38, true, 1);
 	// jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN,
@@ -124,27 +140,34 @@ void setup()
 	/**
 	 * Went into the hole on switched pid (d link engaged)
 	 */
-	// jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN,
-	// 							JOINT_MOTOR1_ADR, 20, 0.3, 20, 30, 0.35, 20, 27.81, true, 0);
-	// jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN,
-	// 							JOINT_MOTOR2_ADR, 20, 0.3, 20, 4, 0.05, 1, 124.38, true, 1);
-	// jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN,
-	// 							JOINT_MOTOR3_ADR, 10, 0.3, 20, 17, 0.25, 8, 27.81, false, 2);
+	if(USE_MOTORS){
+		jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN,
+									JOINT_MOTOR1_ADR, 20, 0.3, 20, 30, 0.35, 20, 27.81, true, 0);
+		jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN,
+									JOINT_MOTOR2_ADR, 20, 0.3, 20, 4, 0.05, 1, 124.38, true, 1);
+		jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN,
+									JOINT_MOTOR3_ADR, 10, 0.3, 20, 17, 0.25, 8, 27.81, false, 2);
+	}
 
 	jointMotor[0].SetTarget(27.81);
-	// jointMotor[1].SetTarget(124.38);
-	// jointMotor[2].SetTarget(27.81);
+	jointMotor[1].SetTarget(124.38);
+	jointMotor[2].SetTarget(27.81);
 
 	inputBuffer.reserve(24);
 
 	if (USE_GRIPPERS)
 	{
-		// gripper[0] = Gripper(GRIPPER_MOTOR_1, false, false, GRIPPER_ROTATION_BUTTON_A_LINK); 
-		// gripper[1] = Gripper(GRIPPER_MOTOR_2, true, false, GRIPPER_ROTATION_BUTTON_D_LINK);  
+		gripper[0] = Gripper(GRIPPER_MOTOR_1, false, false, GRIPPER_ROTATION_BUTTON_A_LINK); 
+		gripper[1] = Gripper(GRIPPER_MOTOR_2, true, false, GRIPPER_ROTATION_BUTTON_D_LINK);  
 		// gripper[2] = Gripper(GRIPPER_MOTOR_3, false, false, GRIPPER_ROTATION_BUTTON_A_LINK); 
 		// gripper[3] = Gripper(GRIPPER_MOTOR_4, true, false, GRIPPER_ROTATION_BUTTON_D_LINK);  
 		// gripperSelect = jointMotor[0].fixed_link == jointMotor[0].a_link_engaged ? 1 : 2;
 		// gripperState = gripper[0].engage;
+	}
+
+	if(USE_DEBUG_BUTTON)
+	{
+		pinMode(DEBUG_PIN, INPUT);
 	}
 
 	Serial.println("Done");
@@ -169,7 +192,12 @@ void loop()
 	// Update flag to use grippers
 	if (USE_GRIPPERS)
 	{
-		ActuateGrippers();
+		//ActuateGrippers();
+		if(buttonPressed()){
+			Serial.println("BUTTON PRESSED GRIPPERS");
+			gripper[0].setGripper(2);
+			gripper[1].setGripper(2);
+		}
 	}
 
 
@@ -390,6 +418,7 @@ void SetNewVias(void)
  * to angle for each joint, gripper configuration, and allen 
  * key actuation. 
  */
+boolean toggleBuffer = true;
 void ReadAngleInputs()
 {
 	if (Serial.available() > 0)
@@ -402,7 +431,16 @@ void ReadAngleInputs()
 		int jointIndex = 0;
 		float tempAngle = 0;
 		boolean motorPktCompleted = true;
-
+		
+		if(toggleBuffer){
+			for(int i = 0; i < len; i++){
+				tempSerialBuffer[i] = serialBuffer[i];
+			}
+		}
+		for(int i = 0; i < len; i++){
+			serialBuffer[i] = tempSerialBuffer[i];
+		}
+	
 		if (serialBuffer[0] == '-' || serialBuffer[0] == '0')
 		{
 			for (int i = 0; i < len; i++)
@@ -495,13 +533,17 @@ void ReadAngleInputs()
 				Serial.read();
 			}
 		}
+
+		Serial.println(serialBuffer);
+		Serial.println(tempSerialBuffer);
+		toggleBuffer = !toggleBuffer;
 	}
 }
 
 
 /**
  * Helper method to actuate grippers and allen key
- */
+ **/
 void ActuateGrippers()
 {
 
@@ -557,6 +599,26 @@ void ActuateGrippers()
 	{
 		gripperEngagedSelect = jointMotor[0].neither_gripper_engaged;
 	}
+}
+
+/**
+ * Helper function to use for the debug button
+ * 
+ * return: if button is pressed or not
+ **/
+
+bool buttonPressed(){
+	bool pressed = false;
+
+	if(analogRead(DEBUG_PIN) < 50)
+	{
+		pressed = true;
+	}
+	else
+	{
+		pressed = false;
+	}
+	return pressed;
 }
 
 #endif

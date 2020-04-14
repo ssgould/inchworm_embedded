@@ -10,12 +10,6 @@
 #include <Servo.h>
 #include <Arduino.h>
 
-typedef enum
-{  // Used globaly as states for gripper functions
-   idle,      //0
-   engage,    //1
-   disengage, //2
-} gripperState;
 
 class Gripper
 {
@@ -36,11 +30,19 @@ private:
     Servo grip;
 
 public:
+
+    typedef enum
+    {  // Used globaly as states for gripper functions
+        idle,      //0
+        engage,    //1
+        disengage, //2
+    } gripperState;
+    
     ////////////////////////////////////////////////////////////////
     // CONSTRUCTORS
     ////////////////////////////////////////////////////////////////
     Gripper(); //default constructor
-    Gripper(int pin, bool directionCW, bool isEngaged, int buttonPin, int threshold = 5); //contructor with values
+    Gripper(int gripperPin, bool directionCW, bool isEngaged, int buttonPin, int threshold = 5); //contructor with values
     bool isE; //Flag to know if gripper is enagaged or not TODO: check if this is actauly useful
 
     ////////////////////////////////////////////////////////////////
