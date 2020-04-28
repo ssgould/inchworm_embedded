@@ -147,6 +147,11 @@ void setup()
 									JOINT_MOTOR2_ADR, 20, 0.3, 20, 4, 0.05, 1, 124.38, true, 1);
 		jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN,
 									JOINT_MOTOR3_ADR, 10, 0.3, 20, 17, 0.25, 8, 27.81, false, 2);
+		// TODO: pid values need to be tuned
+		jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN,
+									JOINT_MOTOR4_ADR, 10, 0.3, 20, 17, 0.25, 8, 27.81, false, 3);
+		jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN,
+									JOINT_MOTOR5_ADR, 10, 0.3, 20, 17, 0.25, 8, 27.81, false, 4);
 	}
 
 	jointMotor[0].SetTarget(27.81);
@@ -454,7 +459,7 @@ void ReadAngleInputs()
 				{
 					temp[PARSE_PKT_LEN - 1] = '\n'; //you need this
 					tempIndex = 0;
-					if (jointIndex > 2)
+					if (jointIndex >= MOTOR_COUNT)
 					{   //Gripper
 						if (USE_GRIPPERS)
 						{
