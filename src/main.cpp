@@ -13,16 +13,16 @@
 ////////////////////////////////////////////////////////////////
 const bool DEBUG = false;
 const bool TUNING = false;
-const bool CHANGE_JOINTMOTORS_FREQUENCY = false; // Be careful when changing this constant (check the frequency)
+const bool CHANGE_JOINTMOTORS_FREQUENCY = false; // Be careful when enabling this constant (check the frequency of the pins to be changed)
 
-const bool USE_MOTORS = true;
+const bool USE_MOTORS = false;
 const bool USE_GRIPPERS = false;
 const bool USE_DEBUG_BUTTON = true;
 
 ////////////////////////////////////////////////////////////////
 // CONTROLLER CONSTANTS
 ////////////////////////////////////////////////////////////////
-const int NUM_MOTORS = 3;
+const int NUM_MOTORS = 5;
 JointMotor2 jointMotor[NUM_MOTORS];
 STATE state = ST_HOLDING;
 double previous_time;
@@ -34,7 +34,7 @@ uint32_t startMoveTime = 0;
 ////////////////////////////////////////////////////////////////
 const int MOTOR_PKT_LEN = 8;   // motor packet example: "-123.32_" (ending in space)
 const int CONTROL_PKT_LEN = 4; // control packet example: "0131"
-const int len = MOTOR_PKT_LEN * 3 + CONTROL_PKT_LEN;
+const int len = MOTOR_PKT_LEN * NUM_MOTORS + CONTROL_PKT_LEN;
 char serialBuffer[len];
 char tempSerialBuffer[len];
 const int PARSE_PKT_LEN = 5;
@@ -60,20 +60,9 @@ bool switchedPid_2 = false;
 ////////////////////////////////////////////////////////////////
 // TEST ANGLES
 ////////////////////////////////////////////////////////////////
-// 0005.21 0116.44 0058.30 0100 Trevor use this one [FIRST WAYPOINT]
-// 0030.00 0084.00 0067.00 0100 //Try this after [SECOND WAYPOINT]
-// 0045.00 0090.00 0045.00 0100 [THIRD WAYPOINT]
-
-//D link fixed
-// 0067.00 0084.00 0030.00 0100
-// storage = Storage(STORAGE_MOTOR_LC);
-// 0058.30 0116.44 0005.21 0100
-// 0067.00 0084.00 0030.00 0100 //Try this after [SECOND WAYPOINT]
-// 0045.00 0090.00 0045.00 0100 [THIRD WAYPOINT]
-
-// 0030.00 0130.00 0030.00 0100
-// 0028.00 0124.00 0028.00 0100
-// 0028.00 000 0124.00 000 0028.00 000 0100
+// 0005.21 0116.44 0058.30 0000.00 0000.00 0100  [FIRST WAYPOINT]
+// 0030.00 0084.00 0067.00 0000.00 0000.00 0100  [SECOND WAYPOINT]
+// 0045.00 0090.00 0045.00 0000.00 0000.00 0100 [THIRD WAYPOINT]
 
 ////////////////////////////////////////////////////////////////
 // FUNCTION PROTOTYPES
@@ -162,10 +151,10 @@ void setup()
 
 	if (USE_GRIPPERS)
 	{
-		gripper[0] = Gripper(GRIPPER_MOTOR_1, false, false, GRIPPER_ROTATION_BUTTON_A_LINK); 
-		gripper[1] = Gripper(GRIPPER_MOTOR_2, true, false, GRIPPER_ROTATION_BUTTON_D_LINK);  
-		// gripper[2] = Gripper(GRIPPER_MOTOR_3, false, false, GRIPPER_ROTATION_BUTTON_A_LINK); 
-		// gripper[3] = Gripper(GRIPPER_MOTOR_4, true, false, GRIPPER_ROTATION_BUTTON_D_LINK);  
+		gripper[0] = Gripper(GRIPPER_MOTOR_1, false, false, GRIPPER_ROTATION_BUTTON_A_LINK);
+		gripper[1] = Gripper(GRIPPER_MOTOR_2, true, false, GRIPPER_ROTATION_BUTTON_D_LINK);
+		// gripper[2] = Gripper(GRIPPER_MOTOR_3, false, false, GRIPPER_ROTATION_BUTTON_A_LINK);
+		// gripper[3] = Gripper(GRIPPER_MOTOR_4, true, false, GRIPPER_ROTATION_BUTTON_D_LINK);
 		// gripperSelect = jointMotor[0].fixed_link == jointMotor[0].a_link_engaged ? 1 : 2;
 		// gripperState = gripper[0].engage;
 	}
@@ -185,7 +174,7 @@ void setup()
 void loop()
 {
 	// Update flag to tune PID value on Robot or Run Robot Normally
-	if (TUNING) 
+	if (TUNING)
 	{
 		RunPidTuningDebug();
 	}
@@ -206,36 +195,36 @@ void loop()
 	}
 
 
-	// Move joint motors
-	static uint32_t lastUpdateTime = millis();
-	uint32_t currTime = millis();
-	if (currTime - lastUpdateTime >= UPDATE_INTERVAL)
-	{
-		if (currTime - lastUpdateTime > UPDATE_INTERVAL)
-			Serial.println("Missed update schedule.");
-
-		lastUpdateTime += UPDATE_INTERVAL;
-
-		if (state == ST_HOLDING || ST_MOVING)
-		{
-			UpdateMotors();
-		}
-	}
-
-	// Set vias between waypoints
-	if (currTime - lastViaUpdate >= VIA_INTERVAL)
-	{
-		if (state == ST_MOVING)
-		{
-			if (currTime - startMoveTime >= VIA_COUNT * VIA_INTERVAL)
-			{
-				state = ST_HOLDING;
-			}
-
-			else
-				SetNewVias();
-		}
-	}
+	// // Move joint motors
+	// static uint32_t lastUpdateTime = millis();
+	// uint32_t currTime = millis();
+	// if (currTime - lastUpdateTime >= UPDATE_INTERVAL)
+	// {
+	// 	if (currTime - lastUpdateTime > UPDATE_INTERVAL)
+	// 		Serial.println("Missed update schedule.");
+	//
+	// 	lastUpdateTime += UPDATE_INTERVAL;
+	//
+	// 	if (state == ST_HOLDING || ST_MOVING)
+	// 	{
+	// 		UpdateMotors();
+	// 	}
+	// }
+	//
+	// // Set vias between waypoints
+	// if (currTime - lastViaUpdate >= VIA_INTERVAL)
+	// {
+	// 	if (state == ST_MOVING)
+	// 	{
+	// 		if (currTime - startMoveTime >= VIA_COUNT * VIA_INTERVAL)
+	// 		{
+	// 			state = ST_HOLDING;
+	// 		}
+	//
+	// 		else
+	// 			SetNewVias();
+	// 	}
+	// }
 }
 
 ////////////////////////////////////////////////////////////////
@@ -244,25 +233,25 @@ void loop()
 
 /**
  * Tunes PID values quickly and tests small trajectories
- *  
- * This method allows for the use of the Serial Terminal to tune 
- * PID values separatly for when D or A link is fixed with the 
- * Serial inputs shown below. 
- * 
+ *
+ * This method allows for the use of the Serial Terminal to tune
+ * PID values separatly for when D or A link is fixed with the
+ * Serial inputs shown below.
+ *
  * 			> P0.1 //Controller term and then value
  *  		> A    //Prints all PID values
- * 
- * Important: Once the PID values are tuned they can be printed 
- * to Serial as they are volatile. 
- * 
+ *
+ * Important: Once the PID values are tuned they can be printed
+ * to Serial as they are volatile.
+ *
  * To make tunning easier this method allows for the robot to be
- * controlled by moving it down and up with two simple commands 
- * shown below. This is a simple way of checking if the values 
+ * controlled by moving it down and up with two simple commands
+ * shown below. This is a simple way of checking if the values
  * for the PID controller are tunned properly.
- * 
+ *
  * 			> M	// Move robot up
  *    		> N // Move robot down
- *  
+ *
  */
 void RunPidTuningDebug()
 {
@@ -275,7 +264,7 @@ void RunPidTuningDebug()
 
 		if (c == '\n')
 		{
-			// Move up 
+			// Move up
 			if (inputBuffer[0] == 'M')
 			{
 				StartMove(0);
@@ -343,7 +332,7 @@ void RunPidTuningDebug()
 }
 
 /**
- * Updates all motors on robot 
+ * Updates all motors on robot
  */
 void UpdateMotors()
 {
@@ -374,7 +363,7 @@ void UpdateMotors()
 
 
 /**
- * Helper method to start robot movement when tunning PID values 
+ * Helper method to start robot movement when tunning PID values
  */
 
 float startAngles[MOTOR_COUNT];
@@ -418,10 +407,10 @@ void SetNewVias(void)
 
 /**
  * Main method that reads control message form high level code
- * 
+ *
  * This method parses and organizes the serial control message
- * to angle for each joint, gripper configuration, and allen 
- * key actuation. 
+ * to angle for each joint, gripper configuration, and allen
+ * key actuation.
  */
 boolean toggleBuffer = true;
 void ReadAngleInputs()
@@ -436,7 +425,7 @@ void ReadAngleInputs()
 		int jointIndex = 0;
 		float tempAngle = 0;
 		boolean motorPktCompleted = true;
-		
+
 		if(toggleBuffer){
 			for(int i = 0; i < len; i++){
 				tempSerialBuffer[i] = serialBuffer[i];
@@ -445,7 +434,7 @@ void ReadAngleInputs()
 		for(int i = 0; i < len; i++){
 			serialBuffer[i] = tempSerialBuffer[i];
 		}
-	
+
 		if (serialBuffer[0] == '-' || serialBuffer[0] == '0')
 		{
 			for (int i = 0; i < len; i++)
@@ -608,7 +597,7 @@ void ActuateGrippers()
 
 /**
  * Helper function to use for the debug button
- * 
+ *
  * return: if button is pressed or not
  **/
 

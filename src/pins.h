@@ -47,15 +47,15 @@
 #define JOINT_MOTOR3_ADR 0x42
 
 // TODO: need to be changed
-// #define JOINT_MOTOR4_FWD 8
-// #define JOINT_MOTOR4_REV 9
-// #define JOINT_MOTOR4_EN 10
-// #define JOINT_MOTOR4_ADR 0x43
+#define JOINT_MOTOR4_FWD 8
+#define JOINT_MOTOR4_REV 9
+#define JOINT_MOTOR4_EN 10
+#define JOINT_MOTOR4_ADR 0x43
 
-// #define JOINT_MOTOR5_FWD 8
-// #define JOINT_MOTOR5_REV 9
-// #define JOINT_MOTOR5_EN 10
-// #define JOINT_MOTOR5_ADR 0x44
+#define JOINT_MOTOR5_FWD 8
+#define JOINT_MOTOR5_REV 9
+#define JOINT_MOTOR5_EN 10
+#define JOINT_MOTOR5_ADR 0x44
 
 // DEBUG PIN TO BE USED FOR ANYTHING
 #define DEBUG_PIN 23
