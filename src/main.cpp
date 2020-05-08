@@ -1,4 +1,4 @@
-// #ifndef UNIT_TEST
+// #ifndef UNIT_TEST //
 
 #include <Arduino.h>
 #include <Wire.h>
