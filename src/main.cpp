@@ -1,4 +1,4 @@
-#ifndef UNIT_TEST
+// #ifndef UNIT_TEST
 
 #include <Arduino.h>
 #include <Wire.h>
@@ -12,10 +12,11 @@
 // TUNABLE PARAMETERS
 ////////////////////////////////////////////////////////////////
 const bool DEBUG = false;
-const bool TUNING = false;
+const bool TUNING = true;
+		const int thisId = 3; // Motor being tunned
 const bool CHANGE_JOINTMOTORS_FREQUENCY = false; // Be careful when enabling this constant (check the frequency of the pins to be changed)
 
-const bool USE_MOTORS = false;
+const bool USE_MOTORS = true;
 const bool USE_GRIPPERS = false;
 const bool USE_DEBUG_BUTTON = true;
 
@@ -74,6 +75,7 @@ void ReadAngleInputs(void);
 void RunPidTuningDebug(void);
 void ActuateGrippers(void);
 bool buttonPressed(void);
+void testJointMotor(void);
 
 ////////////////////////////////////////////////////////////////
 // SETUP METHOD
@@ -130,22 +132,23 @@ void setup()
 	 * Went into the hole on switched pid (d link engaged)
 	 */
 	if(USE_MOTORS){
-		jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN,
-									JOINT_MOTOR1_ADR, 20, 0.3, 20, 30, 0.35, 20, 27.81, true, 0);
-		jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN,
-									JOINT_MOTOR2_ADR, 20, 0.3, 20, 4, 0.05, 1, 124.38, true, 1);
-		jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN,
-									JOINT_MOTOR3_ADR, 10, 0.3, 20, 17, 0.25, 8, 27.81, false, 2);
-		// TODO: pid values need to be tuned
-		jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN,
-									JOINT_MOTOR4_ADR, 10, 0.3, 20, 17, 0.25, 8, 27.81, false, 3);
-		jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN,
-									JOINT_MOTOR5_ADR, 10, 0.3, 20, 17, 0.25, 8, 27.81, false, 4);
+		jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
+									JOINT_MOTOR1_ADR, 8, 0, 0, 0, 0, 0, 0.0, false, 1);
+		jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
+									JOINT_MOTOR2_ADR, 12, 1, 0, 0, 0, 0, 27.81, false, 2);
+		jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
+									JOINT_MOTOR3_ADR, 12, 1, 0, 0, 0, 0, 124.38, true, 3);
+		jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
+									JOINT_MOTOR4_ADR, 12, 1, 0, 0, 0, 0, 27.8, true, 4);
+		jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
+									JOINT_MOTOR5_ADR, 8, 0, 0, 0, 0, 0, 0.0, false, 5);
 	}
 
-	jointMotor[0].SetTarget(27.81);
-	jointMotor[1].SetTarget(124.38);
-	jointMotor[2].SetTarget(27.81);
+	jointMotor[0].SetTarget(0.0);
+	jointMotor[1].SetTarget(27.81);
+	jointMotor[2].SetTarget(124.38);
+	jointMotor[3].SetTarget(27.81);
+	jointMotor[4].SetTarget(0.0);
 
 	inputBuffer.reserve(24);
 
@@ -195,36 +198,36 @@ void loop()
 	}
 
 
-	// // Move joint motors
-	// static uint32_t lastUpdateTime = millis();
-	// uint32_t currTime = millis();
-	// if (currTime - lastUpdateTime >= UPDATE_INTERVAL)
-	// {
-	// 	if (currTime - lastUpdateTime > UPDATE_INTERVAL)
-	// 		Serial.println("Missed update schedule.");
-	//
-	// 	lastUpdateTime += UPDATE_INTERVAL;
-	//
-	// 	if (state == ST_HOLDING || ST_MOVING)
-	// 	{
-	// 		UpdateMotors();
-	// 	}
-	// }
-	//
-	// // Set vias between waypoints
-	// if (currTime - lastViaUpdate >= VIA_INTERVAL)
-	// {
-	// 	if (state == ST_MOVING)
-	// 	{
-	// 		if (currTime - startMoveTime >= VIA_COUNT * VIA_INTERVAL)
-	// 		{
-	// 			state = ST_HOLDING;
-	// 		}
-	//
-	// 		else
-	// 			SetNewVias();
-	// 	}
-	// }
+	// Move joint motors
+	static uint32_t lastUpdateTime = millis();
+	uint32_t currTime = millis();
+	if (currTime - lastUpdateTime >= UPDATE_INTERVAL)
+	{
+		if (currTime - lastUpdateTime > UPDATE_INTERVAL)
+			Serial.println("Missed update schedule.");
+
+		lastUpdateTime += UPDATE_INTERVAL;
+
+		if (state == ST_HOLDING || ST_MOVING)
+		{
+			UpdateMotors();
+		}
+	}
+
+	// Set vias between waypoints
+	if (currTime - lastViaUpdate >= VIA_INTERVAL)
+	{
+		if (state == ST_MOVING)
+		{
+			if (currTime - startMoveTime >= VIA_COUNT * VIA_INTERVAL)
+			{
+				state = ST_HOLDING;
+			}
+
+			else
+				SetNewVias();
+		}
+	}
 }
 
 ////////////////////////////////////////////////////////////////
@@ -311,7 +314,7 @@ void RunPidTuningDebug()
 			{
 				for (int i = 0; i < MOTOR_COUNT; i++)
 				{
-					jointMotor[i].printPID();
+					jointMotor[i].printPID(thisId);
 				}
 			}
 
@@ -615,4 +618,41 @@ bool buttonPressed(){
 	return pressed;
 }
 
-#endif
+void testJointMotor() {
+	char motor[1];
+    char direction[1];
+    char speed[3];
+	char duration[4];
+
+
+    Serial.print("\nJoint Motor Number: ");
+    while (Serial.available() == 0){
+        continue;
+    }
+    Serial.readBytesUntil('\n', motor, len); //put input into buffer
+
+	Serial.print("\nDirection (0 or 1) (0 = -; 1 = +): ");
+    while (Serial.available() == 0){
+        continue;
+    }
+    Serial.readBytesUntil('\n', direction, len); //put input into buffer
+
+	Serial.print("\nSpeed (0 - 255)): ");
+    while (Serial.available() == 0){
+        continue;
+    }
+    Serial.readBytesUntil('\n', speed, len); //put input into buffer
+
+	Serial.print("\nDuration (0ms - 9999ms)): ");
+    while (Serial.available() == 0){
+        continue;
+    }
+    Serial.readBytesUntil('\n', duration, len); //put input into buffer
+
+	if (direction[0] == '0'){ jointMotor[atoi(motor)].SendPWM((-1*atoi(speed))); }
+	else { jointMotor[atoi(motor)].SendPWM(atoi(speed)); }
+	Serial.println("Moving motor");
+	delay(atoi(duration));
+	jointMotor[atoi(motor)].SendPWM(0);
+	return;
+}

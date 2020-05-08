@@ -66,7 +66,13 @@ void JointMotor2::SendPWM(int speed)
 double JointMotor2::getAngleDegrees()
 {
 	double angle = encoder.angleR(U_DEG, true);
+	// Serial.println("Ang:");
+	// Serial.print(angle);
 	double calibrated_angle = angle + angle_offset;
+	// Serial.println("CA: ");
+	// Serial.print(calibrated_angle);
+	// Serial.print("ER:")
+	// Serial.print(angle-targetAngle);
 
 	// if (calibrated_angle > 360)
 	// {
@@ -94,6 +100,22 @@ double JointMotor2::getAngleDegrees()
 	}
 
 	last_calibrated_angle = calibrated_angle;
+	// double currentTime = millis();
+	// if (currentTime - lastDebugUpdate >= 3000)
+	// {
+	// 	Serial.print("\nID: ");
+	// 	Serial.print(id);
+	// 	Serial.print("\tCALIBRATED ANGLE: ");
+	// 	Serial.print(calibrated_angle);
+	// 	Serial.print("\t ANGLE: ");
+	// 	Serial.print(angle);
+	// 	// Serial.print("\t TAngle: ");
+	// 	// Serial.print(targetAngle);
+	// 	// Serial.print("\t Error:");
+	// 	// Serial.println(targetAngle-calibrated_angle);
+	//
+	// 	lastDebugUpdate = currentTime;
+	// }
 	return calibrated_angle;
 }
 
@@ -135,15 +157,18 @@ int JointMotor2::CalcEffort(void)
 
 	lastError = error;
 
-	//TODO: REMOVE ME
+	// //TODO:
 	double currentTime = millis();
-	if (currentTime - lastDebugUpdate >= 2000)
+	if (currentTime - lastDebugUpdate >= 1000)
 	{
-		Serial.print("ID: ");
+		Serial.print("\nID: ");
 		Serial.print(id);
-		Serial.print("\t Angle: ");
-		// Serial.println(error);
-		Serial.println(currentAngle);
+	// 	Serial.print(" CA: ");
+	// 	Serial.print(currentAngle);
+	// 	Serial.print(" TA: ");
+	// 	Serial.print(targetAngle);
+		Serial.print(" ER:");
+		Serial.print(error);
 		lastDebugUpdate = currentTime;
 	}
 
@@ -183,25 +208,27 @@ bool JointMotor2::SwitchPID(uint8_t gripperEngagedSelect)
 	}
 }
 
-void JointMotor2::printPID(void)
+void JointMotor2::printPID(int thisId)
 {
-	Serial.println("Joint ");Serial.print(id);Serial.print(": ");
-	Serial.println("    ");Serial.print("P1: ");Serial.print(kP1);
-	Serial.println("    ");Serial.print("I1: ");Serial.print(kI1);
-	Serial.println("    ");Serial.print("D1: ");Serial.print(kD1);
-	Serial.println("    ");Serial.print("P2: ");Serial.print(kP2);
-	Serial.println("    ");Serial.print("I2: ");Serial.print(kI2);
-	Serial.println("    ");Serial.print("D2: ");Serial.print(kD2);
+
+	Serial.print("\nJoint ");Serial.print(id);Serial.print(": ");
+	Serial.print("    ");Serial.print("P1: ");Serial.print(kP);
+	Serial.print("    ");Serial.print("I1: ");Serial.print(kI);
+	Serial.print("    ");Serial.print("D1: ");Serial.print(kD);
+
+	// Serial.println("    ");Serial.print("P2: ");Serial.print(kP2);
+	// Serial.println("    ");Serial.print("I2: ");Serial.print(kI2);
+	// Serial.println("    ");Serial.print("D2: ");Serial.print(kD2);
 }
 
 ////**********************GETTTERS**************************////
 
 //Pin Configuration
-int JointMotor2::get_pwmForwardPin() { 
-	return pwmForward; 
+int JointMotor2::get_pwmForwardPin() {
+	return pwmForward;
 }
-int JointMotor2::get_pwmReversePin() { 
-	return pwmReverse; 
+int JointMotor2::get_pwmReversePin() {
+	return pwmReverse;
 }
 int JointMotor2::get_pinEnable() {
 	return pinEnable;
