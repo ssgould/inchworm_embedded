@@ -12,7 +12,7 @@
 
 class Storage {
     private:
-
+        bool isImplemented = false; // flag for unit test since this has not been implemented on robot
         Servo storageMotor;
 
     public:
@@ -20,8 +20,10 @@ class Storage {
         Storage(); //default constructor
         Storage(int pin);
 
-        void restPosition();
-        void loadPosition();
+        void restPosition(void);
+        void loadPosition(void);
+
+        void getImplementation(void){ return isImplemented; }
 };
 
 #endif
