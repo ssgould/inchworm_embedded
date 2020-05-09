@@ -82,10 +82,12 @@ void testJointMotor(void);
 ////////////////////////////////////////////////////////////////
 void setup()
 {
-	Wire.begin();		  //begin I2C
-	Serial.begin(115200); //Debug Serial
+	Wire.begin();		  			// Begin I2C
+	Serial.begin(115200); 	// Initialize Serial
 
-	//Change frequncy at pins
+	/**
+	* Change frequncy of Motor PINs
+	*/
 	if(CHANGE_JOINTMOTORS_FREQUENCY)
 	{
 		analogWriteFrequency(5,FREQUENCY_JOINT_MOTORS);
@@ -93,43 +95,16 @@ void setup()
 		analogWriteFrequency(2,FREQUENCY_JOINT_MOTORS);
 	}
 
-
-	pinMode(POWER_LED, OUTPUT);     // Power LED
+	// Power LED
+	pinMode(POWER_LED, OUTPUT);
 	digitalWrite(POWER_LED, HIGH);
+
 	temp[PARSE_PKT_LEN - 1] = '\n'; // Buffer for serial message (important)
+
 	Serial.println("Robot intializing....");
 
-	// jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN,
-	// 							JOINT_MOTOR1_ADR, 40, 0.3, 20, 27.81, true, 0);
-	// jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN,
-	// 							JOINT_MOTOR2_ADR, 40, 0.3, 20, 124.38, true, 1);
-	// jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN,
-	// 							JOINT_MOTOR3_ADR, 40, 0.3, 20, 27.81, false, 2);
-
-	// jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN,
-	// 							JOINT_MOTOR1_ADR, 20, 0.3, 20, 27.81, true, 0);
-	// jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN,
-	// 							JOINT_MOTOR2_ADR, 20, 0.3, 20, 124.38, true, 1);
-	// jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN,
-	// 							JOINT_MOTOR3_ADR, 10, 0.3, 20, 27.81, false, 2);
-
-	// jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN,
-	// 							JOINT_MOTOR1_ADR, 20, 0.3, 20, 5, 0.15, 15, 27.81, true, 0);
-	// jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN,
-	// 							JOINT_MOTOR2_ADR, 20, 0.3, 20, 7, 0.25, 15, 124.38, true, 1);
-	// jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN,
-	// 							JOINT_MOTOR3_ADR, 10, 0.3, 20, 15, 0.25, 15, 27.81, false, 2);
-
-	// THIS one have been tested for d_link gripped
-	// jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN,
-	// 							JOINT_MOTOR1_ADR, 17, 0.3, 20, 30, 0.35, 20, 27.81, true, 0);
-	// jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN,
-	// 							JOINT_MOTOR2_ADR, 20, 0.3, 20, 15, 0.01, 0.8, 124.38, true, 1);
-	// jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN,
-	// 							JOINT_MOTOR3_ADR, 10, 0.3, 20, 17, 0.25, 8, 27.81, false, 2);
-
 	/**
-	 * Went into the hole on switched pid (d link engaged)
+	 * Intialize Joint Motors (PINs, Dynamic PID values, Encoder I2C address, direction, ID)
 	 */
 	if(USE_MOTORS){
 		jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
@@ -142,16 +117,19 @@ void setup()
 									JOINT_MOTOR4_ADR, 12, 1, 0, 0, 0, 0, 27.8, true, 4);
 		jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
 									JOINT_MOTOR5_ADR, 8, 0, 0, 0, 0, 0, 0.0, false, 5);
-	}
 
-	jointMotor[0].SetTarget(0.0);
-	jointMotor[1].SetTarget(27.81);
-	jointMotor[2].SetTarget(124.38);
-	jointMotor[3].SetTarget(27.81);
-	jointMotor[4].SetTarget(0.0);
+		jointMotor[0].SetTarget(0.0);
+		jointMotor[1].SetTarget(27.81);
+		jointMotor[2].SetTarget(124.38);
+		jointMotor[3].SetTarget(27.81);
+		jointMotor[4].SetTarget(0.0);
+	}
 
 	inputBuffer.reserve(24);
 
+	/*
+	* Initialize Grippers and Allen Keys
+	*/
 	if (USE_GRIPPERS)
 	{
 		gripper[0] = Gripper(GRIPPER_MOTOR_1, false, false, GRIPPER_ROTATION_BUTTON_A_LINK);
@@ -564,13 +542,6 @@ void ActuateGrippers()
 	}
 
 	// Switching PID values for joint motors
-	// Serial.print("Gripper Finished 1: ");
-	// Serial.print(gripperFinished1);
-
-	// Serial.print("\tGripper Finished 2: ");
-	// Serial.print(gripperFinished1);
-
-	// Serial.print("\nGripper Select ");
 	if (gripperFinished1 && gripperSelect == 1 && gripperState == 1) // A link gripper just engaged
 	{
 
