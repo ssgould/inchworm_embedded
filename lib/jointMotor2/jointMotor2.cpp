@@ -1,6 +1,16 @@
 #include "jointMotor2.h"
 #include "config.h"
 
+
+JointMotor2::JointMotor2(int pwmF, int pwmR)
+{
+	//Pin Configuration
+	pwmForward = pwmF;
+	pwmReverse = pwmR;
+	pinMode(pwmForward, OUTPUT);
+	pinMode(pwmReverse, OUTPUT);
+}
+
 JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
 						 uint8_t encoderAddress, double kp_a_link_fixed, double ki_a_link_fixed, double kd_a_link_fixed,
 						 double kp_d_link_fixed, double ki_d_link_fixed, double kd_d_link_fixed,
@@ -128,6 +138,17 @@ void JointMotor2::SetTarget(double angle)
 	return;
 }
 
+/*
+* TODO: Add moving average to see if the max change is greater than the one wanted 
+  if it is then stop the motor from moving to that angle. There is two places where 
+  this could work:1) in this calcEffor() function when I get the getAngleDegrees() 
+  function to see what the change is 2) In the function getAngleDegrees() above to 
+  get the actual angle and smooth out the noise.
+TODO: Add movement restiriction on robot (variables for the min and max
+  values that a joint can move to). This can be done with a simple implementation 
+  of a if the angle reading is greater than the MAX then stop and print ANGLE OUT
+  OF POSSIBLE PHYSICAL ROBOTS RANGE.
+  */
 int JointMotor2::CalcEffort(void)
 {
 	double currentAngle = getAngleDegrees();

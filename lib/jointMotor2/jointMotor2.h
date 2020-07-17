@@ -31,6 +31,7 @@ private:
 
 public:
 	JointMotor2() {}
+	JointMotor2(int pwmF, int pwmR);
 	JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1,
 				uint8_t encoderAddress, double kp_a_link_fixed, double ki_a_link_fixed, double kd_a_link_fixed,
 				double kp_d_link_fixed, double ki_d_link_fixed, double kd_d_link_fixed,

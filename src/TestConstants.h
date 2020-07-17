@@ -1,0 +1,2 @@
+#define TEST_ENCODERS 1
+#define TEST_MOTORS 2

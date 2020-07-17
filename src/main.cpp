@@ -7,13 +7,15 @@
 #include "pins.h"
 #include "jointMotor2.h"
 #include "Gripper.h"
+#include "test1Step.h"
+#include "TestConstants.h"
 
 ////////////////////////////////////////////////////////////////
 // TUNABLE PARAMETERS
 ////////////////////////////////////////////////////////////////
 const bool DEBUG = false;
 const bool TUNING = true;
-		const int thisId = 3; // Motor being tunned
+const int thisId = 3; // Motor being tunned
 const bool CHANGE_JOINTMOTORS_FREQUENCY = false; // Be careful when enabling this constant (check the frequency of the pins to be changed)
 
 const bool USE_MOTORS = true;
@@ -34,10 +36,10 @@ uint32_t startMoveTime = 0;
 // SERIAL BUFFER
 ////////////////////////////////////////////////////////////////
 const int MOTOR_PKT_LEN = 8;   // motor packet example: "-123.32_" (ending in space)
-const int CONTROL_PKT_LEN = 4; // control packet example: "0131"
+const int CONTROL_PKT_LEN = 4; // gripper and allen key control packet example: "0131"
 const int len = MOTOR_PKT_LEN * NUM_MOTORS + CONTROL_PKT_LEN;
 char serialBuffer[len];
-char tempSerialBuffer[len];
+char tempSerialBuffer[len]; // Temporary Serial Buffer
 const int PARSE_PKT_LEN = 5;
 char temp[PARSE_PKT_LEN];
 String inputBuffer; //String isn't the most efficient, but easier for I/O
@@ -66,6 +68,11 @@ bool switchedPid_2 = false;
 // 0045.00 0090.00 0045.00 0000.00 0000.00 0100 [THIRD WAYPOINT]
 
 ////////////////////////////////////////////////////////////////
+// TEST CONSTANTS
+////////////////////////////////////////////////////////////////
+int testState = TEST_ENCODERS;
+
+////////////////////////////////////////////////////////////////
 // FUNCTION PROTOTYPES
 ////////////////////////////////////////////////////////////////
 void UpdateMotors(void);
@@ -77,76 +84,130 @@ void ActuateGrippers(void);
 bool buttonPressed(void);
 void testJointMotor(void);
 
+void testEncoders(void){
+
+	Serial.print("------ ENCODER TEST -----\n");
+	Serial.print("  The following addresses are set for each encoder: \n");
+
+	AMS_AS5048B encoder;
+
+	unsigned char addressE[NUM_MOTORS] = {JOINT_MOTOR1_ADR, JOINT_MOTOR2_ADR, JOINT_MOTOR3_ADR, JOINT_MOTOR4_ADR, JOINT_MOTOR5_ADR};
+	for(int i; i < NUM_MOTORS; i++){
+		Serial.print(addressE[i], HEX);
+		Serial.print(" | ");
+	} 
+	
+	Serial.print("  \nStating Test ...");
+	for(int i; i < NUM_MOTORS; i++){
+		Serial.printf("\n   Testing Encoder: %d Address: ", i);
+		Serial.print(addressE[i], HEX);
+		Serial.print(" | ");
+		encoder = AMS_AS5048B(addressE[i]);
+		encoder.begin();
+		encoder.angleRegR();
+	}
+	Serial.println("\nFinishing Test ...\n");
+	delay(4000);
+}
+
+void testMotors(void){
+		Serial.print("------ MOTOR TEST -----\n");
+	Serial.print("  The following pins are set for each motor (forward, reverse): \n");
+
+	JointMotor2 motor;
+	int totalPins = NUM_MOTORS*2;
+
+	const int pinM[totalPins] = {JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV};
+	for(int i; i < totalPins*2; i = i+2){
+		Serial.printf("  (%d, %d) | ", pinM[i], pinM[i+1]);
+	} 
+	
+	Serial.print("  \nStating Test ...");
+	for(int i; i < totalPins; i = i + 2){
+		Serial.printf("\n   Testing Motor: %d Pins: (%d, %d) ", i, pinM[i], pinM[i+1]);
+		motor = JointMotor2(pinM[i], pinM[i+1]);
+		motor.SendPWM(10);
+		delay(1000);
+		motor.SendPWM(0);
+		delay(1000);
+	}
+	Serial.println("\nFinishing Test ...\n");
+	delay(4000);
+}
+
 ////////////////////////////////////////////////////////////////
 // SETUP METHOD
 ////////////////////////////////////////////////////////////////
 void setup()
 {
-	Wire.begin();		  			// Begin I2C
-	Serial.begin(115200); 	// Initialize Serial
+	Wire.begin();		  	// Begin I2C
+	Serial.begin(115200); 	
 
-	/**
-	* Change frequncy of Motor PINs
-	*/
-	if(CHANGE_JOINTMOTORS_FREQUENCY)
-	{
-		analogWriteFrequency(5,FREQUENCY_JOINT_MOTORS);
-		analogWriteFrequency(3,FREQUENCY_JOINT_MOTORS);
-		analogWriteFrequency(2,FREQUENCY_JOINT_MOTORS);
-	}
+	Serial.println("Robot intializing....");
 
 	// Power LED
 	pinMode(POWER_LED, OUTPUT);
 	digitalWrite(POWER_LED, HIGH);
 
-	temp[PARSE_PKT_LEN - 1] = '\n'; // Buffer for serial message (important)
+	if(testState == TEST_ENCODERS){
+	}else{
+		/**
+		* Change frequency pins for MotorControllers
+		*/
+		if(CHANGE_JOINTMOTORS_FREQUENCY)
+		{
+			analogWriteFrequency(5,FREQUENCY_JOINT_MOTORS);
+			analogWriteFrequency(3,FREQUENCY_JOINT_MOTORS);
+			analogWriteFrequency(2,FREQUENCY_JOINT_MOTORS);
+		}
 
-	Serial.println("Robot intializing....");
+		temp[PARSE_PKT_LEN - 1] = '\n'; // Buffer for serial message (important)
 
-	/**
-	 * Intialize Joint Motors (PINs, Dynamic PID values, Encoder I2C address, direction, ID)
-	 */
-	if(USE_MOTORS){
-		jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
-									JOINT_MOTOR1_ADR, 8, 0, 0, 0, 0, 0, 0.0, false, 1);
-		jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
-									JOINT_MOTOR2_ADR, 12, 1, 0, 0, 0, 0, 27.81, false, 2);
-		jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
-									JOINT_MOTOR3_ADR, 12, 1, 0, 0, 0, 0, 124.38, true, 3);
-		jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
-									JOINT_MOTOR4_ADR, 12, 1, 0, 0, 0, 0, 27.8, true, 4);
-		jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
-									JOINT_MOTOR5_ADR, 8, 0, 0, 0, 0, 0, 0.0, false, 5);
+		/**
+		 * Intialize Joint Motors (PINs, Dynamic PID values, Encoder I2C address, direction, ID)
+		 */
+		if(USE_MOTORS){
+			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
+										JOINT_MOTOR1_ADR, 8, 0, 0, 0, 0, 0, 0.0, false, 1);
+			jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
+										JOINT_MOTOR2_ADR, 12, 1, 0, 0, 0, 0, 27.81, false, 2);
+			jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
+										JOINT_MOTOR3_ADR, 12, 1, 0, 0, 0, 0, 124.38, true, 3);
+			jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
+										JOINT_MOTOR4_ADR, 12, 1, 0, 0, 0, 0, 27.8, true, 4);
+			jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
+										JOINT_MOTOR5_ADR, 8, 0, 0, 0, 0, 0, 0.0, false, 5);
 
-		jointMotor[0].SetTarget(0.0);
-		jointMotor[1].SetTarget(27.81);
-		jointMotor[2].SetTarget(124.38);
-		jointMotor[3].SetTarget(27.81);
-		jointMotor[4].SetTarget(0.0);
+			jointMotor[0].SetTarget(0.0);
+			jointMotor[1].SetTarget(27.81);
+			jointMotor[2].SetTarget(124.38);
+			jointMotor[3].SetTarget(27.81);
+			jointMotor[4].SetTarget(0.0);
+		}
+
+		inputBuffer.reserve(24);
+
+		/*
+		* Initialize Grippers and Allen Keys
+		*/
+		if (USE_GRIPPERS)
+		{
+			gripper[0] = Gripper(GRIPPER_MOTOR_1, false, false, GRIPPER_ROTATION_BUTTON_A_LINK);
+			gripper[1] = Gripper(GRIPPER_MOTOR_2, true, false, GRIPPER_ROTATION_BUTTON_D_LINK);
+			// gripper[2] = Gripper(GRIPPER_MOTOR_3, false, false, GRIPPER_ROTATION_BUTTON_A_LINK);
+			// gripper[3] = Gripper(GRIPPER_MOTOR_4, true, false, GRIPPER_ROTATION_BUTTON_D_LINK);
+			// gripperSelect = jointMotor[0].fixed_link == jointMotor[0].a_link_engaged ? 1 : 2;
+			// gripperState = gripper[0].engage;
+		}
+
+		if(USE_DEBUG_BUTTON)
+		{
+			pinMode(DEBUG_PIN, INPUT);
+		}
+
+		Serial.println("Done");
+		previous_time = millis();
 	}
-
-	inputBuffer.reserve(24);
-
-	/*
-	* Initialize Grippers and Allen Keys
-	*/
-	if (USE_GRIPPERS)
-	{
-		gripper[0] = Gripper(GRIPPER_MOTOR_1, false, false, GRIPPER_ROTATION_BUTTON_A_LINK);
-		gripper[1] = Gripper(GRIPPER_MOTOR_2, true, false, GRIPPER_ROTATION_BUTTON_D_LINK);
-		// gripper[2] = Gripper(GRIPPER_MOTOR_3, false, false, GRIPPER_ROTATION_BUTTON_A_LINK);
-		// gripper[3] = Gripper(GRIPPER_MOTOR_4, true, false, GRIPPER_ROTATION_BUTTON_D_LINK);
-		// gripperSelect = jointMotor[0].fixed_link == jointMotor[0].a_link_engaged ? 1 : 2;
-		// gripperState = gripper[0].engage;
-	}
-
-	if(USE_DEBUG_BUTTON)
-	{
-		pinMode(DEBUG_PIN, INPUT);
-	}
-
-	Serial.println("Done");
-	previous_time = millis();
 }
 
 ////////////////////////////////////////////////////////////////
@@ -154,56 +215,76 @@ void setup()
 ////////////////////////////////////////////////////////////////
 void loop()
 {
-	// Update flag to tune PID value on Robot or Run Robot Normally
-	if (TUNING)
-	{
-		RunPidTuningDebug();
+	if(testState == TEST_ENCODERS){
+		// testEncoders();
+		testMotors();
 	}
-	else
-	{
-		ReadAngleInputs();
-	}
-
-	// Update flag to use grippers
-	if (USE_GRIPPERS)
-	{
-		//ActuateGrippers();
-		if(buttonPressed()){
-			Serial.println("BUTTON PRESSED GRIPPERS");
-			gripper[0].setGripper(2);
-			gripper[1].setGripper(2);
-		}
-	}
-
-
-	// Move joint motors
-	static uint32_t lastUpdateTime = millis();
-	uint32_t currTime = millis();
-	if (currTime - lastUpdateTime >= UPDATE_INTERVAL)
-	{
-		if (currTime - lastUpdateTime > UPDATE_INTERVAL)
-			Serial.println("Missed update schedule.");
-
-		lastUpdateTime += UPDATE_INTERVAL;
-
-		if (state == ST_HOLDING || ST_MOVING)
+	else{
+		// Update flag to tune PID value on Robot or Run Robot Normally
+		if (TUNING)
 		{
-			UpdateMotors();
+			RunPidTuningDebug();
 		}
-	}
-
-	// Set vias between waypoints
-	if (currTime - lastViaUpdate >= VIA_INTERVAL)
-	{
-		if (state == ST_MOVING)
+		else
 		{
-			if (currTime - startMoveTime >= VIA_COUNT * VIA_INTERVAL)
-			{
-				state = ST_HOLDING;
+			ReadAngleInputs();
+		}
+
+		// Update flag to use grippers
+		if (USE_GRIPPERS)
+		{
+			//ActuateGrippers();
+			if(buttonPressed()){
+				Serial.println("BUTTON PRESSED GRIPPERS");
+				gripper[0].setGripper(2);
+				gripper[1].setGripper(2);
 			}
+		}
 
-			else
-				SetNewVias();
+
+		// Move joint motors
+		static uint32_t lastUpdateTime = millis();
+		uint32_t currTime = millis();
+		if (currTime - lastUpdateTime >= UPDATE_INTERVAL)
+		{
+			if (currTime - lastUpdateTime > UPDATE_INTERVAL)
+				Serial.println("Missed update schedule.");
+
+			lastUpdateTime += UPDATE_INTERVAL;
+
+			if (state == ST_HOLDING || ST_MOVING)
+			{
+				UpdateMotors();
+			}
+		}
+
+		// Set vias between waypoints
+		if (currTime - lastViaUpdate >= VIA_INTERVAL)
+		{
+			if (state == ST_MOVING)
+			{
+				if (currTime - startMoveTime >= VIA_COUNT * VIA_INTERVAL)
+				{
+					state = ST_HOLDING;
+				}
+
+				else
+					SetNewVias();
+			}
+		}
+	}
+}
+
+/**
+ * Tests inchworm taking a step multiple times (back and forth) 
+ */
+void test1Robot(int numberSteps){
+
+	for(int i = 0; i < numberSteps; i++){ // Number of total step
+		for(int p = 0; p < NUM_ANGLES_STEP_1; p = p + NUM_MOTORS){ // Every 5 angles
+			for(int j = 0; j < NUM_MOTORS; j++){
+				jointMotor[j].SetTarget(step1[p+j]);
+			}			
 		}
 	}
 }
