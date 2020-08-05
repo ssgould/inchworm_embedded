@@ -45,7 +45,7 @@ public:
 	void SetKp(float k) { kP = k; }
 	void SetKi(float k) { kI = k; }
 	void SetKd(float k) { kD = k; }
-	void printPID(int thisId);
+	void printPID();
 
 	//**********getters************
 	int get_pwmForwardPin();

@@ -19,6 +19,7 @@
 #include <math.h>
 #include <Wire.h>
 #include "ams_as5048b.h"
+#include "ErrorConstants.h"
 
 /*========================================================================*/
 /*                            CONSTRUCTORS                                */
@@ -339,13 +340,14 @@ uint8_t AMS_AS5048B::getDiagReg(void) {
 double AMS_AS5048B::angleR(int unit, boolean newVal) {
 
 	double angleRaw;
+	uint16_t angleReadRegister = AMS_AS5048B::readReg16(AS5048B_ANGLMSB_REG);
 
-	if (newVal) {
+	if (newVal && angleReadRegister != I2C_ERROR) {
 		if(_clockWise) {
-			angleRaw = (double) (0b11111111111111 - AMS_AS5048B::readReg16(AS5048B_ANGLMSB_REG));
+			angleRaw = (double) (0b11111111111111 - angleReadRegister);
 		}
 		else {
-			angleRaw = (double) AMS_AS5048B::readReg16(AS5048B_ANGLMSB_REG);
+			angleRaw = (double) angleReadRegister;
 		}
 		_lastAngleRaw = angleRaw;
 	}
@@ -458,6 +460,7 @@ uint16_t AMS_AS5048B::readReg16(uint8_t address) {
 	if (requestResult){
 		Serial.print("I2C error: ");
 		Serial.println(requestResult);
+		// return I2C_ERROR;
 	}
 
 

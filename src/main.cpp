@@ -8,16 +8,12 @@
 #include "jointMotor2.h"
 #include "Gripper.h"
 #include "test1Step.h"
-#include "TestConstants.h"
+#include "SystemStateConstants.h"
 
 ////////////////////////////////////////////////////////////////
 // TUNABLE PARAMETERS
 ////////////////////////////////////////////////////////////////
-const bool DEBUG = false;
-const bool TUNING = true;
-const int thisId = 3; // Motor being tunned
 const bool CHANGE_JOINTMOTORS_FREQUENCY = false; // Be careful when enabling this constant (check the frequency of the pins to be changed)
-
 const bool USE_MOTORS = true;
 const bool USE_GRIPPERS = false;
 const bool USE_DEBUG_BUTTON = true;
@@ -68,7 +64,7 @@ bool switchedPid_2 = false;
 // 0045.00 0090.00 0045.00 0000.00 0000.00 0100 [THIRD WAYPOINT]
 
 ////////////////////////////////////////////////////////////////
-// TEST CONSTANTS
+// SYTEM CONSTANTS
 ////////////////////////////////////////////////////////////////
 int testState = TEST_ENCODERS;
 
@@ -83,57 +79,8 @@ void RunPidTuningDebug(void);
 void ActuateGrippers(void);
 bool buttonPressed(void);
 void testJointMotor(void);
-
-void testEncoders(void){
-
-	Serial.print("------ ENCODER TEST -----\n");
-	Serial.print("  The following addresses are set for each encoder: \n");
-
-	AMS_AS5048B encoder;
-
-	unsigned char addressE[NUM_MOTORS] = {JOINT_MOTOR1_ADR, JOINT_MOTOR2_ADR, JOINT_MOTOR3_ADR, JOINT_MOTOR4_ADR, JOINT_MOTOR5_ADR};
-	for(int i; i < NUM_MOTORS; i++){
-		Serial.print(addressE[i], HEX);
-		Serial.print(" | ");
-	} 
-	
-	Serial.print("  \nStating Test ...");
-	for(int i; i < NUM_MOTORS; i++){
-		Serial.printf("\n   Testing Encoder: %d Address: ", i);
-		Serial.print(addressE[i], HEX);
-		Serial.print(" | ");
-		encoder = AMS_AS5048B(addressE[i]);
-		encoder.begin();
-		encoder.angleRegR();
-	}
-	Serial.println("\nFinishing Test ...\n");
-	delay(4000);
-}
-
-void testMotors(void){
-		Serial.print("------ MOTOR TEST -----\n");
-	Serial.print("  The following pins are set for each motor (forward, reverse): \n");
-
-	JointMotor2 motor;
-	int totalPins = NUM_MOTORS*2;
-
-	const int pinM[totalPins] = {JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV};
-	for(int i; i < totalPins*2; i = i+2){
-		Serial.printf("  (%d, %d) | ", pinM[i], pinM[i+1]);
-	} 
-	
-	Serial.print("  \nStating Test ...");
-	for(int i; i < totalPins; i = i + 2){
-		Serial.printf("\n   Testing Motor: %d Pins: (%d, %d) ", i, pinM[i], pinM[i+1]);
-		motor = JointMotor2(pinM[i], pinM[i+1]);
-		motor.SendPWM(10);
-		delay(1000);
-		motor.SendPWM(0);
-		delay(1000);
-	}
-	Serial.println("\nFinishing Test ...\n");
-	delay(4000);
-}
+void testEncoders(void);
+void testMotors(void);
 
 ////////////////////////////////////////////////////////////////
 // SETUP METHOD
@@ -149,8 +96,9 @@ void setup()
 	pinMode(POWER_LED, OUTPUT);
 	digitalWrite(POWER_LED, HIGH);
 
-	if(testState == TEST_ENCODERS){
-	}else{
+	if(testState == TEST_ALL || testState == TEST_ENCODERS || testState == TEST_MOTORS){
+		// No intialization is needed for testing
+	}else if(testState == ROBOT_TUNNING || testState == ROBOT_NORMAL){
 		/**
 		* Change frequency pins for MotorControllers
 		*/
@@ -215,21 +163,21 @@ void setup()
 ////////////////////////////////////////////////////////////////
 void loop()
 {
-	if(testState == TEST_ENCODERS){
-		// testEncoders();
+	if(testState == TEST_ALL){
+		testEncoders();
 		testMotors();
+	}else if(testState == TEST_ENCODERS){
+		testEncoders();
+	}else if(testState == TEST_MOTORS){
+		testMotors();
+	}else if(testState == ROBOT_TUNNING){
+		RunPidTuningDebug();
+	}else if(testState == ROBOT_NORMAL){
+		ReadAngleInputs();
 	}
-	else{
-		// Update flag to tune PID value on Robot or Run Robot Normally
-		if (TUNING)
-		{
-			RunPidTuningDebug();
-		}
-		else
-		{
-			ReadAngleInputs();
-		}
+		
 
+	if(testState == ROBOT_TUNNING || testState == ROBOT_NORMAL){
 		// Update flag to use grippers
 		if (USE_GRIPPERS)
 		{
@@ -373,7 +321,7 @@ void RunPidTuningDebug()
 			{
 				for (int i = 0; i < MOTOR_COUNT; i++)
 				{
-					jointMotor[i].printPID(thisId);
+					jointMotor[i].printPID();
 				}
 			}
 
@@ -707,4 +655,83 @@ void testJointMotor() {
 	delay(atoi(duration));
 	jointMotor[atoi(motor)].SendPWM(0);
 	return;
+}
+
+////////////////////////////////////////////////////////////////
+// TEST FUNCTIONS
+////////////////////////////////////////////////////////////////
+void testEncoders(void){
+
+	Serial.print("------ ENCODER TEST -----\n");
+	
+	// Scanning
+	Serial.print("Scanning...\n");
+	Serial.print("Scanned addresses: ");
+
+	int error = 0;
+	for(int add = 0; add < 127; add++){
+		Wire.beginTransmission(add);
+		error = Wire.endTransmission();
+
+		if(error == 0){
+			Serial.print("0x");
+			Serial.print(add, HEX);
+			Serial.print(",");
+		} else if(error == 4){
+			Serial.print("0x");
+			Serial.print(add, HEX);
+			Serial.print(" (Communicating with error 4),");
+		}
+		Serial.print("\n");
+	}
+
+	// Encoder values set in program 
+	Serial.print("  The following addresses are set for each encoder: \n");
+
+	AMS_AS5048B encoder;
+
+	unsigned char addressE[NUM_MOTORS] = {JOINT_MOTOR1_ADR, JOINT_MOTOR2_ADR, JOINT_MOTOR3_ADR, JOINT_MOTOR4_ADR, JOINT_MOTOR5_ADR};
+	for(int i = 0; i < NUM_MOTORS; i++){
+		Serial.print(addressE[i], HEX);
+		Serial.print(" | ");
+	} 
+	Serial.print("\n");
+	
+	// Communicate with each enoder
+	Serial.print("Starting Individual Test ...");
+	for(int i = 0; i < NUM_MOTORS; i++){
+		Serial.printf("\n   Testing Encoder: %d Address: ", i);
+		Serial.print(addressE[i], HEX);
+		Serial.print(" | ");
+		encoder = AMS_AS5048B(addressE[i]);
+		encoder.begin();
+		encoder.angleRegR();
+	}
+	Serial.println("\nFinishing Test ...\n");
+	delay(4000);
+}
+
+void testMotors(void){
+		Serial.print("------ MOTOR TEST -----\n");
+	Serial.print("  The following pins are set for each motor (forward, reverse): \n");
+
+	JointMotor2 motor;
+	int totalPins = NUM_MOTORS*2;
+
+	const int pinM[totalPins] = {JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV};
+	for(int i = 0; i < totalPins*2; i = i+2){
+		Serial.printf("  (%d, %d) | ", pinM[i], pinM[i+1]);
+	} 
+	
+	Serial.print("\nStating Test ...");
+	for(int i = 0; i < totalPins; i = i + 2){
+		Serial.printf("\n   Testing Motor: %d Pins: (%d, %d) ", i, pinM[i], pinM[i+1]);
+		motor = JointMotor2(pinM[i], pinM[i+1]);
+		motor.SendPWM(10);
+		delay(1000);
+		motor.SendPWM(0);
+		delay(1000);
+	}
+	Serial.println("\nFinishing Test ...\n");
+	delay(4000);
 }

@@ -229,7 +229,7 @@ bool JointMotor2::SwitchPID(uint8_t gripperEngagedSelect)
 	}
 }
 
-void JointMotor2::printPID(int thisId)
+void JointMotor2::printPID()
 {
 
 	Serial.print("\nJoint ");Serial.print(id);Serial.print(": ");
