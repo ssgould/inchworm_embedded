@@ -12,9 +12,9 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug",
-            "executable": "c:/Users/JosuD/Documents/MQP/githubCode/inchworm_embedded/.pio/build/teensy36/firmware.elf",
-            "toolchainBinDir": "C:/Users/JosuD/.platformio/packages/toolchain-gccarmnoneeabi@1.50401.190816/bin",
-            "svdPath": "C:/Users/JosuD/.platformio/platforms/teensy/misc/svd/MK66F18.svd",
+            "executable": "C:/Users/neel2/Documents/github/inchworm_embedded/.pio/build/teensy36/firmware.elf",
+            "toolchainBinDir": "C:/Users/neel2/.platformio/packages/toolchain-gccarmnoneeabi/bin",
+            "svdPath": "C:/Users/neel2/.platformio/platforms/teensy/misc/svd/MK66F18.svd",
             "preLaunchTask": {
                 "type": "PlatformIO",
                 "task": "Pre-Debug"
@@ -25,9 +25,9 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug (skip Pre-Debug)",
-            "executable": "c:/Users/JosuD/Documents/MQP/githubCode/inchworm_embedded/.pio/build/teensy36/firmware.elf",
-            "toolchainBinDir": "C:/Users/JosuD/.platformio/packages/toolchain-gccarmnoneeabi@1.50401.190816/bin",
-            "svdPath": "C:/Users/JosuD/.platformio/platforms/teensy/misc/svd/MK66F18.svd",
+            "executable": "C:/Users/neel2/Documents/github/inchworm_embedded/.pio/build/teensy36/firmware.elf",
+            "toolchainBinDir": "C:/Users/neel2/.platformio/packages/toolchain-gccarmnoneeabi/bin",
+            "svdPath": "C:/Users/neel2/.platformio/platforms/teensy/misc/svd/MK66F18.svd",
             "internalConsoleOptions": "openOnSessionStart"
         }
     ]

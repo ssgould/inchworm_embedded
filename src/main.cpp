@@ -66,7 +66,7 @@ bool switchedPid_2 = false;
 ////////////////////////////////////////////////////////////////
 // SYTEM CONSTANTS
 ////////////////////////////////////////////////////////////////
-int testState = TEST_ENCODERS;
+int testState = 1;
 
 ////////////////////////////////////////////////////////////////
 // FUNCTION PROTOTYPES
@@ -116,15 +116,25 @@ void setup()
 		 */
 		if(USE_MOTORS){
 			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
-										JOINT_MOTOR1_ADR, 8, 0, 0, 0, 0, 0, 0.0, false, 1);
+										JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
 			jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
-										JOINT_MOTOR2_ADR, 12, 1, 0, 0, 0, 0, 27.81, false, 2);
+										JOINT_MOTOR2_ADR, 22, .3, 0, 0, 0, 0, 27.81, false, 2);
 			jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
-										JOINT_MOTOR3_ADR, 12, 1, 0, 0, 0, 0, 124.38, true, 3);
+										JOINT_MOTOR3_ADR, 0, 0, 0, 0, 0, 0, 124.38, true, 3);
 			jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
-										JOINT_MOTOR4_ADR, 12, 1, 0, 0, 0, 0, 27.8, true, 4);
+										JOINT_MOTOR4_ADR, 8, .3, 0, 0, 0, 0, 27.8, true, 4);
 			jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
-										JOINT_MOTOR5_ADR, 8, 0, 0, 0, 0, 0, 0.0, false, 5);
+										JOINT_MOTOR5_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 5);
+			// jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
+			// 							JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
+			// jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
+			// 							JOINT_MOTOR2_ADR, 22, .3, 0, 0, 0, 0, 27.81, false, 2);
+			// jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
+			// 							JOINT_MOTOR3_ADR, 0, 0, 0, 0, 0, 0, 124.38, true, 3);
+			// jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
+			// 							JOINT_MOTOR4_ADR, 0, 0, 0, 0, 0, 0, 27.8, true, 4);
+			// jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
+			// 							JOINT_MOTOR5_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 5);
 
 			jointMotor[0].SetTarget(0.0);
 			jointMotor[1].SetTarget(27.81);

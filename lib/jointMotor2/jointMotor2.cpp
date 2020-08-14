@@ -190,6 +190,8 @@ int JointMotor2::CalcEffort(void)
 	// 	Serial.print(targetAngle);
 		Serial.print(" ER:");
 		Serial.print(error);
+		Serial.print(" Effort:");
+		Serial.print(effort);
 		lastDebugUpdate = currentTime;
 	}
 
