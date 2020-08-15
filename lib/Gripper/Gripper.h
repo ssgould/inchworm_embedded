@@ -19,13 +19,14 @@ private:
     int maxPulse, minPulse, medianPulse, pulseWidth;
     bool rotationDirection;
     bool isEngaged;
-    long turnsItterator;
+    
 
     int startTime = 0; // TODO: replace with the start turns 
     bool resetTime = true; // TODO: change the "resetTime" name to "resetRotationItterator"
     bool gripperFinished;
 
     int time = 30000; //Time is takes for gripper to engage/disengage
+    long turns = 600;
 
     Servo grip;
 
@@ -44,19 +45,25 @@ public:
     Gripper(); //default constructor
     Gripper(int gripperPin, bool directionCW, bool isEngaged, int buttonPin, int threshold = 5); //contructor with values
     bool isE; //Flag to know if gripper is enagaged or not TODO: check if this is actauly useful
+    long turnsItterator;
 
     ////////////////////////////////////////////////////////////////
     // FUNCTIONS
     ////////////////////////////////////////////////////////////////
 
     // Sets gripper state to engage or disengage (1000 milliseconds = 1 sec)
+    void begin(void);
     bool setGripper(gripperState gState);
     bool setGripper(int gState);
+    bool setGripperwTime(int gState);
     void incrementIterator(void);
-    void resetIterator(void);
+    void resetItterator(void);
     void screwTurns(void);
     // Writes the pulsewidth specified to the motorcontroller and maps the values.
     void write(int power);
+    void intService(void);
+
+    
 
     ////////////////////////////////////////////////////////////////
     // SETTERS AND GETTERS
@@ -68,6 +75,8 @@ public:
     bool getRotationDirection(void){ return rotationDirection; } // check if the rotation direction is correct for each gripper
     bool getEngaged(void){ return isEngaged; } // check if the flag is engaged after commanding the grippers to the enagage state
     long getTurnsItterator(void){ return turnsItterator; } // check if the right amount of turns have been done to fully engage
+    long getTurns(void);
+    void Gripper::intService(void);
 
 };
 

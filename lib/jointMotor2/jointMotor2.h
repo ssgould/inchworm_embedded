@@ -37,11 +37,13 @@ public:
 				double kp_d_link_fixed, double ki_d_link_fixed, double kd_d_link_fixed,
 				double ang_offset, bool encoder_clockwise, uint8_t id_input);
 
+	void begin(void);
 	void SendPWM(int speed);
 	void SetTarget(double angle);
 	int CalcEffort(void);
 	double getAngleDegrees();
 	bool SwitchPID(uint8_t gripperEngagedSelect);
+	bool SwitchPID(void);
 	void SetKp(float k) { kP = k; }
 	void SetKi(float k) { kI = k; }
 	void SetKd(float k) { kD = k; }

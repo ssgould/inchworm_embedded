@@ -26,7 +26,8 @@ Gripper::Gripper(int gripperPin, bool rotationDirection, bool isEngaged, int but
 
     gripperPin = gripperPin;
     buttonPin = buttonPin;
-
+    pinMode(buttonPin, INPUT_PULLUP);
+    turnsItterator = 0;
     rotationDirection = rotationDirection;
     threshold = threshold;
     medianPulse = 1500; //motor stops at this pulse width
@@ -43,8 +44,17 @@ Gripper::Gripper(int gripperPin, bool rotationDirection, bool isEngaged, int but
       maxPulse = 1000; //unique value to VEX 29 motorcontrollers
       minPulse = 2000; //unique value to VEX 29 motorcontrollers
     }
-
     grip.attach(gripperPin);
+    
+}
+
+void Gripper::begin(void){
+   pinMode(buttonPin, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(buttonPin), Gripper::intService, RISING); 
+}
+
+void Gripper::intService(void){
+  incrementIterator();
 }
 
 ////////////////////////////////////////////////////////////////
@@ -58,7 +68,11 @@ void Gripper::incrementIterator(void){
   turnsItterator++;
 }
 
-void Gripper::resetIterator(void){
+long Gripper::getTurns(void){
+  return turnsItterator;
+}
+
+void Gripper::resetItterator(void){
   turnsItterator = 0;
 }
 
@@ -77,26 +91,28 @@ void Gripper::write(int power){
 
     pulseWidth = map(power, maxSpeedCCW, maxSpeedCW, maxPulse, minPulse);
     grip.writeMicroseconds(pulseWidth);
+    
 }
 
 /**
  * For gripper engagment and disengament
  * TODO: when button added to gripper, add ticks instead of the time delay.
  **/
-bool Gripper::setGripper(gripperState gState){
+
+bool Gripper::setGripper(int gState){
 
   if(resetTime){
-    startTime = millis();
+    resetItterator();
     resetTime = false;
   }
 
   switch(gState){
-    case idle: //nothing happens
+    case 0: //nothing happens
         write(0);
         gripperFinished = true;
         break;
-    case engage: //engage gripper
-      if((int)(millis() - startTime) < time){
+    case 1: //engage gripper
+      if(getTurns() < turns){
         write(maxSpeedCCW);
         gripperFinished = false;
         isE = false;
@@ -107,8 +123,8 @@ bool Gripper::setGripper(gripperState gState){
         setEngaged(true);
       }
         break;
-    case disengage: //disengage gripper
-      if((int)(millis() - startTime) < time){
+    case 2: //disengage gripper
+      if(getTurns() < turns){
         write(maxSpeedCW);
         gripperFinished = false;
         isE = true;
@@ -129,7 +145,9 @@ bool Gripper::setGripper(gripperState gState){
 
 }
 
-bool Gripper::setGripper(int gState){
+
+//// Funciton that uses time to screw
+bool Gripper::setGripperwTime(int gState){
 
   if(resetTime){
     startTime = millis();

@@ -184,10 +184,10 @@ int JointMotor2::CalcEffort(void)
 	{
 		Serial.print("\nID: ");
 		Serial.print(id);
-	// 	Serial.print(" CA: ");
-	// 	Serial.print(currentAngle);
-	// 	Serial.print(" TA: ");
-	// 	Serial.print(targetAngle);
+		// Serial.print(" CA: ");
+		// Serial.print(currentAngle);
+		// Serial.print(" TA: ");
+		// Serial.print(targetAngle);
 		Serial.print(" ER:");
 		Serial.print(error);
 		Serial.print(" Effort:");
@@ -202,6 +202,33 @@ int JointMotor2::CalcEffort(void)
 * Switch PID values for which joint is fixed
 * Returns false if gripper 1 is engaged and true if gripper 2
 */
+bool JointMotor2::SwitchPID(void)
+{
+	// Serial.println("Switching the PID values");
+	angle_offset += targetAngle - getAngleDegrees();
+
+	if (fixed_link == a_link_engaged) // TODO switch to a_link_engaged
+	{
+		kP = kP1;
+		kI = kI1;
+		kD = kD1;
+		Serial.printf("JOINT %d Switching to PID 1: %f, %f, %f\n", id, kP, kI, kD);
+		return false;
+	}
+	else if (fixed_link == d_link_engaged) // TODO switch to d_link_engaged
+	{
+		kP = kP2;
+		kI = kI2;
+		kD = kD2;
+		Serial.printf("JOINT %d Switching to PID 2: %f, %f, %f\n", id, kP, kI, kD);
+		return true;
+	}
+	else
+	{
+		return;
+	}
+}
+
 bool JointMotor2::SwitchPID(uint8_t gripperEngagedSelect)
 {
 	// Serial.println("Switching the PID values");
