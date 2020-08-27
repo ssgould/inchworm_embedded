@@ -33,7 +33,7 @@ uint32_t startMoveTime = 0;
 ////////////////////////////////////////////////////////////////
 const int MOTOR_PKT_LEN = 8;   // motor packet example: "-123.32_" (ending in space)
 const int CONTROL_PKT_LEN = 4; // gripper and allen key control packet example: "0131"
-const int TOTAL_PACKET_LEN = MOTOR_PKT_LEN * NUM_MOTORS + CONTROL_PKT_LEN;
+const int TOTAL_PACKET_LEN = MOTOR_PKT_LEN * NUM_MOTORS + CONTROL_PKT_LEN + 1;
 char serialBuffer[TOTAL_PACKET_LEN];
 char tempSerialBuffer[TOTAL_PACKET_LEN]; // Temporary Serial Buffer
 const int PARSE_PKT_LEN = 5;
@@ -44,8 +44,8 @@ String angleInputs;
 // GRIPPER CONTROL
 ////////////////////////////////////////////////////////////////
 Gripper gripper[4];
-bool gripperFinished1 = true;
-bool gripperFinished2 = true;
+bool gripperFinished1 = false;
+bool gripperFinished2 = false;
 bool allenKeyFinished = true;
 int gripperStatus = 0;
 int gripperSelect = 0; //idle (No gripper selected)
@@ -55,6 +55,8 @@ uint8_t switchGrippers = 0;
 int allenKeySelect = 0;
 int allenKeyState = 0;
 bool switchedPid_2 = false;
+unsigned long incrementTime[4];
+unsigned long lastIncrementTime[4];
 
 ////////////////////////////////////////////////////////////////
 // TEST ANGLES
@@ -82,6 +84,10 @@ bool buttonPressed(void);
 void testJointMotor(void);
 void testEncoders(void);
 void testMotors(void);
+void intServiceGrip1(void);
+void intServiceGrip2(void);
+void intServiceAllen1(void);
+void intServiceAllen2(void);
 
 ////////////////////////////////////////////////////////////////
 // SETUP METHOD
@@ -117,26 +123,26 @@ void setup()
 		 * Intialize Joint Motors (PINs, Dynamic PID values, Encoder I2C address, direction, ID)
 		 */
 		if(USE_MOTORS){
-			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
-										JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
-			jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
-										JOINT_MOTOR2_ADR, 22, .3, 0, 8, .3, 0, 27.81, false, 2);
-			jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
-										JOINT_MOTOR3_ADR, 22, 0.3, 0, 23, 0.4, 0, 124.38, true, 3);
-			jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
-										JOINT_MOTOR4_ADR, 8, .3, 0, 23, .4, 0, 27.8, true, 4);
-			jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
-										JOINT_MOTOR5_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 5);
 			// jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
 			// 							JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
 			// jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
-			// 							JOINT_MOTOR2_ADR, 0, 0, 0, 0, 0, 0, 27.81, false, 2);
+			// 							JOINT_MOTOR2_ADR, 22, .3, 0, 8, .3, 0, 27.81, false, 2);
 			// jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
-			// 							JOINT_MOTOR3_ADR, 0, 0, 0, 0, 0, 0, 124.38, true, 3);
+			// 							JOINT_MOTOR3_ADR, 22, 0.3, 0, 23, 0.4, 0, 124.38, true, 3);
 			// jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
-			// 							JOINT_MOTOR4_ADR, 8, .3, 0, 0, 0, 0, 27.8, true, 4);
+			// 							JOINT_MOTOR4_ADR, 8, .3, 0, 23, .4, 0, 27.8, true, 4);
 			// jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
 			// 							JOINT_MOTOR5_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 5);
+			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
+										JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
+			jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
+										JOINT_MOTOR2_ADR, 0, 0, 0, 0, 0, 0, 27.81, false, 2);
+			jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
+										JOINT_MOTOR3_ADR, 0, 0, 0, 0, 0, 0, 124.38, true, 3);
+			jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
+										JOINT_MOTOR4_ADR, 0, 0, 0, 0, 0, 0, 27.8, true, 4);
+			jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
+										JOINT_MOTOR5_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 5);
 
 			jointMotor[0].SetTarget(0.0);
 			jointMotor[1].SetTarget(27.81);
@@ -151,14 +157,35 @@ void setup()
 		/*
 		* Initialize Grippers and Allen Keys
 		*/
+
+		
+
+
+
+		
+		
 		if (USE_GRIPPERS)
 		{
-			//gripper[0] = Gripper(GRIPPER_MOTOR_1, false, false, GRIPPER_ROTATION_BUTTON_A_LINK);
-			//gripper[1] = Gripper(GRIPPER_MOTOR_2, true, false, GRIPPER_ROTATION_BUTTON_D_LINK);
-			// gripper[2] = Gripper(GRIPPER_MOTOR_3, false, false, GRIPPER_ROTATION_BUTTON_A_LINK);
-			// gripper[3] = Gripper(GRIPPER_MOTOR_4, true, false, GRIPPER_ROTATION_BUTTON_D_LINK);
+			gripper[0] = Gripper(GRIPPER_MOTOR_1, true, false, GRIPPER_ROTATION_BUTTON_A_LINK); // gripper
+			gripper[1] = Gripper(GRIPPER_MOTOR_2, true, false, GRIPPER_ROTATION_BUTTON_D_LINK);	 // gripper
+			gripper[2] = Gripper(GRIPPER_MOTOR_3, false, false, GRIPPER_ROTATION_BUTTON_A_LINK); // allen key
+			gripper[3] = Gripper(GRIPPER_MOTOR_4, true, false, GRIPPER_ROTATION_BUTTON_D_LINK);	 // allen key
 			// gripperSelect = jointMotor[0].fixed_link == jointMotor[0].a_link_engaged ? 1 : 2;
 			// gripperState = gripper[0].engage;
+			
+			
+					//intialize button encoder 
+			// pinMode(GRIPPER_ROTATION_BUTTON_A_LINK, INPUT_PULLUP);
+    		attachInterrupt(digitalPinToInterrupt(GRIPPER_ROTATION_BUTTON_A_LINK), intServiceGrip1, RISING); 
+		
+			// pinMode(GRIPPER_ROTATION_BUTTON_D_LINK, INPUT_PULLUP);
+    		attachInterrupt(digitalPinToInterrupt(GRIPPER_ROTATION_BUTTON_D_LINK), intServiceGrip2, RISING); 
+
+			// pinMode(ALLEN_KEY_BUTTON_A_LINK, INPUT_PULLUP);
+			attachInterrupt(digitalPinToInterrupt(ALLEN_KEY_BUTTON_A_LINK), intServiceAllen1, RISING); 
+
+			// pinMode(ALLEN_KEY_BUTTON_D_LINK, INPUT_PULLUP);
+			attachInterrupt(digitalPinToInterrupt(ALLEN_KEY_BUTTON_D_LINK), intServiceAllen2, RISING); 
 		}
 
 		if(USE_DEBUG_BUTTON)
@@ -195,11 +222,11 @@ void loop()
 		if (USE_GRIPPERS)
 		{
 			ActuateGrippers();
-			if(buttonPressed()){
-				Serial.println("BUTTON PRESSED GRIPPERS");
-				gripper[0].setGripper(2);
-				gripper[1].setGripper(2);
-			}
+			// if(buttonPressed()){
+			// 	Serial.println("BUTTON PRESSED GRIPPERS");
+			// 	gripper[0].setGripper(2);
+			// 	gripper[1].setGripper(2);
+			// }
 		}
 
 
@@ -510,14 +537,17 @@ void ReadAngleInputs()
 								gripperSelect = (temp[2] - '0');
 								gripperState = (temp[3] - '0');
 
+								Serial.print("Gripper state:  ");
+								Serial.println(gripperState);
+
 								if (gripperSelect == 1)
 								{
-									// Serial.println("Gripper select set to 1");
+									Serial.println("Gripper select set to 1");
 									gripperFinished1 = false;
 								}
 								else if (gripperSelect == 2)
 								{
-									// Serial.println("Gripper select set to 2");
+									Serial.println("Gripper select set to 2");
 									gripperFinished2 = false;
 								}
 								else
@@ -584,23 +614,23 @@ void ReadAngleInputs()
 void ActuateGrippers()
 {
 
-	// Allen Key Control Code
-	// if (!allenKeyFinished && (allenKeySelect == 1 || allenKeySelect == 2)
-	// {
-	// 	allenKeyFinished = gripper[allenKeySelect - 1 + 2].setGripper(allenKeyState);
-	// }
+	//Allen Key Control Code
+	if (!allenKeyFinished && (allenKeySelect == 1 || allenKeySelect == 2))
+	{
+		allenKeyFinished = gripper[allenKeySelect - 1 + 2].setGripper(allenKeyState);
+	}
 
 	// Gripper Control Code
 	if (!gripperFinished1 && gripperSelect == 1)
 	{
-		// gripperFinished1 = gripper[gripperSelect - 1].setGripper(gripperState);
-		gripperFinished1 = true;
+		gripperFinished1 = gripper[gripperSelect - 1].setGripper(gripperState);
+		//gripperFinished1 = true;
 	}
 
 	if (!gripperFinished2 && gripperSelect == 2)
 	{
-		// gripperFinished2 = gripper[gripperSelect - 1].setGripper(gripperState);
-		gripperFinished2 = true;
+		gripperFinished2 = gripper[gripperSelect - 1].setGripper(gripperState);
+		//gripperFinished2 = true;
 	}
 
 	// Switching PID values for joint motors
@@ -766,4 +796,40 @@ void testMotors(void){
 	}
 	Serial.println("\nFinishing Test ...\n");
 	delay(4000);
+}
+
+void intServiceGrip1(void){
+  incrementTime[0] = millis();
+  if (incrementTime[0] - lastIncrementTime[0] > 200){
+      gripper[0].incrementIterator();
+  }
+  lastIncrementTime[0] = incrementTime[0];
+      
+}
+
+void intServiceGrip2(void){
+  incrementTime[1] = millis();
+  if (incrementTime[1] - lastIncrementTime[1] > 200){
+      gripper[1].incrementIterator();
+  }
+  lastIncrementTime[1] = incrementTime[1];
+      
+}
+
+void intServiceAllen1(void){
+  incrementTime[2] = millis();
+  if (incrementTime[2] - lastIncrementTime[2] > 200){
+      gripper[2].incrementIterator();
+  }
+  lastIncrementTime[2] = incrementTime[2];
+      
+}
+
+void intServiceAllen2(void){
+  incrementTime[3] = millis();
+  if (incrementTime[3] - lastIncrementTime[3] > 200){
+      gripper[3].incrementIterator();
+  }
+  lastIncrementTime[3] = incrementTime[3];
+      
 }

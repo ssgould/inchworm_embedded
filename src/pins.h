@@ -16,14 +16,14 @@
 #define HALL_EFFECT_D_LINK_1 0
 
 //END EFFECTOR GRIPPER MOTORS
-#define GRIPPER_MOTOR_1 0           //a_link gripper motor
-#define GRIPPER_MOTOR_2 0           //d_link gripper motor
-#define GRIPPER_MOTOR_3 0           //a_link allen key motor
-#define GRIPPER_MOTOR_4 0           //d_link allen key motor
-#define GRIPPER_ROTATION_BUTTON_A_LINK 0 //rotation button
-#define GRIPPER_ROTATION_BUTTON_D_LINK 0 //rotation button
-#define ALLEN_KEY_BUTTON_A_LINK 0 //limit switch for allen key
-#define ALLEN_KEY_BUTTON_D_LINK 0 //limit switch for allen key
+#define GRIPPER_MOTOR_1 35           //a_link gripper motor
+#define GRIPPER_MOTOR_2 37           //d_link gripper motor
+#define GRIPPER_MOTOR_3 36           //a_link allen key motor
+#define GRIPPER_MOTOR_4 38           //d_link allen key motor
+#define GRIPPER_ROTATION_BUTTON_A_LINK 32 //rotation button
+#define GRIPPER_ROTATION_BUTTON_D_LINK 30 //rotation button
+#define ALLEN_KEY_BUTTON_A_LINK 31 //limit switch for allen key
+#define ALLEN_KEY_BUTTON_D_LINK 29 //limit switch for allen key
 
 //TEENSY CLOCK PINS
 // FTM0

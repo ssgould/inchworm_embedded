@@ -48,14 +48,14 @@ Gripper::Gripper(int gripperPin, bool rotationDirection, bool isEngaged, int but
     
 }
 
-void Gripper::begin(void){
-   pinMode(buttonPin, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(buttonPin), Gripper::intService, RISING); 
-}
+// void Gripper::begin(void){
+//    pinMode(buttonPin, INPUT_PULLUP);
+//   attachInterrupt(digitalPinToInterrupt(buttonPin), Gripper::intService, RISING); 
+// }
 
-void Gripper::intService(void){
-  incrementIterator();
-}
+// static void Gripper::intService(void){
+//   incrementIterator();
+// }
 
 ////////////////////////////////////////////////////////////////
 // FUNCTIONS

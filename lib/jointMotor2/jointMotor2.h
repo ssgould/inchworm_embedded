@@ -37,7 +37,6 @@ public:
 				double kp_d_link_fixed, double ki_d_link_fixed, double kd_d_link_fixed,
 				double ang_offset, bool encoder_clockwise, uint8_t id_input);
 
-	void begin(void);
 	void SendPWM(int speed);
 	void SetTarget(double angle);
 	int CalcEffort(void);

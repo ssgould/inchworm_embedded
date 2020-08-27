@@ -76,7 +76,7 @@ public:
     bool getEngaged(void){ return isEngaged; } // check if the flag is engaged after commanding the grippers to the enagage state
     long getTurnsItterator(void){ return turnsItterator; } // check if the right amount of turns have been done to fully engage
     long getTurns(void);
-    void Gripper::intService(void);
+    //void Gripper::intService(void);
 
 };
 
