@@ -68,7 +68,7 @@ unsigned long lastIncrementTime[4];
 ////////////////////////////////////////////////////////////////
 // SYTEM CONSTANTS
 ////////////////////////////////////////////////////////////////
-int testState = ROBOT_NORMAL;
+int testState = TEST_ALL;
 
 ////////////////////////////////////////////////////////////////
 // FUNCTION PROTOTYPES
@@ -166,10 +166,10 @@ void setup()
 		
 		if (USE_GRIPPERS)
 		{
-			gripper[0] = Gripper(GRIPPER_MOTOR_1, true, false, GRIPPER_ROTATION_BUTTON_A_LINK); // gripper
-			gripper[1] = Gripper(GRIPPER_MOTOR_2, true, false, GRIPPER_ROTATION_BUTTON_D_LINK);	 // gripper
-			gripper[2] = Gripper(GRIPPER_MOTOR_3, false, false, GRIPPER_ROTATION_BUTTON_A_LINK); // allen key
-			gripper[3] = Gripper(GRIPPER_MOTOR_4, true, false, GRIPPER_ROTATION_BUTTON_D_LINK);	 // allen key
+			gripper[0] = Gripper(GRIPPER_MOTOR_1, true, false, GRIPPER_ROTATION_BUTTON_A_LINK,true); // gripper
+			gripper[1] = Gripper(GRIPPER_MOTOR_2, true, false, GRIPPER_ROTATION_BUTTON_D_LINK,true);	 // gripper
+			gripper[2] = Gripper(GRIPPER_MOTOR_3, false, false, GRIPPER_ROTATION_BUTTON_A_LINK,false); // allen key
+			gripper[3] = Gripper(GRIPPER_MOTOR_4, false, false, GRIPPER_ROTATION_BUTTON_D_LINK,false);	 // allen key
 			// gripperSelect = jointMotor[0].fixed_link == jointMotor[0].a_link_engaged ? 1 : 2;
 			// gripperState = gripper[0].engage;
 			
@@ -800,7 +800,7 @@ void testMotors(void){
 
 void intServiceGrip1(void){
   incrementTime[0] = millis();
-  if (incrementTime[0] - lastIncrementTime[0] > 200){
+  if (incrementTime[0] - lastIncrementTime[0] > 50){
       gripper[0].incrementIterator();
   }
   lastIncrementTime[0] = incrementTime[0];
@@ -809,7 +809,7 @@ void intServiceGrip1(void){
 
 void intServiceGrip2(void){
   incrementTime[1] = millis();
-  if (incrementTime[1] - lastIncrementTime[1] > 200){
+  if (incrementTime[1] - lastIncrementTime[1] > 50){
       gripper[1].incrementIterator();
   }
   lastIncrementTime[1] = incrementTime[1];
@@ -818,7 +818,7 @@ void intServiceGrip2(void){
 
 void intServiceAllen1(void){
   incrementTime[2] = millis();
-  if (incrementTime[2] - lastIncrementTime[2] > 200){
+  if (incrementTime[2] - lastIncrementTime[2] > 50){
       gripper[2].incrementIterator();
   }
   lastIncrementTime[2] = incrementTime[2];
@@ -827,7 +827,7 @@ void intServiceAllen1(void){
 
 void intServiceAllen2(void){
   incrementTime[3] = millis();
-  if (incrementTime[3] - lastIncrementTime[3] > 200){
+  if (incrementTime[3] - lastIncrementTime[3] > 50){
       gripper[3].incrementIterator();
   }
   lastIncrementTime[3] = incrementTime[3];

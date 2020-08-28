@@ -22,7 +22,7 @@ Gripper::Gripper(){
  * sets the middle value for the range of values that are mapped. Threshold is not used
  * but could serve to implement the write to motor function.
  **/
-Gripper::Gripper(int gripperPin, bool rotationDirection, bool isEngaged, int buttonPin, int threshold = 5){
+Gripper::Gripper(int gripperPin, bool rotationDirection, bool isEngaged, int buttonPin, bool gripper){
 
     gripperPin = gripperPin;
     buttonPin = buttonPin;
@@ -32,6 +32,14 @@ Gripper::Gripper(int gripperPin, bool rotationDirection, bool isEngaged, int but
     threshold = threshold;
     medianPulse = 1500; //motor stops at this pulse width
     isEngaged = false;
+    if(gripper){
+      turns=5;
+    }
+    else{
+      turns=144;
+    }
+
+    
 
     if(rotationDirection){
       maxSpeedCCW = -255;
@@ -116,6 +124,8 @@ bool Gripper::setGripper(int gState){
         write(maxSpeedCCW);
         gripperFinished = false;
         isE = false;
+        Serial.print("Turns:   ");
+        Serial.println(getTurns());
       }else{
         write(0);
         resetTime = true;
@@ -124,7 +134,7 @@ bool Gripper::setGripper(int gState){
       }
         break;
     case 2: //disengage gripper
-      if(getTurns() < turns){
+      if(getTurns() < turns+2){
         write(maxSpeedCW);
         gripperFinished = false;
         isE = true;
