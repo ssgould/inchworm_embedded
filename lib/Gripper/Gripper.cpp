@@ -33,7 +33,7 @@ Gripper::Gripper(int gripperPin, bool rotationDirection, bool isEngaged, int but
     medianPulse = 1500; //motor stops at this pulse width
     isEngaged = false;
     if(gripper){
-      turns=5;
+      turns=4;
     }
     else{
       turns=144;
@@ -74,6 +74,7 @@ Gripper::Gripper(int gripperPin, bool rotationDirection, bool isEngaged, int but
  **/
 void Gripper::incrementIterator(void){
   turnsItterator++;
+  last_update = millis();
 }
 
 long Gripper::getTurns(void){
@@ -112,6 +113,7 @@ bool Gripper::setGripper(int gState){
   if(resetTime){
     resetItterator();
     resetTime = false;
+    last_update = millis();
   }
 
   switch(gState){
@@ -120,7 +122,7 @@ bool Gripper::setGripper(int gState){
         gripperFinished = true;
         break;
     case 1: //engage gripper
-      if(getTurns() < turns){
+      if(abs(millis() - last_update) < gripper_wait_timeout){
         write(maxSpeedCCW);
         gripperFinished = false;
         isE = false;
@@ -131,6 +133,7 @@ bool Gripper::setGripper(int gState){
         resetTime = true;
         gripperFinished = true;
         setEngaged(true);
+        gState = 0;
       }
         break;
     case 2: //disengage gripper
@@ -138,6 +141,8 @@ bool Gripper::setGripper(int gState){
         write(maxSpeedCW);
         gripperFinished = false;
         isE = true;
+        Serial.print("Turns:   ");
+        Serial.println(getTurns());
       }else{
         write(0);
         resetTime = true;

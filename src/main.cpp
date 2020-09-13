@@ -57,18 +57,19 @@ int allenKeyState = 0;
 bool switchedPid_2 = false;
 unsigned long incrementTime[4];
 unsigned long lastIncrementTime[4];
-
+bool new_command = true;
 ////////////////////////////////////////////////////////////////
 // TEST ANGLES
 ////////////////////////////////////////////////////////////////
-// 0000.00 0005.21 0116.44 0058.30 0000.00 0100  [FIRST WAYPOINT]
+// 0000.00 0005.21 0116.44 0058.30 0000.00 0011 [FIRST WAYPOINT]
 // 0000.00 0030.00 0084.00 0067.00 0000.00 0100  [SECOND WAYPOINT]
 // 0000.00 0045.00 0090.00 0045.00 0000.00 0100 [THIRD WAYPOINT]
+// 0000.00 0027.81 0124.38 0027.81 0000.00 0000 [HOME POSITION]
 
 ////////////////////////////////////////////////////////////////
 // SYTEM CONSTANTS
 ////////////////////////////////////////////////////////////////
-int testState = TEST_ALL;
+int testState = ROBOT_NORMAL;
 
 ////////////////////////////////////////////////////////////////
 // FUNCTION PROTOTYPES
@@ -123,26 +124,26 @@ void setup()
 		 * Intialize Joint Motors (PINs, Dynamic PID values, Encoder I2C address, direction, ID)
 		 */
 		if(USE_MOTORS){
-			// jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
-			// 							JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
-			// jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
-			// 							JOINT_MOTOR2_ADR, 22, .3, 0, 8, .3, 0, 27.81, false, 2);
-			// jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
-			// 							JOINT_MOTOR3_ADR, 22, 0.3, 0, 23, 0.4, 0, 124.38, true, 3);
-			// jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
-			// 							JOINT_MOTOR4_ADR, 8, .3, 0, 23, .4, 0, 27.8, true, 4);
-			// jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
-			// 							JOINT_MOTOR5_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 5);
 			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
 										JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
 			jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
-										JOINT_MOTOR2_ADR, 0, 0, 0, 0, 0, 0, 27.81, false, 2);
+										JOINT_MOTOR2_ADR, 22, .5, 0, 8, .3, 0, 27.81, false, 2);
 			jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
-										JOINT_MOTOR3_ADR, 0, 0, 0, 0, 0, 0, 124.38, true, 3);
+										JOINT_MOTOR3_ADR, 22, 0.5, 0, 23, 0.4, 0, 124.38, true, 3);
 			jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
-										JOINT_MOTOR4_ADR, 0, 0, 0, 0, 0, 0, 27.8, true, 4);
+										JOINT_MOTOR4_ADR, 8, .3, 0, 23, .4, 0, 27.8, true, 4);
 			jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
 										JOINT_MOTOR5_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 5);
+			// jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
+			// 							JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
+			// jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
+			// 							JOINT_MOTOR2_ADR, 0, 0, 0, 0, 0, 0, 27.81, false, 2);
+			// jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
+			// 							JOINT_MOTOR3_ADR, 0, 0, 0, 0, 0, 0, 124.38, true, 3);
+			// jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
+			// 							JOINT_MOTOR4_ADR, 0, 0, 0, 0, 0, 0, 27.8, true, 4);
+			// jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
+			// 							JOINT_MOTOR5_ADR, 2, .3, 0, 0, 0, 0, 0.0, false, 5);
 
 			jointMotor[0].SetTarget(0.0);
 			jointMotor[1].SetTarget(27.81);
@@ -487,6 +488,7 @@ void ReadAngleInputs()
 {
 	if (Serial.available() > 0)
 	{
+		new_command=true;
 		double current_time = millis();
 		Serial.println("Message received");
 		previous_time = current_time;
@@ -615,6 +617,13 @@ void ActuateGrippers()
 {
 
 	//Allen Key Control Code
+
+	if(new_command){
+		for(int i = 0; i < 4; i++){
+			gripper[i].last_update = millis();
+		}
+		new_command=false;
+	}
 	if (!allenKeyFinished && (allenKeySelect == 1 || allenKeySelect == 2))
 	{
 		allenKeyFinished = gripper[allenKeySelect - 1 + 2].setGripper(allenKeyState);

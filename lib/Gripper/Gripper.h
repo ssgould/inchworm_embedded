@@ -28,6 +28,7 @@ private:
     int time = 30000; //Time is takes for gripper to engage/disengage
     bool gripper;
     long turns;
+    unsigned long gripper_wait_timeout=1000; 
 
     Servo grip;
 
@@ -47,6 +48,7 @@ public:
     Gripper(int gripperPin, bool directionCW, bool isEngaged, int buttonPin, bool gripper); //contructor with values
     bool isE; //Flag to know if gripper is enagaged or not TODO: check if this is actauly useful
     long turnsItterator;
+    unsigned long last_update;
 
     ////////////////////////////////////////////////////////////////
     // FUNCTIONS

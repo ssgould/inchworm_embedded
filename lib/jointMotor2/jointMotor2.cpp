@@ -182,16 +182,16 @@ int JointMotor2::CalcEffort(void)
 	double currentTime = millis();
 	if (currentTime - lastDebugUpdate >= 1000)
 	{
-		// Serial.print("\nID: ");
-		// Serial.print(id);
+		Serial.print("\nID: ");
+		Serial.print(id);
 		// Serial.print(" CA: ");
 		// Serial.print(currentAngle);
 		// Serial.print(" TA: ");
 		// Serial.print(targetAngle);
-		// Serial.print(" ER:");
-		// Serial.print(error);
-		// Serial.print(" Effort:");
-		// Serial.print(effort);
+		Serial.print(" ER:");
+		Serial.print(error);
+		Serial.print(" Effort:");
+		Serial.print(effort);
 		lastDebugUpdate = currentTime;
 	}
 
