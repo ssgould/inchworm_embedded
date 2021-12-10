@@ -1,4 +1,5 @@
 // #ifndef UNIT_TEST //
+#include <string>
 
 #include <Arduino.h>
 #include <Wire.h>
@@ -58,6 +59,13 @@ bool switchedPid_2 = false;
 unsigned long incrementTime[4];
 unsigned long lastIncrementTime[4];
 bool new_command = true;
+
+////////////////////////////////////////////////////////////////
+// MAGNET STUFF
+////////////////////////////////////////////////////////////////
+enum MagnetState {magnetsOn, magnet1Off, magnet2Off};
+MagnetState magState = magnetsOn;
+
 ////////////////////////////////////////////////////////////////
 // TEST ANGLES
 ////////////////////////////////////////////////////////////////
@@ -840,8 +848,24 @@ void testJointMotor() {
 	Serial.println("Moving motor");
 	delay(atoi(duration));
 	jointMotor[atoi(motor)].SendPWM(0);
-	return;
 }
+
+/** 
+ * Sets the magnet state off the enum
+ * 
+ **/
+void setMagnetState(int mag1, int mag2) {
+    if (mag1 == 0 && mag2 == 0)
+                magState = magnetsOn;
+        else if (mag1 == 1 && mag2 == 0)
+                magState = magnet1Off;
+        else if (mag1 == 0 && mag2 == 1)
+                magState = magnet2Off;
+        else
+                printf("Error - invalid magnet state\n");
+
+}
+
 
 ////////////////////////////////////////////////////////////////
 // TEST FUNCTIONS
