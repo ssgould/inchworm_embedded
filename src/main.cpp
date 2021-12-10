@@ -90,6 +90,13 @@ void intServiceGrip2(void);
 void intServiceAllen1(void);
 void intServiceAllen2(void);
 
+//serial stuff
+void readSerial(void);
+void printSerial(void);
+
+//magnet switching
+void setMagnetState(int, int);
+
 ////////////////////////////////////////////////////////////////
 // SETUP METHOD
 ////////////////////////////////////////////////////////////////
@@ -205,6 +212,9 @@ void setup()
 
 void loop()
 {
+    readSerial();
+    printSerial();
+	/*
 	if(testState == TEST_ALL){
 		testEncoders();
 		testMotors();
@@ -262,6 +272,7 @@ void loop()
 			}
 		}
 	}
+	*/
 }
 
 /**
@@ -609,6 +620,109 @@ void ReadAngleInputs()
 	}
 }
 
+/**
+ * @brief read control message from ROS
+ * 
+ */
+void readSerial() {
+	if (Serial.available() > 0)
+	{
+		new_command=true;
+		double current_time = millis();
+		previous_time = current_time;
+		Serial.readBytesUntil('\n', serialBuffer, TOTAL_PACKET_LEN);
+
+
+		String outString = "Message received: ";
+		outString.concat(serialBuffer);
+		Serial.println(outString);
+		int tempIndex = 0;
+		int jointIndex = 0;
+
+		if (serialBuffer[0] == '-' || serialBuffer[0] == '0')
+		{
+			//read serial
+			//split it up into the separate pieces
+			tempIndex = 0;
+
+			//cycle through joints and decode angles
+			for (jointIndex = 0; jointIndex < NUM_MOTORS; jointIndex++)
+			{
+				tempIndex = jointIndex * MOTOR_PKT_LEN; //offsets start of motor packet
+				char angleChars[MOTOR_PKT_LEN];
+				for (int i = 0; i < MOTOR_PKT_LEN; i++)
+				{
+					angleChars[i] = serialBuffer[tempIndex + i];
+				}
+				std::string angleString = std::string(angleChars);
+				float tempAngle = atof(angleChars);
+
+				// send robot off
+				jointMotor[jointIndex].SetTarget(tempAngle);
+			}
+
+			tempIndex++;
+			
+			// get magnet state
+			setMagnetState(int(serialBuffer[tempIndex]), int(serialBuffer[tempIndex + 2]));
+		}
+	    else
+		{
+			Serial.println("Invalid Input"); //didn't get the serial message
+		}
+	}
+}
+
+/**
+ * @brief print where the joints currently are
+ * 
+ */
+void printSerial() {
+	String outputString = "";
+	double tempAngle;
+	char tempString[20];
+
+	//turn the angles into strings
+	for (int i = 0; i < NUM_MOTORS; i++)
+	{
+		tempAngle = jointMotor[i].getAngleDegrees();
+		
+		dtostrf(tempAngle,6,2,tempString);
+		
+		if (tempAngle >= 0)
+		{
+			outputString.concat('0');
+		}
+		else
+		{
+			outputString.concat('-');
+		}
+		tempAngle = abs(tempAngle);
+		if (tempAngle < 100)
+			tempString[0] = '0';
+		if (tempAngle < 10)
+			tempString[1] = '0';
+		
+		outputString.concat(tempString);
+		outputString.concat(" ");
+	}
+	//add magnet state to string
+	switch(magState)
+	{
+		case magnetsOn:
+			outputString.concat("0 0");
+			break;
+		case magnet1Off:
+			outputString.concat("1 0");
+			break;
+		case magnet2Off:
+			outputString.concat("0 1");
+			break;
+	}
+	//print string
+	Serial.println(outputString);
+
+}
 
 /**
  * Helper method to actuate grippers and allen key
