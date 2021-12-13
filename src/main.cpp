@@ -17,6 +17,7 @@
 const bool CHANGE_JOINTMOTORS_FREQUENCY = false; // Be careful when enabling this constant (check the frequency of the pins to be changed)
 const bool USE_MOTORS = true;
 const bool USE_GRIPPERS = true;
+const bool USE_MAGNETS = true;
 const bool USE_DEBUG_BUTTON = true;
 
 ////////////////////////////////////////////////////////////////
@@ -44,17 +45,6 @@ String angleInputs;
 ////////////////////////////////////////////////////////////////
 // GRIPPER CONTROL
 ////////////////////////////////////////////////////////////////
-Gripper gripper[4];
-bool gripperFinished1 = false;
-bool gripperFinished2 = false;
-bool allenKeyFinished = true;
-int gripperStatus = 0;
-int gripperSelect = 0; //idle (No gripper selected)
-int gripperState = 0;  //idle (No gripper action)
-int gripperEngagedSelect = 0;
-uint8_t switchGrippers = 0;
-int allenKeySelect = 0;
-int allenKeyState = 0;
 bool switchedPid_2 = false;
 unsigned long incrementTime[4];
 unsigned long lastIncrementTime[4];
@@ -88,15 +78,10 @@ void StartMove(bool);
 void ReadAngleInputs(void);
 void ReadAngleString(void);
 void RunPidTuningDebug(void);
-void ActuateGrippers(void);
 bool buttonPressed(void);
 void testJointMotor(void);
 void testEncoders(void);
 void testMotors(void);
-void intServiceGrip1(void);
-void intServiceGrip2(void);
-void intServiceAllen1(void);
-void intServiceAllen2(void);
 
 //serial stuff
 void readSerial(void);
@@ -104,6 +89,7 @@ void printSerial(void);
 
 //magnet switching
 void setMagnetState(int, int);
+void updateMagnets(void);
 
 ////////////////////////////////////////////////////////////////
 // SETUP METHOD
@@ -171,38 +157,14 @@ void setup()
 		inputBuffer.reserve(24);
 
 		/*
-		* Initialize Grippers and Allen Keys
+		* Initialize Magnets
 		*/
-
-		
-
-
-
-		
-		
-		if (USE_GRIPPERS)
+		if (USE_MAGNETS)
 		{
-			gripper[0] = Gripper(GRIPPER_MOTOR_1, true, false, GRIPPER_ROTATION_BUTTON_A_LINK,true); // gripper
-			gripper[1] = Gripper(GRIPPER_MOTOR_2, true, false, GRIPPER_ROTATION_BUTTON_D_LINK,true);	 // gripper
-			gripper[2] = Gripper(GRIPPER_MOTOR_3, false, false, GRIPPER_ROTATION_BUTTON_A_LINK,false); // allen key
-			gripper[3] = Gripper(GRIPPER_MOTOR_4, false, false, GRIPPER_ROTATION_BUTTON_D_LINK,false);	 // allen key
-			// gripperSelect = jointMotor[0].fixed_link == jointMotor[0].a_link_engaged ? 1 : 2;
-			// gripperState = gripper[0].engage;
-			
-			
-					//intialize button encoder 
-			// pinMode(GRIPPER_ROTATION_BUTTON_A_LINK, INPUT_PULLUP);
-    		attachInterrupt(digitalPinToInterrupt(GRIPPER_ROTATION_BUTTON_A_LINK), intServiceGrip1, RISING); 
-		
-			// pinMode(GRIPPER_ROTATION_BUTTON_D_LINK, INPUT_PULLUP);
-    		attachInterrupt(digitalPinToInterrupt(GRIPPER_ROTATION_BUTTON_D_LINK), intServiceGrip2, RISING); 
-
-			// pinMode(ALLEN_KEY_BUTTON_A_LINK, INPUT_PULLUP);
-			attachInterrupt(digitalPinToInterrupt(ALLEN_KEY_BUTTON_A_LINK), intServiceAllen1, RISING); 
-
-			// pinMode(ALLEN_KEY_BUTTON_D_LINK, INPUT_PULLUP);
-			attachInterrupt(digitalPinToInterrupt(ALLEN_KEY_BUTTON_D_LINK), intServiceAllen2, RISING); 
+			pinMode(MAGNET_1, OUTPUT);
+			pinMode(MAGNET_2, OUTPUT);
 		}
+
 
 		if(USE_DEBUG_BUTTON)
 		{
@@ -222,6 +184,8 @@ void loop()
 {
     readSerial();
     printSerial();
+
+	
 	/*
 	if(testState == TEST_ALL){
 		testEncoders();
@@ -237,17 +201,11 @@ void loop()
 	}	
 
 	if(testState == ROBOT_TUNNING || testState == ROBOT_NORMAL){
-		// Update flag to use grippers
-		if (USE_GRIPPERS)
+		// turn the magnets on/off
+		if (USE_MAGNETS)
 		{
-			ActuateGrippers();
-			// if(buttonPressed()){
-			// 	Serial.println("BUTTON PRESSED GRIPPERS");
-			// 	gripper[0].setGripper(2);
-			// 	gripper[1].setGripper(2);
-			// }
+			updateMagnets();
 		}
-
 
 		// Move joint motors
 		static uint32_t lastUpdateTime = millis();
@@ -540,45 +498,8 @@ void ReadAngleInputs()
 					temp[PARSE_PKT_LEN - 1] = '\n'; //you need this
 					tempIndex = 0;
 					if (jointIndex >= MOTOR_COUNT)
-					{   //Gripper
-						if (USE_GRIPPERS)
-						{
-							// Allen Key Control
-							if ((temp[0] - '0' == 1) || (temp[0] - '0' == 2) || (temp[0] - '0' == 3))
-							{
-								allenKeySelect = (temp[0] - '0');
-								allenKeyState = (temp[1] - '0');
-
-								allenKeyFinished = false;
-							}
-
-							// Gripper Control
-							if ((temp[2] - '0' == 1) || (temp[2] - '0' == 2) || (temp[2] - '0' == 3))
-							{
-								gripperSelect = (temp[2] - '0');
-								gripperState = (temp[3] - '0');
-
-								Serial.print("Gripper state:  ");
-								Serial.println(gripperState);
-
-								if (gripperSelect == 1)
-								{
-									Serial.println("Gripper select set to 1");
-									gripperFinished1 = false;
-								}
-								else if (gripperSelect == 2)
-								{
-									Serial.println("Gripper select set to 2");
-									gripperFinished2 = false;
-								}
-								else
-								{ // both gripper selected
-									// Serial.println(gripperSelect);
-									gripperFinished1 = false;
-									gripperFinished2 = false;
-								}
-							}
-						}
+					{   
+						//Gripper							
 					}
 					else
 					{   //Joint angles
@@ -733,66 +654,6 @@ void printSerial() {
 }
 
 /**
- * Helper method to actuate grippers and allen key
- **/
-void ActuateGrippers()
-{
-
-	//Allen Key Control Code
-
-	if(new_command){
-		for(int i = 0; i < 4; i++){
-			gripper[i].last_update = millis();
-		}
-		new_command=false;
-	}
-	if (!allenKeyFinished && (allenKeySelect == 1 || allenKeySelect == 2))
-	{
-		allenKeyFinished = gripper[allenKeySelect - 1 + 2].setGripper(allenKeyState);
-	}
-
-	// Gripper Control Code
-	if (!gripperFinished1 && gripperSelect == 1)
-	{
-		gripperFinished1 = gripper[gripperSelect - 1].setGripper(gripperState);
-		//gripperFinished1 = true;
-	}
-
-	if (!gripperFinished2 && gripperSelect == 2)
-	{
-		gripperFinished2 = gripper[gripperSelect - 1].setGripper(gripperState);
-		//gripperFinished2 = true;
-	}
-
-	// Switching PID values for joint motors
-	if (gripperFinished1 && gripperSelect == 1 && gripperState == 1) // A link gripper just engaged
-	{
-
-		gripperEngagedSelect = jointMotor[0].a_link_engaged;
-		for (int i = 0; i < NUM_MOTORS; i++) // Switches PID values for joint motors
-		{
-			jointMotor[i].SwitchPID(gripperEngagedSelect);
-		}
-		gripperSelect = 0;
-	}
-	else if (gripperFinished2 && gripperSelect == 2 && gripperState == 1) // D link gripper just engaged
-	{
-
-		gripperEngagedSelect = jointMotor[0].d_link_engaged;
-		for (int i = 0; i < NUM_MOTORS; i++) // Switches PID values for joint motors
-		{
-			switchedPid_2 = true;
-			jointMotor[i].SwitchPID(gripperEngagedSelect);
-		}
-		gripperSelect = 0;
-	}
-	else
-	{
-		gripperEngagedSelect = jointMotor[0].neither_gripper_engaged;
-	}
-}
-
-/**
  * Helper function to use for the debug button
  *
  * return: if button is pressed or not
@@ -866,6 +727,26 @@ void setMagnetState(int mag1, int mag2) {
 
 }
 
+/**
+ * @brief Does the magnet signal
+ * 
+ */
+void updateMagnets() {
+	switch(magState) {
+		case magnetsOn:
+			digitalWrite(MAGNET_1, LOW);
+			digitalWrite(MAGNET_2, LOW);
+			break;
+		case magnet1Off:
+			digitalWrite(MAGNET_1, HIGH);
+			digitalWrite(MAGNET_2, LOW);
+			break;
+		case magnet2Off:
+			digitalWrite(MAGNET_1, LOW);
+			digitalWrite(MAGNET_2, HIGH);
+			break;
+	}
+}
 
 ////////////////////////////////////////////////////////////////
 // TEST FUNCTIONS
@@ -943,40 +824,4 @@ void testMotors(void){
 	}
 	Serial.println("\nFinishing Test ...\n");
 	delay(4000);
-}
-
-void intServiceGrip1(void){
-  incrementTime[0] = millis();
-  if (incrementTime[0] - lastIncrementTime[0] > 50){
-      gripper[0].incrementIterator();
-  }
-  lastIncrementTime[0] = incrementTime[0];
-      
-}
-
-void intServiceGrip2(void){
-  incrementTime[1] = millis();
-  if (incrementTime[1] - lastIncrementTime[1] > 50){
-      gripper[1].incrementIterator();
-  }
-  lastIncrementTime[1] = incrementTime[1];
-      
-}
-
-void intServiceAllen1(void){
-  incrementTime[2] = millis();
-  if (incrementTime[2] - lastIncrementTime[2] > 50){
-      gripper[2].incrementIterator();
-  }
-  lastIncrementTime[2] = incrementTime[2];
-      
-}
-
-void intServiceAllen2(void){
-  incrementTime[3] = millis();
-  if (incrementTime[3] - lastIncrementTime[3] > 50){
-      gripper[3].incrementIterator();
-  }
-  lastIncrementTime[3] = incrementTime[3];
-      
 }
