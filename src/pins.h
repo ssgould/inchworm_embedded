@@ -38,27 +38,32 @@
 #define JOINT_MOTOR1_FWD 9  // A-LINK WRIST
 #define JOINT_MOTOR1_REV 10
 #define JOINT_MOTOR1_EN 0
-#define JOINT_MOTOR1_ADR 0x44 // -> ankle (joint 4 from pinned picture)
+#define JOINT_MOTOR1_ADR 0x41
+//#define JOINT_MOTOR1_ADR 0x44 // -> ankle (joint 4 from pinned picture)
 
 #define JOINT_MOTOR2_FWD 5  // AB-LINK JOINTt
 #define JOINT_MOTOR2_REV 6
 #define JOINT_MOTOR2_EN 0
-#define JOINT_MOTOR2_ADR 0x40 // -> both on the teensy leg
+#define JOINT_MOTOR2_ADR 0x40
+//#define JOINT_MOTOR2_ADR 0x40 // -> both on the teensy leg
 
 #define JOINT_MOTOR3_FWD 4  // BC-LINK JOINT
 #define JOINT_MOTOR3_REV 3
 #define JOINT_MOTOR3_EN 0
-#define JOINT_MOTOR3_ADR 0x41 // no one has it? i2c error = 2 (joint 1)
+#define JOINT_MOTOR3_ADR 0x42
+//#define JOINT_MOTOR3_ADR 0x41 // no one has it? i2c error = 2 (joint 1)
 
 #define JOINT_MOTOR4_FWD 21  // CD-LINK JOINT
 #define JOINT_MOTOR4_REV 20
 #define JOINT_MOTOR4_EN 0
-#define JOINT_MOTOR4_ADR 0x42 // no one has it? i2c error  = 2  (joint 2 / 3)
+#define JOINT_MOTOR4_ADR 0x44
+//#define JOINT_MOTOR4_ADR 0x42 // no one has it? i2c error  = 2  (joint 2 / 3)
 
 #define JOINT_MOTOR5_FWD 22 // D-LINK WRIST
 #define JOINT_MOTOR5_REV 23
 #define JOINT_MOTOR5_EN 0
-#define JOINT_MOTOR5_ADR 0x48 // joint 5 (wrist not on teensy leg)
+#define JOINT_MOTOR5_ADR 0x48
+//#define JOINT_MOTOR5_ADR 0x48 // joint 5 (wrist not on teensy leg)
 
 // DEBUG PIN TO BE USED FOR ANYTHING
 #define DEBUG_PIN 0
