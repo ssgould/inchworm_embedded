@@ -34,7 +34,7 @@ uint32_t startMoveTime = 0;
 // SERIAL BUFFER
 ////////////////////////////////////////////////////////////////
 const int MOTOR_PKT_LEN = 8;   // motor packet example: "-123.32_" (ending in space)
-const int CONTROL_PKT_LEN = 4; // gripper and allen key control packet example: "0131"
+const int CONTROL_PKT_LEN = 3; // gripper and allen key control packet example: "0 1"
 const int TOTAL_PACKET_LEN = MOTOR_PKT_LEN * NUM_MOTORS + CONTROL_PKT_LEN + 1;
 char serialBuffer[TOTAL_PACKET_LEN];
 char tempSerialBuffer[TOTAL_PACKET_LEN]; // Temporary Serial Buffer
@@ -86,9 +86,10 @@ void testMotors(void);
 //serial stuff
 void readSerial(void);
 void printSerial(void);
+void printFakeSerial(void);
 
 //magnet switching
-void setMagnetState(int, int);
+void setMagnetState(char, char);
 void updateMagnets(void);
 
 ////////////////////////////////////////////////////////////////
@@ -125,15 +126,15 @@ void setup()
 		 * Intialize Joint Motors (PINs, Dynamic PID values, Encoder I2C address, direction, ID)
 		 */
 		if(USE_MOTORS){
-			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
-										JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
-			jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
-										JOINT_MOTOR2_ADR, 22, .5, 0, 8, .3, 0, 27.81, false, 2);
-			jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
-										JOINT_MOTOR3_ADR, 22, 0.5, 0, 23, 0.4, 0, 124.38, true, 3);
-			jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
-										JOINT_MOTOR4_ADR, 8, .3, 0, 23, .4, 0, 27.8, true, 4);
-			jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
+			//jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
+			//							JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
+			//jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
+			//							JOINT_MOTOR2_ADR, 22, .5, 0, 8, .3, 0, 27.81, false, 2);
+			//jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
+			//							JOINT_MOTOR3_ADR, 22, 0.5, 0, 23, 0.4, 0, 124.38, true, 3);
+			//jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
+			//							JOINT_MOTOR4_ADR, 8, .3, 0, 23, .4, 0, 27.8, true, 4);
+			jointMotor[0] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
 										JOINT_MOTOR5_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 5);
 			// jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
 			// 							JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
@@ -147,10 +148,10 @@ void setup()
 			// 							JOINT_MOTOR5_ADR, 2, .3, 0, 0, 0, 0, 0.0, false, 5);
 
 			jointMotor[0].SetTarget(0.0);
-			jointMotor[1].SetTarget(27.81);
-			jointMotor[2].SetTarget(124.38);
-			jointMotor[3].SetTarget(27.81);
-			jointMotor[4].SetTarget(0.0);
+			//jointMotor[1].SetTarget(27.81);
+			//jointMotor[2].SetTarget(124.38);
+			//jointMotor[3].SetTarget(27.81);
+			//jointMotor[4].SetTarget(0.0);
 	
 		}
 
@@ -182,10 +183,11 @@ void setup()
 
 void loop()
 {
-    readSerial();
-    printSerial();
-
-	
+    //readSerial();
+    //printSerial();
+    //printFakeSerial();;
+	Serial.println("hi");
+	Serial.println(jointMotor[0].getAngleDegrees());
 	/*
 	if(testState == TEST_ALL){
 		testEncoders();
@@ -562,13 +564,13 @@ void readSerial() {
 		Serial.readBytesUntil('\n', serialBuffer, TOTAL_PACKET_LEN);
 
 
-		String outString = "Message received: ";
-		outString.concat(serialBuffer);
-		Serial.println(outString);
+		//String outString = "Message received: ";
+		//outString.concat(serialBuffer);
+		//Serial.println(outString);
 		int tempIndex = 0;
 		int jointIndex = 0;
 
-		if (serialBuffer[0] == '-' || serialBuffer[0] == '0')
+		if (serialBuffer[0] == '-' || serialBuffer[0] == ' ')
 		{
 			//read serial
 			//split it up into the separate pieces
@@ -585,15 +587,28 @@ void readSerial() {
 				}
 				std::string angleString = std::string(angleChars);
 				float tempAngle = atof(angleChars);
+				
+				//check that it correctly decodes things
+				//Serial.print("calc joint ");
+				//Serial.print(jointIndex);
+				//Serial.print(": ");
+				//Serial.print(tempAngle);
+				//Serial.print("\n");
 
 				// send robot off
 				jointMotor[jointIndex].SetTarget(tempAngle);
 			}
-
-			tempIndex++;
+			Serial.print(tempIndex+1);
+			tempIndex = NUM_MOTORS * MOTOR_PKT_LEN + 1;
+			Serial.print(tempIndex);
+			//Serial.println(tempIndex);
+			Serial.println(serialBuffer[TOTAL_PACKET_LEN - 4]);
+			Serial.println((serialBuffer[TOTAL_PACKET_LEN - 2]));
 			
 			// get magnet state
-			setMagnetState(int(serialBuffer[tempIndex]), int(serialBuffer[tempIndex + 2]));
+			setMagnetState((serialBuffer[TOTAL_PACKET_LEN - 4]), (serialBuffer[TOTAL_PACKET_LEN - 42]));
+			//Serial.println("got here");
+			printFakeSerial();
 		}
 	    else
 		{
@@ -616,11 +631,63 @@ void printSerial() {
 	{
 		tempAngle = jointMotor[i].getAngleDegrees();
 		
+		dtostrf(tempAngle,5,2,tempString);
+		
+		if (tempAngle >= 0)
+		{
+			outputString.concat(' ');
+		}
+		else
+		{
+			outputString.concat('-');
+		}
+		tempAngle = abs(tempAngle);
+		if (tempAngle < 100)
+			tempString[0] = '0';
+		if (tempAngle < 10)
+			tempString[1] = '0';
+		
+		outputString.concat(tempString);
+		outputString.concat(" ");
+	}
+	//add magnet state to string
+	switch(magState)
+	{
+		case magnetsOn:
+			outputString.concat("0 0");
+			break;
+		case magnet1Off:
+			outputString.concat("1 0");
+			break;
+		case magnet2Off:
+			outputString.concat("0 1");
+			break;
+	}
+	//print string
+	Serial.println(outputString);
+
+}
+
+/**
+ * @brief print where the fake joints currently are
+ * 
+ */
+void printFakeSerial() {
+	//Serial.println("here");
+	String outputString = "";
+	double tempAngle;
+	char tempString[20];
+
+	//turn the angles into strings
+	for (int i = 0; i < NUM_MOTORS; i++)
+	{
+		tempAngle = jointMotor[i].GetTarget();
+		
 		dtostrf(tempAngle,6,2,tempString);
 		
 		if (tempAngle >= 0)
 		{
-			outputString.concat('0');
+			outputString.concat(' ');
 		}
 		else
 		{
@@ -715,16 +782,24 @@ void testJointMotor() {
  * Sets the magnet state off the enum
  * 
  **/
-void setMagnetState(int mag1, int mag2) {
-    if (mag1 == 0 && mag2 == 0)
-                magState = magnetsOn;
-        else if (mag1 == 1 && mag2 == 0)
-                magState = magnet1Off;
-        else if (mag1 == 0 && mag2 == 1)
-                magState = magnet2Off;
-        else
-                printf("Error - invalid magnet state\n");
-
+void setMagnetState(char mag1, char mag2) {
+	Serial.println("made it");
+	Serial.println(mag1);
+	Serial.println(mag2);
+	Serial.println(mag1 == '0');
+	Serial.println(mag1 == '1');
+	Serial.println(mag2 == '0');
+	Serial.println(mag2 == '1');
+	/*
+    if (mag1 == '0' && mag2 == '0')
+		magState = magnetsOn;
+	else if (mag1 == '1' && mag2 == '0')
+		magState = magnet1Off;
+	else if (mag1 == '0' && mag2 == '1')
+		magState = magnet2Off;
+	else
+		printf("Error - invalid magnet state\n");
+    */
 }
 
 /**
