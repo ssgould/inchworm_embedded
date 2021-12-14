@@ -43,17 +43,17 @@
 #define JOINT_MOTOR2_FWD 5  // AB-LINK JOINTt
 #define JOINT_MOTOR2_REV 6
 #define JOINT_MOTOR2_EN 0
-#define JOINT_MOTOR2_ADR 0x40 // -> wrist (joint 1 from pinned picture) also both on the teensy leg
+#define JOINT_MOTOR2_ADR 0x40 // -> both on the teensy leg
 
 #define JOINT_MOTOR3_FWD 4  // BC-LINK JOINT
 #define JOINT_MOTOR3_REV 3
 #define JOINT_MOTOR3_EN 0
-#define JOINT_MOTOR3_ADR 0x41 // no one has it? i2c error = 2
+#define JOINT_MOTOR3_ADR 0x41 // no one has it? i2c error = 2 (joint 1)
 
 #define JOINT_MOTOR4_FWD 21  // CD-LINK JOINT
 #define JOINT_MOTOR4_REV 20
 #define JOINT_MOTOR4_EN 0
-#define JOINT_MOTOR4_ADR 0x42 // no one has it? i2c error  = 2
+#define JOINT_MOTOR4_ADR 0x42 // no one has it? i2c error  = 2  (joint 2 / 3)
 
 #define JOINT_MOTOR5_FWD 22 // D-LINK WRIST
 #define JOINT_MOTOR5_REV 23
