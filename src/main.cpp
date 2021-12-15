@@ -67,7 +67,8 @@ MagnetState magState = magnetsOn;
 ////////////////////////////////////////////////////////////////
 // SYTEM CONSTANTS
 ////////////////////////////////////////////////////////////////
-int testState = ROBOT_NORMAL;
+//int testState = ROBOT_NORMAL;
+int testState = TEST_MOTORS;
 
 ////////////////////////////////////////////////////////////////
 // FUNCTION PROTOTYPES
@@ -160,11 +161,11 @@ void setup()
 		/*
 		* Initialize Magnets
 		*/
-		if (USE_MAGNETS)
-		{
-			pinMode(MAGNET_1, OUTPUT);
-			pinMode(MAGNET_2, OUTPUT);
-		}
+		pinMode(MAGNET_1, OUTPUT);
+		pinMode(MAGNET_2, OUTPUT);
+		digitalWrite(MAGNET_1, HIGH);
+		digitalWrite(MAGNET_2, HIGH);
+		
 
 
 		if(USE_DEBUG_BUTTON)
@@ -183,9 +184,11 @@ void setup()
 
 void loop()
 {
-    readSerial();
+    //readSerial();
     //printSerial();
     //printFakeSerial();
+	if(testState == TEST_MOTORS)
+		testMotors();
 
 /*
 	if (testState == TEST_MAGNETS) {
@@ -847,16 +850,16 @@ void setMagnetState(char mag1, char mag2) {
 void updateMagnets() {
 	switch(magState) {
 		case magnetsOn:
-			digitalWrite(MAGNET_1, LOW);
-			digitalWrite(MAGNET_2, LOW);
+			digitalWrite(MAGNET_1, HIGH);
+			digitalWrite(MAGNET_2, HIGH);
 			break;
 		case magnet1Off:
-			digitalWrite(MAGNET_1, HIGH);
-			digitalWrite(MAGNET_2, LOW);
-			break;
-		case magnet2Off:
 			digitalWrite(MAGNET_1, LOW);
 			digitalWrite(MAGNET_2, HIGH);
+			break;
+		case magnet2Off:
+			digitalWrite(MAGNET_1, HIGH);
+			digitalWrite(MAGNET_2, LOW);
 			break;
 	}
 }
@@ -937,4 +940,5 @@ void testMotors(void){
 	}
 	Serial.println("\nFinishing Test ...\n");
 	delay(4000);
+	//testState = ROBOT_TUNNING;
 }
