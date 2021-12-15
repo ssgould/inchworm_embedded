@@ -183,9 +183,54 @@ void setup()
 
 void loop()
 {
-    //readSerial();
-    printSerial();
+    readSerial();
+    //printSerial();
     //printFakeSerial();
+
+/*
+	if (testState == TEST_MAGNETS) {
+		updateMagnets();
+	}
+
+	if(testState == ROBOT_TUNNING || testState == ROBOT_NORMAL){
+		// turn the magnets on/off
+		if (USE_MAGNETS)
+		{
+			updateMagnets();
+		}
+
+		// Move joint motors
+		static uint32_t lastUpdateTime = millis();
+		uint32_t currTime = millis();
+		if (currTime - lastUpdateTime >= UPDATE_INTERVAL)
+		{
+			if (currTime - lastUpdateTime > UPDATE_INTERVAL)
+				Serial.println("Missed update schedule.");
+
+			lastUpdateTime += UPDATE_INTERVAL;
+
+			if (state == ST_HOLDING || ST_MOVING)
+			{
+				UpdateMotors();
+			}
+		}
+
+		// Set vias between waypoints
+		if (currTime - lastViaUpdate >= VIA_INTERVAL)
+		{
+			if (state == ST_MOVING)
+			{
+				if (currTime - startMoveTime >= VIA_COUNT * VIA_INTERVAL)
+				{
+					state = ST_HOLDING;
+				}
+
+				else
+					SetNewVias();
+			}
+		}
+	}
+*/	
 	/*
 	if(testState == TEST_ALL){
 		testEncoders();
@@ -560,11 +605,9 @@ void readSerial() {
 		double current_time = millis();
 		previous_time = current_time;
 		Serial.readBytesUntil('\n', serialBuffer, TOTAL_PACKET_LEN);
+		//Serial.println("Message received:");
+		//Serial.println(serialBuffer);
 
-
-		//String outString = "Message received: ";
-		//outString.concat(serialBuffer);
-		//Serial.println(outString);
 		int tempIndex = 0;
 		int jointIndex = 0;
 
@@ -596,15 +639,12 @@ void readSerial() {
 				// send robot off
 				jointMotor[jointIndex].SetTarget(tempAngle);
 			}
-			Serial.print(tempIndex+1);
-			tempIndex = NUM_MOTORS * MOTOR_PKT_LEN + 1;
-			Serial.print(tempIndex);
-			//Serial.println(tempIndex);
-			Serial.println(serialBuffer[TOTAL_PACKET_LEN - 4]);
-			Serial.println((serialBuffer[TOTAL_PACKET_LEN - 2]));
+			//the third to last and last characters should be the magnets
+			char magnet1 = serialBuffer[TOTAL_PACKET_LEN - 4];
+			char magnet2 = serialBuffer[TOTAL_PACKET_LEN - 2];
 			
 			// get magnet state
-			setMagnetState((serialBuffer[TOTAL_PACKET_LEN - 4]), (serialBuffer[TOTAL_PACKET_LEN - 42]));
+			setMagnetState(magnet1, magnet2);
 			//Serial.println("got here");
 			printFakeSerial();
 		}
@@ -635,10 +675,10 @@ void printSerial() {
 		{
 			outputString.concat(' ');
 		}
-		else
-		{
-			outputString.concat('-');
-		}
+		//else
+		//{
+		//	outputString.concat('-');
+		//}
 		tempAngle = abs(tempAngle);
 		if (tempAngle < 100)
 			tempString[0] = '0';
@@ -687,10 +727,10 @@ void printFakeSerial() {
 		{
 			outputString.concat(' ');
 		}
-		else
-		{
-			outputString.concat('-');
-		}
+		//else
+		//{
+		//	outputString.concat('-');
+		//}
 		tempAngle = abs(tempAngle);
 		if (tempAngle < 100)
 			tempString[0] = '0';
@@ -781,23 +821,23 @@ void testJointMotor() {
  * 
  **/
 void setMagnetState(char mag1, char mag2) {
-	Serial.println("made it");
-	Serial.println(mag1);
-	Serial.println(mag2);
-	Serial.println(mag1 == '0');
-	Serial.println(mag1 == '1');
-	Serial.println(mag2 == '0');
-	Serial.println(mag2 == '1');
-	/*
-    if (mag1 == '0' && mag2 == '0')
+	
+    if (mag1 == '0' && mag2 == '0') {
 		magState = magnetsOn;
-	else if (mag1 == '1' && mag2 == '0')
+		//Serial.println("set magnet state to both magnets on");
+	}
+	else if (mag1 == '1' && mag2 == '0') {
 		magState = magnet1Off;
-	else if (mag1 == '0' && mag2 == '1')
+		//Serial.println("set magnet state to magnet1 off");
+	}
+	else if (mag1 == '0' && mag2 == '1') {
 		magState = magnet2Off;
-	else
-		printf("Error - invalid magnet state\n");
-    */
+		//Serial.println("set magnet state to magnet2 off");
+	}
+	else {
+		Serial.println("Error - invalid magnet state\n");
+	}
+    
 }
 
 /**
