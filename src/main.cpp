@@ -67,8 +67,8 @@ MagnetState magState = magnetsOn;
 ////////////////////////////////////////////////////////////////
 // SYTEM CONSTANTS
 ////////////////////////////////////////////////////////////////
-//int testState = ROBOT_NORMAL;
-int testState = TEST_MOTORS;
+int testState = ROBOT_NORMAL;
+//int testState = TEST_MOTORS;
 
 ////////////////////////////////////////////////////////////////
 // FUNCTION PROTOTYPES
@@ -92,6 +92,7 @@ void printFakeSerial(void);
 //magnet switching
 void setMagnetState(char, char);
 void updateMagnets(void);
+void testMagnets(void);
 
 ////////////////////////////////////////////////////////////////
 // SETUP METHOD
@@ -127,16 +128,16 @@ void setup()
 		 * Intialize Joint Motors (PINs, Dynamic PID values, Encoder I2C address, direction, ID)
 		 */
 		if(USE_MOTORS){
-			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
-										JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
-			jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
-										JOINT_MOTOR2_ADR, 22, .5, 0, 8, .3, 0, 27.81, false, 2);
-			jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
-										JOINT_MOTOR3_ADR, 22, 0.5, 0, 23, 0.4, 0, 124.38, true, 3);
-			jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
-										JOINT_MOTOR4_ADR, 8, .3, 0, 23, .4, 0, 27.8, true, 4);
-			jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
-										JOINT_MOTOR5_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 5);
+			//jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
+			//							JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
+			//jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
+			//							JOINT_MOTOR2_ADR, 22, .5, 0, 8, .3, 0, 27.81, false, 2);
+			//jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
+			//							JOINT_MOTOR3_ADR, 22, 0.5, 0, 23, 0.4, 0, 124.38, true, 3);
+			//jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
+			//							JOINT_MOTOR4_ADR, 8, .3, 0, 23, .4, 0, 27.8, true, 4);
+			//jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
+			//							JOINT_MOTOR5_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 5);
 			// jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
 			// 							JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
 			// jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
@@ -148,7 +149,7 @@ void setup()
 			// jointMotor[0] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
 			//							JOINT_MOTOR5_ADR, 2, .3, 0, 0, 0, 0, 0.0, false, 5);
 
-			jointMotor[0].SetTarget(0.0);
+			//jointMotor[0].SetTarget(0.0);
 			//jointMotor[1].SetTarget(27.81);
 			//jointMotor[2].SetTarget(124.38);
 			//jointMotor[3].SetTarget(27.81);
@@ -163,6 +164,8 @@ void setup()
 		*/
 		pinMode(MAGNET_1, OUTPUT);
 		pinMode(MAGNET_2, OUTPUT);
+
+        Serial.println("HI");
 		digitalWrite(MAGNET_1, HIGH);
 		digitalWrite(MAGNET_2, HIGH);
 		
@@ -176,6 +179,7 @@ void setup()
 		Serial.println("Done");
 		previous_time = millis();
 	}
+		pinMode(25, OUTPUT);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -184,11 +188,17 @@ void setup()
 
 void loop()
 {
-    //readSerial();
+    readSerial();
+	digitalWrite(25, HIGH);
+	delay(2000);
+	digitalWrite(25, LOW);
+	delay(2000);
+	
+	//testMagnets();
     //printSerial();
     //printFakeSerial();
-	if(testState == TEST_MOTORS)
-		testMotors();
+	//if(testState == TEST_MOTORS)
+	//	testMotors();
 
 /*
 	if (testState == TEST_MAGNETS) {
@@ -303,6 +313,32 @@ void test1Robot(int numberSteps){
 	}
 }
 
+void testMagnets(){
+
+	Serial.print("------ MAGNET TEST -----\n");
+	Serial.print("magnetic\n");
+	digitalWrite(MAGNET_1, HIGH);
+	digitalWrite(MAGNET_2, HIGH);
+	delay(1000);
+	Serial.print("magnet 1 off\n");
+	digitalWrite(MAGNET_1, LOW);
+	digitalWrite(MAGNET_2, HIGH);
+	delay(1000);
+	Serial.print("magnetic\n");
+	digitalWrite(MAGNET_1, HIGH);
+	digitalWrite(MAGNET_2, HIGH);
+	delay(1000);
+	Serial.print("magnet 2 off\n");
+	digitalWrite(MAGNET_1, HIGH);
+	digitalWrite(MAGNET_2, LOW);
+	delay(1000);
+	Serial.print("magnetic\n");
+	digitalWrite(MAGNET_1, HIGH);
+	digitalWrite(MAGNET_2, HIGH);
+	Serial.println("\nFinishing Test ...\n");
+	delay(1000);
+	//testState = ROBOT_TUNNING;
+}
 ////////////////////////////////////////////////////////////////
 // FUNCTIONS
 ////////////////////////////////////////////////////////////////

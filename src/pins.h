@@ -26,7 +26,7 @@
 //#define ALLEN_KEY_BUTTON_D_LINK 29 //limit switch for allen key
 
 //END EFFECTOR MAGNET PINS
-#define MAGNET_1 35           //foot 1 magnet
+#define MAGNET_1 36           //foot 1 magnet
 #define MAGNET_2 37           //foot 2 magnet
 
 //TEENSY CLOCK PINS
