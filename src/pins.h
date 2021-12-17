@@ -26,8 +26,9 @@
 //#define ALLEN_KEY_BUTTON_D_LINK 29 //limit switch for allen key
 
 //END EFFECTOR MAGNET PINS
-#define MAGNET_1 36           //foot 1 magnet
-#define MAGNET_2 37           //foot 2 magnet
+//#define MAGNET_1 36           //foot 1 magnet
+#define MAGNET_1 24
+#define MAGNET_2 26           //foot 2 magnet
 
 //TEENSY CLOCK PINS
 // FTM0
@@ -47,8 +48,8 @@
 #define JOINT_MOTOR2_ADR 0x40
 //#define JOINT_MOTOR2_ADR 0x40 // -> both on the teensy leg
 
-#define JOINT_MOTOR3_FWD 4  // BC-LINK JOINT
-#define JOINT_MOTOR3_REV 3
+#define JOINT_MOTOR3_FWD 8  // BC-LINK JOINT
+#define JOINT_MOTOR3_REV 7
 #define JOINT_MOTOR3_EN 0
 #define JOINT_MOTOR3_ADR 0x42
 //#define JOINT_MOTOR3_ADR 0x41 // no one has it? i2c error = 2 (joint 1)
