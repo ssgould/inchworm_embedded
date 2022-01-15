@@ -93,6 +93,7 @@ void printFakeSerial(void);
 void setMagnetState(char, char);
 void updateMagnets(void);
 void testMagnets(void);
+void test(void);
 
 ////////////////////////////////////////////////////////////////
 // SETUP METHOD
@@ -128,16 +129,30 @@ void setup()
 		 * Intialize Joint Motors (PINs, Dynamic PID values, Encoder I2C address, direction, ID)
 		 */
 		if(USE_MOTORS){
-			//jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
-			//							JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
-			//jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
-			//							JOINT_MOTOR2_ADR, 22, .5, 0, 8, .3, 0, 27.81, false, 2);
-			//jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
-			//							JOINT_MOTOR3_ADR, 22, 0.5, 0, 23, 0.4, 0, 124.38, true, 3);
-			//jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
-			//							JOINT_MOTOR4_ADR, 8, .3, 0, 23, .4, 0, 27.8, true, 4);
-			//jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
-			//							JOINT_MOTOR5_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 5);
+			// proper home
+			/*
+			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
+										JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
+			jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
+										JOINT_MOTOR2_ADR, 22, .5, 0, 8, .3, 0, 27.81, false, 2);
+			jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
+										JOINT_MOTOR3_ADR, 22, 0.5, 0, 23, 0.4, 0, 124.38, true, 3);
+			jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
+										JOINT_MOTOR4_ADR, 8, .3, 0, 23, .4, 0, 27.8, true, 4);
+			jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
+										JOINT_MOTOR5_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 5);
+			*/
+			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
+										JOINT_MOTOR1_ADR, 10, 0, 0, 10, 0, 0, 0.0, false, 1);
+			jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
+										JOINT_MOTOR2_ADR, 10, 0, 0, 10, 0, 0, 0.0, false, 2);
+			jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
+										JOINT_MOTOR3_ADR, 22, 0.5, 0, 23, 0.4, 0, 0.0, true, 3);
+			jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
+										JOINT_MOTOR4_ADR, 8, .3, 0, 23, .4, 0, 0.0, true, 4);
+			jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
+										JOINT_MOTOR5_ADR, 10, 0, 0, 10, 0, 0, 0.0, false, 5);
+			
 			// jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
 			// 							JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
 			// jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
@@ -149,12 +164,19 @@ void setup()
 			// jointMotor[0] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
 			//							JOINT_MOTOR5_ADR, 2, .3, 0, 0, 0, 0, 0.0, false, 5);
 
-			//jointMotor[0].SetTarget(0.0);
-			//jointMotor[1].SetTarget(27.81);
-			//jointMotor[2].SetTarget(124.38);
-			//jointMotor[3].SetTarget(27.81);
-			//jointMotor[4].SetTarget(0.0);
-	
+			// proper home
+			/*
+			jointMotor[0].SetTarget(0.0);
+			jointMotor[1].SetTarget(27.81);
+			jointMotor[2].SetTarget(124.38);
+			jointMotor[3].SetTarget(27.81);
+			jointMotor[4].SetTarget(0.0);
+			*/
+			jointMotor[0].SetTarget(0.0);
+			jointMotor[1].SetTarget(0.0);
+			jointMotor[2].SetTarget(0.0);
+			jointMotor[3].SetTarget(0.0);
+			jointMotor[4].SetTarget(0.0);
 		}
 
 		inputBuffer.reserve(24);
@@ -165,12 +187,9 @@ void setup()
 		pinMode(MAGNET_1, OUTPUT);
 		pinMode(MAGNET_2, OUTPUT);
 
-        Serial.println("HI");
 		digitalWrite(MAGNET_1, HIGH);
 		digitalWrite(MAGNET_2, HIGH);
 		
-
-
 		if(USE_DEBUG_BUTTON)
 		{
 			pinMode(DEBUG_PIN, INPUT);
@@ -179,7 +198,6 @@ void setup()
 		Serial.println("Done");
 		previous_time = millis();
 	}
-		pinMode(25, OUTPUT);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -188,19 +206,7 @@ void setup()
 
 void loop()
 {
-    readSerial();
-	digitalWrite(25, HIGH);
-	delay(2000);
-	digitalWrite(25, LOW);
-	delay(2000);
-	
-	//testMagnets();
-    //printSerial();
-    //printFakeSerial();
-	//if(testState == TEST_MOTORS)
-	//	testMotors();
-
-/*
+	/*
 	if (testState == TEST_MAGNETS) {
 		updateMagnets();
 	}
@@ -243,8 +249,9 @@ void loop()
 			}
 		}
 	}
-*/	
-	/*
+	*/
+
+	
 	if(testState == TEST_ALL){
 		testEncoders();
 		testMotors();
@@ -255,14 +262,14 @@ void loop()
 	}else if(testState == ROBOT_TUNNING){
 		RunPidTuningDebug();
 	}else if(testState == ROBOT_NORMAL){
-		ReadAngleInputs();
+		readSerial();
 	}	
 
 	if(testState == ROBOT_TUNNING || testState == ROBOT_NORMAL){
 		// turn the magnets on/off
 		if (USE_MAGNETS)
 		{
-			updateMagnets();
+			//updateMagnets();
 		}
 
 		// Move joint motors
@@ -271,7 +278,7 @@ void loop()
 		if (currTime - lastUpdateTime >= UPDATE_INTERVAL)
 		{
 			if (currTime - lastUpdateTime > UPDATE_INTERVAL)
-				Serial.println("Missed update schedule.");
+				//Serial.println("Missed update schedule.");
 
 			lastUpdateTime += UPDATE_INTERVAL;
 
@@ -292,11 +299,13 @@ void loop()
 				}
 
 				else
+				{
 					SetNewVias();
+				}
+					
 			}
 		}
 	}
-	*/
 }
 
 /**
@@ -312,6 +321,41 @@ void test1Robot(int numberSteps){
 		}
 	}
 }
+
+
+void test() {
+	Serial.println("motor 1");
+	analogWrite(JOINT_MOTOR1_FWD, 255);
+	analogWrite(JOINT_MOTOR1_REV, 0);
+	delay(1000);
+	analogWrite(JOINT_MOTOR1_FWD, 0);
+	analogWrite(JOINT_MOTOR1_REV, 0);
+	Serial.println("motor 2");
+	analogWrite(JOINT_MOTOR2_FWD, 255);
+	analogWrite(JOINT_MOTOR2_REV, 0);
+	delay(1000);
+	analogWrite(JOINT_MOTOR2_FWD, 0);
+	analogWrite(JOINT_MOTOR2_REV, 0);
+	Serial.println("motor 3");
+	analogWrite(JOINT_MOTOR3_FWD, 255);
+	analogWrite(JOINT_MOTOR3_REV, 0);
+	delay(1000);
+	analogWrite(JOINT_MOTOR3_FWD, 0);
+	analogWrite(JOINT_MOTOR3_REV, 0);
+	Serial.println("motor 4");
+	analogWrite(JOINT_MOTOR4_FWD, 255);
+	analogWrite(JOINT_MOTOR4_REV, 0);
+	delay(1000);
+	analogWrite(JOINT_MOTOR4_FWD, 0);
+	analogWrite(JOINT_MOTOR4_REV, 0);
+	Serial.println("motor 5");
+	analogWrite(JOINT_MOTOR5_FWD, 255);
+	analogWrite(JOINT_MOTOR5_REV, 0);
+	delay(1000);
+	analogWrite(JOINT_MOTOR5_FWD, 0);
+	analogWrite(JOINT_MOTOR5_REV, 0);
+}
+
 
 void testMagnets(){
 
@@ -448,10 +492,11 @@ void RunPidTuningDebug()
  */
 void UpdateMotors()
 {
+	/*
 	int speeds[MOTOR_COUNT];
-	for (int i = 0; i < MOTOR_COUNT; i++)
+	for (int i = 0; i < NUM_MOTORS; i++)
 	{
-		speeds[i] = jointMotor[i].CalcEffort();
+		speeds[i] = jointMotor[1].CalcEffort();
 	}
 
 	// jointMotor speed should be updated after all gcs are calculated to
@@ -466,11 +511,28 @@ void UpdateMotors()
 	}
 	else
 	{
-		for (int i = 0; i < MOTOR_COUNT; i++)
+		for (int i = 0; i < 1; i++)
 		{
 			jointMotor[i].SendPWM(speeds[i]);
 		}
 	}
+	*/
+	int speed;
+	speed = jointMotor[4].CalcEffort();
+	Serial.printf("Effort: %d\n", speed);
+
+
+	// jointMotor speed should be updated after all gcs are calculated to
+	// minimize delay between each joint movement
+	if (switchedPid_2)
+	{
+		jointMotor[4].SendPWM(speed);
+	}
+	else
+	{
+		jointMotor[4].SendPWM(speed);
+	}
+
 }
 
 
@@ -510,10 +572,10 @@ void SetNewVias(void)
 	if (fraction > 1)
 		fraction = 1;
 
-	for (int i = 0; i < MOTOR_COUNT; i++)
+	for (int i = 0; i < 1; i++)
 	{
 		float viaAngle = startAngles[i] + (targetAngles[i] - startAngles[i]) * fraction;
-		jointMotor[i].SetTarget(viaAngle);
+		jointMotor[1].SetTarget(viaAngle);
 	}
 }
 
@@ -685,7 +747,7 @@ void readSerial() {
 			// get magnet state
 			setMagnetState(magnet1, magnet2);
 			//Serial.println("got here");
-			printFakeSerial();
+			printSerial(); 
 		}
 	    else
 		{
@@ -969,10 +1031,18 @@ void testMotors(void){
 	for(int i = 0; i < totalPins; i = i + 2){
 		Serial.printf("\n   Testing Motor: %d Pins: (%d, %d) ", i, pinM[i], pinM[i+1]);
 		motor = JointMotor2(pinM[i], pinM[i+1]);
+		Serial.printf("\n  forward");
 		motor.SendPWM(10);
-		delay(1000);
+		delay(2000);
+		Serial.printf("\n  stop");
 		motor.SendPWM(0);
-		delay(1000);
+		delay(2000);
+		Serial.printf("\n  backward");
+		motor.SendPWM(-10);
+		delay(2000);
+		Serial.printf("\n  stop");
+		motor.SendPWM(0);
+		delay(2000);
 	}
 	Serial.println("\nFinishing Test ...\n");
 	delay(4000);
