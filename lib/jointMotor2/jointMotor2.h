@@ -39,6 +39,7 @@ public:
 
 	void SendPWM(int speed);
 	void SetTarget(double angle);
+	double GetTarget(void);
 	int CalcEffort(void);
 	double getAngleDegrees();
 	bool SwitchPID(uint8_t gripperEngagedSelect);

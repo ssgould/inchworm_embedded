@@ -139,6 +139,14 @@ void JointMotor2::SetTarget(double angle)
 }
 
 /*
+* Get desired joint angle
+*/
+double JointMotor2::GetTarget(void)
+{
+	return targetAngle;
+}
+
+/*
 * TODO: Add moving average to see if the max change is greater than the one wanted 
   if it is then stop the motor from moving to that angle. There is two places where 
   this could work:1) in this calcEffor() function when I get the getAngleDegrees() 
@@ -182,6 +190,7 @@ int JointMotor2::CalcEffort(void)
 	double currentTime = millis();
 	if (currentTime - lastDebugUpdate >= 1000)
 	{
+		/*
 		Serial.print("\nID: ");
 		Serial.print(id);
 		// Serial.print(" CA: ");
@@ -192,6 +201,7 @@ int JointMotor2::CalcEffort(void)
 		Serial.print(error);
 		Serial.print(" Effort:");
 		Serial.print(effort);
+		*/
 		lastDebugUpdate = currentTime;
 	}
 
