@@ -205,17 +205,8 @@ void setup()
 ////////////////////////////////////////////////////////////////
 
 void loop()
-{ 
-	double temp1 = jointMotor[0].getAngleDegrees();
-	double temp2 = jointMotor[1].getAngleDegrees();
-	double temp3 = jointMotor[2].getAngleDegrees();
-	double temp4 = jointMotor[3].getAngleDegrees();
-	double temp5 = jointMotor[4].getAngleDegrees();
-	Serial.printf("Egg motor 1 %f\n", temp1);
-	Serial.printf("Egg motor 2 %f\n", temp2);
-	Serial.printf("Egg motor 3 %f\n", temp3);
-	Serial.printf("Egg motor 4 %f\n", temp4);
-	Serial.printf("Egg motor 5 %f\n", temp5);
+{
+	printSerial();
 	/*
 	if (testState == TEST_MAGNETS) {
 		updateMagnets();
@@ -261,7 +252,7 @@ void loop()
 	}
 	*/
 
-	/*
+	
 	if(testState == TEST_ALL){
 		testEncoders();
 		testMotors();
@@ -294,7 +285,7 @@ void loop()
 
 			if (state == ST_HOLDING || ST_MOVING)
 			{
-				//UpdateMotors();
+				UpdateMotors();
 			}
 		}
 
@@ -307,16 +298,13 @@ void loop()
 				{
 					state = ST_HOLDING;
 				}
-
 				else
 				{
 					SetNewVias();
-				}
-					
+				}	
 			}
 		}
 	}
-	*/
 	
 }
 
@@ -527,6 +515,7 @@ void UpdateMotors()
 			jointMotor[i].SendPWM(speeds[i]);
 		}
 	}
+	Serial.printf("E %3.2f %3.2f %3.2f %3.2f %3.2f\n", speeds[0], speeds[1], speeds[2], speeds[3],  speeds[4]);
 }
 
 
