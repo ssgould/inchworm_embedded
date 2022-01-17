@@ -205,7 +205,17 @@ void setup()
 ////////////////////////////////////////////////////////////////
 
 void loop()
-{
+{ 
+	double temp1 = jointMotor[0].getAngleDegrees();
+	double temp2 = jointMotor[1].getAngleDegrees();
+	double temp3 = jointMotor[2].getAngleDegrees();
+	double temp4 = jointMotor[3].getAngleDegrees();
+	double temp5 = jointMotor[4].getAngleDegrees();
+	Serial.printf("Egg motor 1 %f\n", temp1);
+	Serial.printf("Egg motor 2 %f\n", temp2);
+	Serial.printf("Egg motor 3 %f\n", temp3);
+	Serial.printf("Egg motor 4 %f\n", temp4);
+	Serial.printf("Egg motor 5 %f\n", temp5);
 	/*
 	if (testState == TEST_MAGNETS) {
 		updateMagnets();
@@ -251,7 +261,7 @@ void loop()
 	}
 	*/
 
-	
+	/*
 	if(testState == TEST_ALL){
 		testEncoders();
 		testMotors();
@@ -284,7 +294,7 @@ void loop()
 
 			if (state == ST_HOLDING || ST_MOVING)
 			{
-				UpdateMotors();
+				//UpdateMotors();
 			}
 		}
 
@@ -306,6 +316,8 @@ void loop()
 			}
 		}
 	}
+	*/
+	
 }
 
 /**
@@ -492,7 +504,6 @@ void RunPidTuningDebug()
  */
 void UpdateMotors()
 {
-	/*
 	int speeds[MOTOR_COUNT];
 	for (int i = 0; i < NUM_MOTORS; i++)
 	{
@@ -516,23 +527,6 @@ void UpdateMotors()
 			jointMotor[i].SendPWM(speeds[i]);
 		}
 	}
-	*/
-	int speed;
-	speed = jointMotor[4].CalcEffort();
-	Serial.printf("Effort: %d\n", speed);
-
-
-	// jointMotor speed should be updated after all gcs are calculated to
-	// minimize delay between each joint movement
-	if (switchedPid_2)
-	{
-		jointMotor[4].SendPWM(speed);
-	}
-	else
-	{
-		jointMotor[4].SendPWM(speed);
-	}
-
 }
 
 
