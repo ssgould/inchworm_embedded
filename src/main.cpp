@@ -847,6 +847,7 @@ void printSerial() {
 	pose.message.j2 = jointMotor[2].GetTarget();
 	pose.message.j3 = jointMotor[3].GetTarget();
 	pose.message.j4 = jointMotor[4].GetTarget();
+	Serial.println(pose.BytePacket);
 }
 
 /**
