@@ -10,6 +10,7 @@
 #include "Gripper.h"
 #include "test1Step.h"
 #include "SystemStateConstants.h"
+#include "messageStructs.h"
 
 ////////////////////////////////////////////////////////////////
 // TUNABLE PARAMETERS
@@ -86,6 +87,9 @@ void testMotors(void);
 
 //serial stuff
 void readSerial(void);
+void readJoints(posePacket_t message);
+void readPID(PID_Packet message);
+void readMagnets(magnetPacket_t message);
 void printSerial(void);
 void printFakeSerial(void);
 
@@ -153,17 +157,6 @@ void setup()
 			jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
 										JOINT_MOTOR5_ADR, 10, 0, 0, 10, 0, 0, 0.0, false, 5);
 			
-			// jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
-			// 							JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
-			// jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
-			// 							JOINT_MOTOR2_ADR, 0, 0, 0, 0, 0, 0, 27.81, false, 2);
-			// jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
-			// 							JOINT_MOTOR3_ADR, 0, 0, 0, 0, 0, 0, 124.38, true, 3);
-			// jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
-			// 							JOINT_MOTOR4_ADR, 0, 0, 0, 0, 0, 0, 27.8, true, 4);
-			// jointMotor[0] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
-			//							JOINT_MOTOR5_ADR, 2, .3, 0, 0, 0, 0, 0.0, false, 5);
-
 			// proper home
 			/*
 			jointMotor[0].SetTarget(0.0);
@@ -285,7 +278,7 @@ void loop()
 
 			if (state == ST_HOLDING || ST_MOVING)
 			{
-				UpdateMotors();
+				//UpdateMotors();
 			}
 		}
 
@@ -683,6 +676,53 @@ void ReadAngleInputs()
  * 
  */
 void readSerial() {
+	// make a switch statement
+	Serial.readBytesUntil('\n', serialBuffer, TOTAL_PACKET_LEN);
+	//byteMessage = serialBuffer;//from serial
+	switch(serialBuffer[0])
+	{
+		case 'g':
+			posePacket_t pose;
+			unsigned char tempPose[244];
+			for (int i = 0; i < 244; i ++){
+				tempPose[i] = serialBuffer[i];
+			}
+			memcpy(pose.BytePacket, tempPose, sizeof(pose.BytePacket));
+			readJoints(pose);
+			//do the joint reading 
+		case 'm':
+			struct magnetPacket_t mag;
+
+			unsigned char temp[12];
+			for (int i = 0; i < 12; i ++)
+			{
+				temp[i] = serialBuffer[i];
+			}
+			memcpy(mag.BytePacket, temp, sizeof(mag.BytePacket));
+			
+			readMagnets(mag);
+			//do the magnet reading
+		case 'p':
+
+			PID_Packet pid;
+			unsigned char tempPid[240];
+			for (int i = 0; i < 240; i ++)
+			{
+				tempPid[i] = serialBuffer[i];
+			}
+			memcpy(pid.BytePacket, tempPid, sizeof(pid.BytePacket));
+			readPID(pid);
+			//do the pid reading
+			break;
+		default:
+			//print fault
+			break;
+	}
+}
+
+void readJoints(posePacket_t message) {
+	//posePacket_t poseMessage.I2CPacket = byteMessage;
+	/*
 	if (Serial.available() > 0)
 	{
 		new_command=true;
@@ -712,13 +752,6 @@ void readSerial() {
 				}
 				std::string angleString = std::string(angleChars);
 				float tempAngle = atof(angleChars);
-				
-				//check that it correctly decodes things
-				//Serial.print("calc joint ");
-				//Serial.print(jointIndex);
-				//Serial.print(": ");
-				//Serial.print(tempAngle);
-				//Serial.print("\n");
 
 				// send robot off
 				jointMotor[jointIndex].SetTarget(tempAngle);
@@ -737,8 +770,26 @@ void readSerial() {
 			Serial.println("Invalid Input"); //didn't get the serial message
 		}
 	}
+	*/
+	jointMotor[0].SetTarget(message.message.j0);
+	jointMotor[1].SetTarget(message.message.j1);
+	jointMotor[2].SetTarget(message.message.j2);
+	jointMotor[3].SetTarget(message.message.j3);
+	jointMotor[4].SetTarget(message.message.j4);
 }
 
+
+void readMagnets(magnetPacket_t message){
+	setMagnetState(char(message.message.magnet1), char(message.message.magnet2));
+}
+
+void readPID(PID_Packet message){
+	jointMotor[0].set_PID(message.message.j0F, message.message.j0B);
+	jointMotor[1].set_PID(message.message.j1F, message.message.j1B);
+	jointMotor[2].set_PID(message.message.j2F, message.message.j2B);
+	jointMotor[3].set_PID(message.message.j3F, message.message.j3B);
+	jointMotor[4].set_PID(message.message.j4F, message.message.j4B);
+}
 /**
  * @brief print where the joints currently are
  * 
@@ -747,7 +798,7 @@ void printSerial() {
 	String outputString = "";
 	double tempAngle;
 	char tempString[20];
-
+	/*
 	//turn the angles into strings
 	for (int i = 0; i < NUM_MOTORS; i++)
 	{
@@ -787,7 +838,15 @@ void printSerial() {
 	}
 	//print string
 	Serial.println(outputString);
-
+	*/
+	posePacket_t pose;
+	pose.message.type = 'g';
+	pose.message.padding;
+	pose.message.j0 = jointMotor[0].GetTarget();
+	pose.message.j1 = jointMotor[1].GetTarget();
+	pose.message.j2 = jointMotor[2].GetTarget();
+	pose.message.j3 = jointMotor[3].GetTarget();
+	pose.message.j4 = jointMotor[4].GetTarget();
 }
 
 /**
@@ -906,17 +965,14 @@ void testJointMotor() {
  **/
 void setMagnetState(char mag1, char mag2) {
 	
-    if (mag1 == '0' && mag2 == '0') {
+    if (mag1 == '1' && mag2 == '1') {
 		magState = magnetsOn;
-		//Serial.println("set magnet state to both magnets on");
-	}
-	else if (mag1 == '1' && mag2 == '0') {
-		magState = magnet1Off;
-		//Serial.println("set magnet state to magnet1 off");
 	}
 	else if (mag1 == '0' && mag2 == '1') {
+		magState = magnet1Off;
+	}
+	else if (mag1 == '1' && mag2 == '0') {
 		magState = magnet2Off;
-		//Serial.println("set magnet state to magnet2 off");
 	}
 	else {
 		Serial.println("Error - invalid magnet state\n");
