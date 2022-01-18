@@ -718,7 +718,7 @@ void readSerial() {
 			}
 			memcpy(mag.BytePacket, temp, sizeof(mag.BytePacket));
 			readMagnets(mag);
-			//printMagnets();
+			printMagnets();
 			break;
 		case 'p':
 			PID_Packet pid;
@@ -795,21 +795,13 @@ void readJoints(posePacket_t message) {
 }
 
 void readMagnets(magnetPacket_t message){
-	//setMagnetState(message.message.magnet1, message.message.magnet2);
-	magnetPacket_t mag;
-	mag.message.type = 'm';
-	mag.message.magnet1 = message.message.magnet1;
-	mag.message.magnet2 = message.message.magnet2;
-
-	//mag.message.magnet1 = 0;
-	//mag.message.magnet2 = 1;
-	Serial.write(mag.BytePacket, sizeof(mag.BytePacket));
+	setMagnetState(message.message.magnet1, message.message.magnet2);
 }
 
 void printMagnets(){
 	magnetPacket_t mag;
 	mag.message.type = 'm';
-	mag.message.padding;
+	//mag.message.padding;
 	
 	if (magState == magnetsOn)
 	{
@@ -1049,7 +1041,7 @@ void setMagnetState(int mag1, int mag2) {
 		magState = magnet2Off;
 	}
 	else {
-		//Serial.println("Error - invalid magnet state\n");
+		//Serial.println("Error - invalid magnet state\n"); TODO send error/debug
 	}
     
 }
