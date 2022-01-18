@@ -10,12 +10,22 @@ typedef union BytePacket_t{
 	unsigned char BytePacket[sizeof(message_t)];
 };
 
-BytePacket_t byteMessage;
+//Bland message to just get the first char
+typedef struct debug_t {
+	char type;
+	char padding[7];
+	unsigned char debug[100];
+};
+
+typedef union DebugPacket_t{
+	debug_t message;
+	unsigned char BytePacket[sizeof(debug_t)];
+};
 
 //Joint Goal message
 typedef struct poseGoal_t {
 	char type;
-	char padding[3];
+	char padding[7];
 	double j0;
 	double j1;
 	double j2;
@@ -24,12 +34,12 @@ typedef struct poseGoal_t {
 };
 typedef union posePacket_t{
 	poseGoal_t message;
-	unsigned char BytePacket[sizeof(message_t)];
+	unsigned char BytePacket[sizeof(poseGoal_t)];
 };
 //PID Message
 typedef struct PID_t{
     char type;
-    char padding[3];
+    char padding[7];
     double j0F[3];
     double j1F[3];
     double j2F[3];
@@ -50,7 +60,7 @@ typedef union PID_Packet {
 //Magnet Message
 typedef struct magnetState_t{
     char type;
-    char padding[3];
+    char padding[7];
     int magnet1;
     int magnet2;
 };
@@ -59,3 +69,4 @@ typedef union magnetPacket_t{
     magnetState_t message;
     unsigned char BytePacket[sizeof(magnetState_t)];
 };
+

@@ -91,10 +91,13 @@ void readJoints(posePacket_t message);
 void readPID(PID_Packet message);
 void readMagnets(magnetPacket_t message);
 void printSerial(void);
+void printDebug(char message[]);
 void printFakeSerial(void);
+void printMagnets(void);
+void printPID(void);
 
 //magnet switching
-void setMagnetState(char, char);
+void setMagnetState(int mag1, int mag2);
 void updateMagnets(void);
 void testMagnets(void);
 void test(void);
@@ -108,7 +111,7 @@ void setup()
 	Serial.begin(115200); 	
 	// Serial.setTimeout(0);
 
-	Serial.println("Robot intializing....");
+	//Serial.println("Robot intializing....");
 
 	// Power LED
 	pinMode(POWER_LED, OUTPUT);
@@ -188,9 +191,23 @@ void setup()
 			pinMode(DEBUG_PIN, INPUT);
 		}
 
-		Serial.println("Done");
+		//Serial.println("Done");
 		previous_time = millis();
 	}
+
+	bool readyToStart = false;
+	while (!readyToStart) {
+		//wait for heartbeat
+		if (Serial.available() > 0) {
+			Serial.readBytesUntil('\n', serialBuffer, TOTAL_PACKET_LEN);
+			if (serialBuffer[0] = 'h') {
+				Serial.print("hhhhh");
+				readyToStart = true;
+			}
+		}
+
+	}
+	
 }
 
 ////////////////////////////////////////////////////////////////
@@ -199,7 +216,7 @@ void setup()
 
 void loop()
 {
-	printSerial();
+	//printSerial();
 	/*
 	if (testState == TEST_MAGNETS) {
 		updateMagnets();
@@ -508,7 +525,7 @@ void UpdateMotors()
 			jointMotor[i].SendPWM(speeds[i]);
 		}
 	}
-	Serial.printf("E %3.2f %3.2f %3.2f %3.2f %3.2f\n", speeds[0], speeds[1], speeds[2], speeds[3],  speeds[4]);
+	//Serial.printf("E %3.2f %3.2f %3.2f %3.2f %3.2f\n", speeds[0], speeds[1], speeds[2], speeds[3],  speeds[4]);
 }
 
 
@@ -677,33 +694,33 @@ void ReadAngleInputs()
  */
 void readSerial() {
 	// make a switch statement
-	Serial.readBytesUntil('\n', serialBuffer, TOTAL_PACKET_LEN);
+	Serial.readBytesUntil('\n', serialBuffer, 245);
 	//byteMessage = serialBuffer;//from serial
 	switch(serialBuffer[0])
 	{
 		case 'g':
 			posePacket_t pose;
-			unsigned char tempPose[244];
-			for (int i = 0; i < 244; i ++){
+			unsigned char tempPose[48];
+			for (int i = 0; i < 48; i ++){
 				tempPose[i] = serialBuffer[i];
 			}
 			memcpy(pose.BytePacket, tempPose, sizeof(pose.BytePacket));
 			readJoints(pose);
 			//do the joint reading 
+			printSerial();
+			break;
 		case 'm':
-			struct magnetPacket_t mag;
-
-			unsigned char temp[12];
-			for (int i = 0; i < 12; i ++)
+			magnetPacket_t mag;
+			unsigned char temp[16];
+			for (int i = 0; i < 16; i ++)
 			{
 				temp[i] = serialBuffer[i];
 			}
 			memcpy(mag.BytePacket, temp, sizeof(mag.BytePacket));
-			
 			readMagnets(mag);
-			//do the magnet reading
+			//printMagnets();
+			break;
 		case 'p':
-
 			PID_Packet pid;
 			unsigned char tempPid[240];
 			for (int i = 0; i < 240; i ++)
@@ -712,7 +729,6 @@ void readSerial() {
 			}
 			memcpy(pid.BytePacket, tempPid, sizeof(pid.BytePacket));
 			readPID(pid);
-			//do the pid reading
 			break;
 		default:
 			//print fault
@@ -778,9 +794,65 @@ void readJoints(posePacket_t message) {
 	jointMotor[4].SetTarget(message.message.j4);
 }
 
-
 void readMagnets(magnetPacket_t message){
-	setMagnetState(char(message.message.magnet1), char(message.message.magnet2));
+	//setMagnetState(message.message.magnet1, message.message.magnet2);
+	magnetPacket_t mag;
+	mag.message.type = 'm';
+	mag.message.magnet1 = message.message.magnet1;
+	mag.message.magnet2 = message.message.magnet2;
+
+	//mag.message.magnet1 = 0;
+	//mag.message.magnet2 = 1;
+	Serial.write(mag.BytePacket, sizeof(mag.BytePacket));
+}
+
+void printMagnets(){
+	magnetPacket_t mag;
+	mag.message.type = 'm';
+	mag.message.padding;
+	
+	if (magState == magnetsOn)
+	{
+		mag.message.magnet1 = 1;
+		mag.message.magnet2 = 1;
+	} else if (magState == magnet1Off) {
+		mag.message.magnet1 = 0;
+		mag.message.magnet2 = 1;
+	} else if (magState == magnet1Off) {
+		mag.message.magnet1 = 0;
+		mag.message.magnet2 = 1;
+	} 
+	Serial.write(mag.BytePacket, sizeof(mag.BytePacket));
+}
+
+void printPID(){
+	PID_Packet pid;
+	pid.message.type = 'p';
+	pid.message.padding;
+	/*
+	if (magState == magnetsOn)
+	{
+		mag.message.magnet1 = 1;
+		mag.message.magnet2 = 1;
+	} else if (magState == magnet1Off) {
+		mag.message.magnet1 = 0;
+		mag.message.magnet2 = 1;
+	} else if (magState == magnet1Off) {
+		mag.message.magnet1 = 0;
+		mag.message.magnet2 = 1;
+	} 
+	Serial.write(mag.BytePacket, sizeof(mag.BytePacket));*/
+}
+
+void printDebug(char message[]) {
+	DebugPacket_t debug;
+	int i = 0;
+	debug.message.type = 'd';
+	while(message[i] != '\n'){
+		debug.BytePacket[i + 8] = message[i];
+		i++;
+	}
+	Serial.write(debug.BytePacket, sizeof(debug.BytePacket));
 }
 
 void readPID(PID_Packet message){
@@ -842,12 +914,13 @@ void printSerial() {
 	posePacket_t pose;
 	pose.message.type = 'g';
 	pose.message.padding;
+	
 	pose.message.j0 = jointMotor[0].GetTarget();
 	pose.message.j1 = jointMotor[1].GetTarget();
 	pose.message.j2 = jointMotor[2].GetTarget();
 	pose.message.j3 = jointMotor[3].GetTarget();
 	pose.message.j4 = jointMotor[4].GetTarget();
-	Serial.println(pose.BytePacket);
+	Serial.write(pose.BytePacket, sizeof(pose.BytePacket));
 }
 
 /**
@@ -964,19 +1037,19 @@ void testJointMotor() {
  * Sets the magnet state off the enum
  * 
  **/
-void setMagnetState(char mag1, char mag2) {
+void setMagnetState(int mag1, int mag2) {
 	
-    if (mag1 == '1' && mag2 == '1') {
+    if (mag1 == 1 && mag2 == 1) {
 		magState = magnetsOn;
 	}
-	else if (mag1 == '0' && mag2 == '1') {
+	else if (mag1 == 0 && mag2 == 1) {
 		magState = magnet1Off;
 	}
-	else if (mag1 == '1' && mag2 == '0') {
+	else if (mag1 == 1 && mag2 == 0) {
 		magState = magnet2Off;
 	}
 	else {
-		Serial.println("Error - invalid magnet state\n");
+		//Serial.println("Error - invalid magnet state\n");
 	}
     
 }
