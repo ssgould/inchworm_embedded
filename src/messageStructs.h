@@ -70,3 +70,14 @@ typedef union magnetPacket_t{
     unsigned char BytePacket[sizeof(magnetState_t)];
 };
 
+typedef struct heartbeat_t{
+    char type;
+    char padding[7];
+    int counter;
+    char padding2[4];
+};
+
+typedef union heartPacket_t{
+    heartbeat_t hb;
+    unsigned char BytePacket[sizeof(heartbeat_t)];
+};

@@ -30,6 +30,7 @@ STATE state = ST_HOLDING;
 double previous_time;
 uint32_t lastViaUpdate = 0;
 uint32_t startMoveTime = 0;
+int numHb = 0;
 
 ////////////////////////////////////////////////////////////////
 // SERIAL BUFFER
@@ -96,6 +97,8 @@ void printFault(String theString);
 void printFakeSerial(void);
 void printMagnets(void);
 void printPID(void);
+void readHeartbeat(heartPacket_t heartBeat);
+void printHeartbeat(void);
 
 //magnet switching
 void setMagnetState(int mag1, int mag2);
@@ -217,8 +220,8 @@ void setup()
 
 void loop()
 {
-	String temp = "hi Eli";
-	printFault(temp);
+	//String temp = "hi Eli";
+	//printFault(temp);
 	
 	//printSerial();
 	/*
@@ -429,6 +432,17 @@ void printFault(String theString){
 	debug.message.type = 'f';
 	memcpy(debug.message.string, temp, sizeof(temp));
 	Serial.write(debug.BytePacket, sizeof(debug.BytePacket));
+}
+
+void readHeartbeat(heartPacket_t heartBeat){
+	numHb = heartBeat.hb.counter;
+}
+
+void printHeartbeat(){
+	heartPacket_t hb;
+	hb.hb.type = 'h';
+	hb.hb.counter = numHb;
+	Serial.write(hb.BytePacket, sizeof(hb.BytePacket));
 }
 
 /**
@@ -732,6 +746,17 @@ void readSerial() {
 	//byteMessage = serialBuffer;//from serial
 	switch(serialBuffer[0])
 	{
+		case 'h':
+			heartPacket_t hb;
+			unsigned char tempHB[16];
+			for (int i = 0; i < 16; i ++){
+				tempHB[i] = serialBuffer[i];
+			}
+			memcpy(hb.BytePacket, tempHB, sizeof(hb.BytePacket));
+			readHeartbeat(hb);
+			//do the joint reading 
+			printHeartbeat();
+			break;
 		case 'g':
 			posePacket_t pose;
 			unsigned char tempPose[48];
