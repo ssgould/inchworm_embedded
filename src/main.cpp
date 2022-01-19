@@ -91,7 +91,8 @@ void readJoints(posePacket_t message);
 void readPID(PID_Packet message);
 void readMagnets(magnetPacket_t message);
 void printSerial(void);
-void printDebug(char message[]);
+void printDebug(String theString);
+void printFault(String theString);
 void printFakeSerial(void);
 void printMagnets(void);
 void printPID(void);
@@ -216,6 +217,9 @@ void setup()
 
 void loop()
 {
+	String temp = "hi Eli";
+	printFault(temp);
+	
 	//printSerial();
 	/*
 	if (testState == TEST_MAGNETS) {
@@ -280,7 +284,7 @@ void loop()
 		// turn the magnets on/off
 		if (USE_MAGNETS)
 		{
-			//updateMagnets();
+			updateMagnets();
 		}
 
 		// Move joint motors
@@ -396,6 +400,36 @@ void testMagnets(){
 ////////////////////////////////////////////////////////////////
 // FUNCTIONS
 ////////////////////////////////////////////////////////////////
+
+void printDebug(String theString){
+	int counter = 0;
+	char temp[100];
+	while (theString[counter] != '\0' && counter < 100) 
+	{
+		temp[counter] = theString[counter];
+		counter++;
+	}
+	temp[counter] = '\n';
+	DebugPacket_t debug;
+	debug.message.type = 'd';
+	memcpy(debug.message.string, temp, sizeof(temp));
+	Serial.write(debug.BytePacket, sizeof(debug.BytePacket));
+}
+
+void printFault(String theString){
+	int counter = 0;
+	char temp[100];
+	while (theString[counter] != '\0' && counter < 100) 
+	{
+		temp[counter] = theString[counter];
+		counter++;
+	}
+	temp[counter] = '\n';
+	DebugPacket_t debug;
+	debug.message.type = 'f';
+	memcpy(debug.message.string, temp, sizeof(temp));
+	Serial.write(debug.BytePacket, sizeof(debug.BytePacket));
+}
 
 /**
  * Tunes PID values quickly and tests small trajectories
@@ -796,6 +830,16 @@ void readJoints(posePacket_t message) {
 
 void readMagnets(magnetPacket_t message){
 	setMagnetState(message.message.magnet1, message.message.magnet2);
+	/*
+	magnetPacket_t mag;
+	mag.message.type = 'm';
+	mag.message.magnet1 = message.message.magnet1;
+	mag.message.magnet2 = message.message.magnet2;
+
+	//mag.message.magnet1 = 0;
+	//mag.message.magnet2 = 1;
+	Serial.write(mag.BytePacket, sizeof(mag.BytePacket));
+	*/
 }
 
 void printMagnets(){
@@ -810,9 +854,9 @@ void printMagnets(){
 	} else if (magState == magnet1Off) {
 		mag.message.magnet1 = 0;
 		mag.message.magnet2 = 1;
-	} else if (magState == magnet1Off) {
-		mag.message.magnet1 = 0;
-		mag.message.magnet2 = 1;
+	} else if (magState == magnet2Off) {
+		mag.message.magnet1 = 1;
+		mag.message.magnet2 = 0;
 	} 
 	Serial.write(mag.BytePacket, sizeof(mag.BytePacket));
 }
@@ -835,7 +879,7 @@ void printPID(){
 	} 
 	Serial.write(mag.BytePacket, sizeof(mag.BytePacket));*/
 }
-
+/*
 void printDebug(char message[]) {
 	DebugPacket_t debug;
 	int i = 0;
@@ -846,7 +890,7 @@ void printDebug(char message[]) {
 	}
 	Serial.write(debug.BytePacket, sizeof(debug.BytePacket));
 }
-
+*/
 void readPID(PID_Packet message){
 	jointMotor[0].set_PID(message.message.j0F, message.message.j0B);
 	jointMotor[1].set_PID(message.message.j1F, message.message.j1B);
@@ -1039,9 +1083,6 @@ void setMagnetState(int mag1, int mag2) {
 	}
 	else if (mag1 == 1 && mag2 == 0) {
 		magState = magnet2Off;
-	}
-	else {
-		//Serial.println("Error - invalid magnet state\n"); TODO send error/debug
 	}
     
 }

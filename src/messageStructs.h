@@ -14,7 +14,7 @@ typedef union BytePacket_t{
 typedef struct debug_t {
 	char type;
 	char padding[7];
-	unsigned char debug[100];
+	unsigned char string[100];
 };
 
 typedef union DebugPacket_t{
