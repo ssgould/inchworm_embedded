@@ -49,7 +49,7 @@ public:
 	void SetKd(float k) { kD = k; }
 	void printPID();
 
-	//**********getters************
+	//**********getters*************/
 	int get_pwmForwardPin();
 	int get_pwmReversePin();
 	int get_pinEnable();
@@ -57,11 +57,19 @@ public:
 	double get_kP();
 	double get_kI();
 	double get_kD();
+	double get_kP1();
+	double get_kI1();
+	double get_kD1();
 	double get_kP2();
 	double get_kI2();
 	double get_kD2();
+	void getPIDF(double (&arr)[3]);
+	void getPIDB(double (&arr)[3]);
 	double get_angle_offset();
 	uint8_t get_id();
+
+	/***********setters*************/
+	void set_PID(double kF[], double kB[]);
 	//*****************************
 
 	typedef enum

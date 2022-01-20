@@ -32,10 +32,26 @@ typedef struct poseGoal_t {
 	double j3;
 	double j4;
 };
-typedef union posePacket_t{
+typedef union poseGoalPacket_t{
 	poseGoal_t message;
 	unsigned char BytePacket[sizeof(poseGoal_t)];
 };
+
+//Joint Goal message
+typedef struct pose_t {
+	char type;
+	char padding[7];
+	double j0;
+	double j1;
+	double j2;
+	double j3;
+	double j4;
+};
+typedef union posePacket_t{
+	pose_t message;
+	unsigned char BytePacket[sizeof(pose_t)];
+};
+
 //PID Message
 typedef struct PID_t{
     char type;
@@ -54,7 +70,7 @@ typedef struct PID_t{
 
 typedef union PID_Packet {
     PID_t message;
-    unsigned char BytePacket[240];
+    unsigned char BytePacket[sizeof(PID_t)];
 };
 
 //Magnet Message

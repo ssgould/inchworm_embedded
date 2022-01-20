@@ -37,7 +37,7 @@ int numHb = 0;
 ////////////////////////////////////////////////////////////////
 const int MOTOR_PKT_LEN = 8;   // motor packet example: "-123.32_" (ending in space)
 const int CONTROL_PKT_LEN = 3; // gripper and allen key control packet example: "0 1"
-const int TOTAL_PACKET_LEN = MOTOR_PKT_LEN * NUM_MOTORS + CONTROL_PKT_LEN + 1;
+const int TOTAL_PACKET_LEN = 249; //MOTOR_PKT_LEN * NUM_MOTORS + CONTROL_PKT_LEN + 1;
 char serialBuffer[TOTAL_PACKET_LEN];
 char tempSerialBuffer[TOTAL_PACKET_LEN]; // Temporary Serial Buffer
 const int PARSE_PKT_LEN = 5;
@@ -88,7 +88,7 @@ void testMotors(void);
 
 //serial stuff
 void readSerial(void);
-void readJoints(posePacket_t message);
+void readJoints(poseGoalPacket_t message);
 void readPID(PID_Packet message);
 void readMagnets(magnetPacket_t message);
 void printSerial(void);
@@ -97,6 +97,7 @@ void printFault(String theString);
 void printFakeSerial(void);
 void printMagnets(void);
 void printPID(void);
+void printJointState(void);
 void readHeartbeat(heartPacket_t heartBeat);
 void printHeartbeat(void);
 
@@ -113,6 +114,7 @@ void setup()
 {
 	Wire.begin();		  	// Begin I2C
 	Serial.begin(115200); 	
+	Serial.setTimeout(20);
 	// Serial.setTimeout(0);
 
 	//Serial.println("Robot intializing....");
@@ -220,6 +222,7 @@ void setup()
 
 void loop()
 {
+	printJointState();
 	//String temp = "hi Eli";
 	//printFault(temp);
 	
@@ -302,7 +305,7 @@ void loop()
 
 			if (state == ST_HOLDING || ST_MOVING)
 			{
-				//UpdateMotors();
+				UpdateMotors();
 			}
 		}
 
@@ -741,8 +744,10 @@ void ReadAngleInputs()
  * 
  */
 void readSerial() {
+	
 	// make a switch statement
-	Serial.readBytesUntil('\n', serialBuffer, 245);
+	Serial.readBytesUntil('\n', serialBuffer, 249);
+	printDebug("read a line");
 	//byteMessage = serialBuffer;//from serial
 	switch(serialBuffer[0])
 	{
@@ -756,9 +761,10 @@ void readSerial() {
 			readHeartbeat(hb);
 			//do the joint reading 
 			printHeartbeat();
+			printDebug("here");
 			break;
 		case 'g':
-			posePacket_t pose;
+			poseGoalPacket_t pose;
 			unsigned char tempPose[48];
 			for (int i = 0; i < 48; i ++){
 				tempPose[i] = serialBuffer[i];
@@ -780,14 +786,20 @@ void readSerial() {
 			printMagnets();
 			break;
 		case 'p':
+			printDebug("should get here");
 			PID_Packet pid;
-			unsigned char tempPid[240];
-			for (int i = 0; i < 240; i ++)
+			unsigned char tempPid[248];
+			printDebug("got to before the loop");
+			for (int i = 0; i < 248; i ++)
 			{
 				tempPid[i] = serialBuffer[i];
 			}
+			printDebug("got to after the loop");
 			memcpy(pid.BytePacket, tempPid, sizeof(pid.BytePacket));
+			printDebug("about to read PID");
 			readPID(pid);
+			printDebug("about to print PID");
+			printPID();
 			break;
 		default:
 			//print fault
@@ -795,7 +807,7 @@ void readSerial() {
 	}
 }
 
-void readJoints(posePacket_t message) {
+void readJoints(poseGoalPacket_t message) {
 	//posePacket_t poseMessage.I2CPacket = byteMessage;
 	/*
 	if (Serial.available() > 0)
@@ -886,24 +898,6 @@ void printMagnets(){
 	Serial.write(mag.BytePacket, sizeof(mag.BytePacket));
 }
 
-void printPID(){
-	PID_Packet pid;
-	pid.message.type = 'p';
-	pid.message.padding;
-	/*
-	if (magState == magnetsOn)
-	{
-		mag.message.magnet1 = 1;
-		mag.message.magnet2 = 1;
-	} else if (magState == magnet1Off) {
-		mag.message.magnet1 = 0;
-		mag.message.magnet2 = 1;
-	} else if (magState == magnet1Off) {
-		mag.message.magnet1 = 0;
-		mag.message.magnet2 = 1;
-	} 
-	Serial.write(mag.BytePacket, sizeof(mag.BytePacket));*/
-}
 /*
 void printDebug(char message[]) {
 	DebugPacket_t debug;
@@ -923,6 +917,54 @@ void readPID(PID_Packet message){
 	jointMotor[3].set_PID(message.message.j3F, message.message.j3B);
 	jointMotor[4].set_PID(message.message.j4F, message.message.j4B);
 }
+
+
+
+void printPID(){
+	PID_Packet pid;
+	pid.message.type = 'p';
+	double arr[3];
+	arr[0] = 0.0;
+	arr[1] = 0.0;
+	arr[2] = 0.0;
+	
+	jointMotor[0].getPIDF(arr);
+	memcpy(pid.message.j0F, arr, sizeof(pid.message.j0F));
+	jointMotor[0].getPIDB(arr);
+	memcpy(pid.message.j0B, arr, sizeof(pid.message.j0B));
+	jointMotor[1].getPIDF(arr);
+	memcpy(pid.message.j1F, arr, sizeof(pid.message.j1F));
+	jointMotor[1].getPIDB(arr);
+	memcpy(pid.message.j1B, arr, sizeof(pid.message.j1B));
+	jointMotor[2].getPIDF(arr);
+	memcpy(pid.message.j2F, arr, sizeof(pid.message.j2F));
+	jointMotor[2].getPIDB(arr);
+	memcpy(pid.message.j2B, arr, sizeof(pid.message.j2B));
+	jointMotor[3].getPIDF(arr);
+	memcpy(pid.message.j3F, arr, sizeof(pid.message.j3F));
+	jointMotor[3].getPIDB(arr);
+	memcpy(pid.message.j3B, arr, sizeof(pid.message.j3B));
+	jointMotor[4].getPIDF(arr);
+	memcpy(pid.message.j4F, arr, sizeof(pid.message.j4F));
+	jointMotor[4].getPIDB(arr);
+	memcpy(pid.message.j4B, arr, sizeof(pid.message.j4B));
+
+	Serial.write(pid.BytePacket, sizeof(pid.BytePacket));
+}
+
+void printJointState(){
+	posePacket_t pose;
+	pose.message.type = 'j';
+
+	pose.message.j0 = jointMotor[0].getAngleDegrees();
+	pose.message.j1 = jointMotor[1].getAngleDegrees();
+	pose.message.j2 = jointMotor[2].getAngleDegrees();
+	pose.message.j3 = jointMotor[3].getAngleDegrees();
+	pose.message.j4 = jointMotor[4].getAngleDegrees();
+
+	Serial.write(pose.BytePacket, sizeof(pose.BytePacket));
+}
+
 /**
  * @brief print where the joints currently are
  * 
@@ -972,7 +1014,7 @@ void printSerial() {
 	//print string
 	Serial.println(outputString);
 	*/
-	posePacket_t pose;
+	poseGoalPacket_t pose;
 	pose.message.type = 'g';
 	pose.message.padding;
 	
