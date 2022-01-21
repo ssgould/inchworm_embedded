@@ -556,7 +556,7 @@ void UpdateMotors()
 	int speeds[MOTOR_COUNT];
 	for (int i = 0; i < NUM_MOTORS; i++)
 	{
-		speeds[i] = jointMotor[1].CalcEffort();
+		speeds[i] = jointMotor[i].CalcEffort();
 	}
 
 	// jointMotor speed should be updated after all gcs are calculated to
@@ -571,7 +571,7 @@ void UpdateMotors()
 	}
 	else
 	{
-		for (int i = 0; i < 1; i++)
+		for (int i = 0; i < NUM_MOTORS; i++)
 		{
 			jointMotor[i].SendPWM(speeds[i]);
 		}
