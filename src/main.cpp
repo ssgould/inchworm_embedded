@@ -28,7 +28,6 @@ const int NUM_MOTORS = 5;
 JointMotor2 jointMotor[NUM_MOTORS];
 STATE state = ST_HOLDING;
 double previous_time;
-uint32_t lastViaUpdate = 0;
 uint32_t startMoveTime = 0;
 int numHb = 0;
 
@@ -76,7 +75,6 @@ int testState = ROBOT_NORMAL;
 // FUNCTION PROTOTYPES
 ////////////////////////////////////////////////////////////////
 void UpdateMotors(void);
-void SetNewVias(void);
 void StartMove(bool);
 void ReadAngleInputs(void);
 void ReadAngleString(void);
@@ -254,21 +252,6 @@ void loop()
 				UpdateMotors();
 			}
 		}
-
-		// Set vias between waypoints
-		if (currTime - lastViaUpdate >= VIA_INTERVAL)
-		{
-			if (state == ST_MOVING)
-			{
-				if (currTime - startMoveTime >= VIA_COUNT * VIA_INTERVAL)
-				{
-					state = ST_HOLDING;
-				}
-
-				else
-					SetNewVias();
-			}
-		}
 	}
 	*/
 
@@ -306,22 +289,6 @@ void loop()
 			if (state == ST_HOLDING || ST_MOVING)
 			{
 				UpdateMotors();
-			}
-		}
-
-		// Set vias between waypoints
-		if (currTime - lastViaUpdate >= VIA_INTERVAL)
-		{
-			if (state == ST_MOVING)
-			{
-				if (currTime - startMoveTime >= VIA_COUNT * VIA_INTERVAL)
-				{
-					state = ST_HOLDING;
-				}
-				else
-				{
-					SetNewVias();
-				}	
 			}
 		}
 	}
@@ -599,29 +566,9 @@ void StartMove(bool dir)
 	}
 
 	startMoveTime = millis();
-	lastViaUpdate = startMoveTime;
-
 	state = ST_MOVING;
 }
 
-/**
- * Configures vias between waypoints for robot to move
- */
-void SetNewVias(void)
-{
-	uint32_t currTime = millis();
-	float fraction = (currTime - startMoveTime) / (float)(VIA_COUNT * VIA_INTERVAL);
-	if (fraction < 0)
-		fraction = 0;
-	if (fraction > 1)
-		fraction = 1;
-
-	for (int i = 0; i < 1; i++)
-	{
-		float viaAngle = startAngles[i] + (targetAngles[i] - startAngles[i]) * fraction;
-		jointMotor[1].SetTarget(viaAngle);
-	}
-}
 
 void ReadAngleString()
 {
