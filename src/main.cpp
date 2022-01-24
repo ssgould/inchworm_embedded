@@ -10,6 +10,7 @@
 #include "Gripper.h"
 #include "test1Step.h"
 #include "SystemStateConstants.h"
+#include "messageStructs.h"
 
 ////////////////////////////////////////////////////////////////
 // TUNABLE PARAMETERS
@@ -17,6 +18,7 @@
 const bool CHANGE_JOINTMOTORS_FREQUENCY = false; // Be careful when enabling this constant (check the frequency of the pins to be changed)
 const bool USE_MOTORS = true;
 const bool USE_GRIPPERS = true;
+const bool USE_MAGNETS = true;
 const bool USE_DEBUG_BUTTON = true;
 
 ////////////////////////////////////////////////////////////////
@@ -26,15 +28,15 @@ const int NUM_MOTORS = 5;
 JointMotor2 jointMotor[NUM_MOTORS];
 STATE state = ST_HOLDING;
 double previous_time;
-uint32_t lastViaUpdate = 0;
 uint32_t startMoveTime = 0;
+int numHb = 0;
 
 ////////////////////////////////////////////////////////////////
 // SERIAL BUFFER
 ////////////////////////////////////////////////////////////////
 const int MOTOR_PKT_LEN = 8;   // motor packet example: "-123.32_" (ending in space)
-const int CONTROL_PKT_LEN = 4; // gripper and allen key control packet example: "0131"
-const int TOTAL_PACKET_LEN = MOTOR_PKT_LEN * NUM_MOTORS + CONTROL_PKT_LEN + 1;
+const int CONTROL_PKT_LEN = 3; // gripper and allen key control packet example: "0 1"
+const int TOTAL_PACKET_LEN = 249; //MOTOR_PKT_LEN * NUM_MOTORS + CONTROL_PKT_LEN + 1;
 char serialBuffer[TOTAL_PACKET_LEN];
 char tempSerialBuffer[TOTAL_PACKET_LEN]; // Temporary Serial Buffer
 const int PARSE_PKT_LEN = 5;
@@ -44,17 +46,6 @@ String angleInputs;
 ////////////////////////////////////////////////////////////////
 // GRIPPER CONTROL
 ////////////////////////////////////////////////////////////////
-Gripper gripper[4];
-bool gripperFinished1 = false;
-bool gripperFinished2 = false;
-bool allenKeyFinished = true;
-int gripperStatus = 0;
-int gripperSelect = 0; //idle (No gripper selected)
-int gripperState = 0;  //idle (No gripper action)
-int gripperEngagedSelect = 0;
-uint8_t switchGrippers = 0;
-int allenKeySelect = 0;
-int allenKeyState = 0;
 bool switchedPid_2 = false;
 unsigned long incrementTime[4];
 unsigned long lastIncrementTime[4];
@@ -78,32 +69,41 @@ MagnetState magState = magnetsOn;
 // SYTEM CONSTANTS
 ////////////////////////////////////////////////////////////////
 int testState = ROBOT_NORMAL;
+//int testState = TEST_MOTORS;
 
 ////////////////////////////////////////////////////////////////
 // FUNCTION PROTOTYPES
 ////////////////////////////////////////////////////////////////
 void UpdateMotors(void);
-void SetNewVias(void);
 void StartMove(bool);
 void ReadAngleInputs(void);
 void ReadAngleString(void);
 void RunPidTuningDebug(void);
-void ActuateGrippers(void);
 bool buttonPressed(void);
 void testJointMotor(void);
 void testEncoders(void);
 void testMotors(void);
-void intServiceGrip1(void);
-void intServiceGrip2(void);
-void intServiceAllen1(void);
-void intServiceAllen2(void);
 
 //serial stuff
 void readSerial(void);
+void readJoints(poseGoalPacket_t message);
+void readPID(PID_Packet message);
+void readMagnets(magnetPacket_t message);
 void printSerial(void);
+void printDebug(String theString);
+void printFault(String theString);
+void printFakeSerial(void);
+void printMagnets(void);
+void printPID(void);
+void printJointState(void);
+void readHeartbeat(heartPacket_t heartBeat);
+void printHeartbeat(void);
 
 //magnet switching
-void setMagnetState(int, int);
+void setMagnetState(int mag1, int mag2);
+void updateMagnets(void);
+void testMagnets(void);
+void test(void);
 
 ////////////////////////////////////////////////////////////////
 // SETUP METHOD
@@ -112,9 +112,10 @@ void setup()
 {
 	Wire.begin();		  	// Begin I2C
 	Serial.begin(115200); 	
+	Serial.setTimeout(20);
 	// Serial.setTimeout(0);
 
-	Serial.println("Robot intializing....");
+	//Serial.println("Robot intializing....");
 
 	// Power LED
 	pinMode(POWER_LED, OUTPUT);
@@ -139,6 +140,8 @@ void setup()
 		 * Intialize Joint Motors (PINs, Dynamic PID values, Encoder I2C address, direction, ID)
 		 */
 		if(USE_MOTORS){
+			// proper home
+			/*
 			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
 										JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
 			jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
@@ -149,69 +152,66 @@ void setup()
 										JOINT_MOTOR4_ADR, 8, .3, 0, 23, .4, 0, 27.8, true, 4);
 			jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
 										JOINT_MOTOR5_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 5);
-			// jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
-			// 							JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
-			// jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
-			// 							JOINT_MOTOR2_ADR, 0, 0, 0, 0, 0, 0, 27.81, false, 2);
-			// jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
-			// 							JOINT_MOTOR3_ADR, 0, 0, 0, 0, 0, 0, 124.38, true, 3);
-			// jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
-			// 							JOINT_MOTOR4_ADR, 0, 0, 0, 0, 0, 0, 27.8, true, 4);
-			// jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
-			// 							JOINT_MOTOR5_ADR, 2, .3, 0, 0, 0, 0, 0.0, false, 5);
-
+			*/
+			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
+										JOINT_MOTOR1_ADR, 10, 0, 0, 10, 0, 0, 0.0, false, 1);
+			jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
+										JOINT_MOTOR2_ADR, 10, 0, 0, 10, 0, 0, 0.0, false, 2);
+			jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
+										JOINT_MOTOR3_ADR, 22, 0.5, 0, 23, 0.4, 0, 0.0, true, 3);
+			jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
+										JOINT_MOTOR4_ADR, 8, .3, 0, 23, .4, 0, 0.0, true, 4);
+			jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
+										JOINT_MOTOR5_ADR, 10, 0, 0, 10, 0, 0, 0.0, false, 5);
+			
+			// proper home
+			/*
 			jointMotor[0].SetTarget(0.0);
 			jointMotor[1].SetTarget(27.81);
 			jointMotor[2].SetTarget(124.38);
 			jointMotor[3].SetTarget(27.81);
 			jointMotor[4].SetTarget(0.0);
-	
+			*/
+			jointMotor[0].SetTarget(0.0);
+			jointMotor[1].SetTarget(0.0);
+			jointMotor[2].SetTarget(0.0);
+			jointMotor[3].SetTarget(0.0);
+			jointMotor[4].SetTarget(0.0);
 		}
 
 		inputBuffer.reserve(24);
 
 		/*
-		* Initialize Grippers and Allen Keys
+		* Initialize Magnets
 		*/
+		pinMode(MAGNET_1, OUTPUT);
+		pinMode(MAGNET_2, OUTPUT);
 
+		digitalWrite(MAGNET_1, HIGH);
+		digitalWrite(MAGNET_2, HIGH);
 		
-
-
-
-		
-		
-		if (USE_GRIPPERS)
-		{
-			gripper[0] = Gripper(GRIPPER_MOTOR_1, true, false, GRIPPER_ROTATION_BUTTON_A_LINK,true); // gripper
-			gripper[1] = Gripper(GRIPPER_MOTOR_2, true, false, GRIPPER_ROTATION_BUTTON_D_LINK,true);	 // gripper
-			gripper[2] = Gripper(GRIPPER_MOTOR_3, false, false, GRIPPER_ROTATION_BUTTON_A_LINK,false); // allen key
-			gripper[3] = Gripper(GRIPPER_MOTOR_4, false, false, GRIPPER_ROTATION_BUTTON_D_LINK,false);	 // allen key
-			// gripperSelect = jointMotor[0].fixed_link == jointMotor[0].a_link_engaged ? 1 : 2;
-			// gripperState = gripper[0].engage;
-			
-			
-					//intialize button encoder 
-			// pinMode(GRIPPER_ROTATION_BUTTON_A_LINK, INPUT_PULLUP);
-    		attachInterrupt(digitalPinToInterrupt(GRIPPER_ROTATION_BUTTON_A_LINK), intServiceGrip1, RISING); 
-		
-			// pinMode(GRIPPER_ROTATION_BUTTON_D_LINK, INPUT_PULLUP);
-    		attachInterrupt(digitalPinToInterrupt(GRIPPER_ROTATION_BUTTON_D_LINK), intServiceGrip2, RISING); 
-
-			// pinMode(ALLEN_KEY_BUTTON_A_LINK, INPUT_PULLUP);
-			attachInterrupt(digitalPinToInterrupt(ALLEN_KEY_BUTTON_A_LINK), intServiceAllen1, RISING); 
-
-			// pinMode(ALLEN_KEY_BUTTON_D_LINK, INPUT_PULLUP);
-			attachInterrupt(digitalPinToInterrupt(ALLEN_KEY_BUTTON_D_LINK), intServiceAllen2, RISING); 
-		}
-
 		if(USE_DEBUG_BUTTON)
 		{
 			pinMode(DEBUG_PIN, INPUT);
 		}
 
-		Serial.println("Done");
+		//Serial.println("Done");
 		previous_time = millis();
 	}
+
+	bool readyToStart = false;
+	while (!readyToStart) {
+		//wait for heartbeat
+		if (Serial.available() > 0) {
+			Serial.readBytesUntil('\n', serialBuffer, TOTAL_PACKET_LEN);
+			if (serialBuffer[0] = 'h') {
+				Serial.print("hhhhh");
+				readyToStart = true;
+			}
+		}
+
+	}
+	
 }
 
 ////////////////////////////////////////////////////////////////
@@ -220,34 +220,22 @@ void setup()
 
 void loop()
 {
-    readSerial();
-    printSerial();
+	printJointState();
+	//String temp = "hi Eli";
+	//printFault(temp);
+	
+	//printSerial();
 	/*
-	if(testState == TEST_ALL){
-		testEncoders();
-		testMotors();
-	}else if(testState == TEST_ENCODERS){
-		testEncoders();
-	}else if(testState == TEST_MOTORS){
-		testMotors();
-	}else if(testState == ROBOT_TUNNING){
-		RunPidTuningDebug();
-	}else if(testState == ROBOT_NORMAL){
-		ReadAngleInputs();
-	}	
+	if (testState == TEST_MAGNETS) {
+		updateMagnets();
+	}
 
 	if(testState == ROBOT_TUNNING || testState == ROBOT_NORMAL){
-		// Update flag to use grippers
-		if (USE_GRIPPERS)
+		// turn the magnets on/off
+		if (USE_MAGNETS)
 		{
-			ActuateGrippers();
-			// if(buttonPressed()){
-			// 	Serial.println("BUTTON PRESSED GRIPPERS");
-			// 	gripper[0].setGripper(2);
-			// 	gripper[1].setGripper(2);
-			// }
+			updateMagnets();
 		}
-
 
 		// Move joint motors
 		static uint32_t lastUpdateTime = millis();
@@ -264,23 +252,47 @@ void loop()
 				UpdateMotors();
 			}
 		}
+	}
+	*/
 
-		// Set vias between waypoints
-		if (currTime - lastViaUpdate >= VIA_INTERVAL)
+	
+	if(testState == TEST_ALL){
+		testEncoders();
+		testMotors();
+	}else if(testState == TEST_ENCODERS){
+		testEncoders();
+	}else if(testState == TEST_MOTORS){
+		testMotors();
+	}else if(testState == ROBOT_TUNNING){
+		RunPidTuningDebug();
+	}else if(testState == ROBOT_NORMAL){
+		readSerial();
+	}	
+
+	if(testState == ROBOT_TUNNING || testState == ROBOT_NORMAL){
+		// turn the magnets on/off
+		if (USE_MAGNETS)
 		{
-			if (state == ST_MOVING)
-			{
-				if (currTime - startMoveTime >= VIA_COUNT * VIA_INTERVAL)
-				{
-					state = ST_HOLDING;
-				}
+			updateMagnets();
+		}
 
-				else
-					SetNewVias();
+		// Move joint motors
+		static uint32_t lastUpdateTime = millis();
+		uint32_t currTime = millis();
+		if (currTime - lastUpdateTime >= UPDATE_INTERVAL)
+		{
+			if (currTime - lastUpdateTime > UPDATE_INTERVAL)
+				//Serial.println("Missed update schedule.");
+
+			lastUpdateTime += UPDATE_INTERVAL;
+
+			if (state == ST_HOLDING || ST_MOVING)
+			{
+				UpdateMotors();
 			}
 		}
 	}
-	*/
+	
 }
 
 /**
@@ -297,9 +309,111 @@ void test1Robot(int numberSteps){
 	}
 }
 
+
+void test() {
+	Serial.println("motor 1");
+	analogWrite(JOINT_MOTOR1_FWD, 255);
+	analogWrite(JOINT_MOTOR1_REV, 0);
+	delay(1000);
+	analogWrite(JOINT_MOTOR1_FWD, 0);
+	analogWrite(JOINT_MOTOR1_REV, 0);
+	Serial.println("motor 2");
+	analogWrite(JOINT_MOTOR2_FWD, 255);
+	analogWrite(JOINT_MOTOR2_REV, 0);
+	delay(1000);
+	analogWrite(JOINT_MOTOR2_FWD, 0);
+	analogWrite(JOINT_MOTOR2_REV, 0);
+	Serial.println("motor 3");
+	analogWrite(JOINT_MOTOR3_FWD, 255);
+	analogWrite(JOINT_MOTOR3_REV, 0);
+	delay(1000);
+	analogWrite(JOINT_MOTOR3_FWD, 0);
+	analogWrite(JOINT_MOTOR3_REV, 0);
+	Serial.println("motor 4");
+	analogWrite(JOINT_MOTOR4_FWD, 255);
+	analogWrite(JOINT_MOTOR4_REV, 0);
+	delay(1000);
+	analogWrite(JOINT_MOTOR4_FWD, 0);
+	analogWrite(JOINT_MOTOR4_REV, 0);
+	Serial.println("motor 5");
+	analogWrite(JOINT_MOTOR5_FWD, 255);
+	analogWrite(JOINT_MOTOR5_REV, 0);
+	delay(1000);
+	analogWrite(JOINT_MOTOR5_FWD, 0);
+	analogWrite(JOINT_MOTOR5_REV, 0);
+}
+
+
+void testMagnets(){
+
+	Serial.print("------ MAGNET TEST -----\n");
+	Serial.print("magnetic\n");
+	digitalWrite(MAGNET_1, HIGH);
+	digitalWrite(MAGNET_2, HIGH);
+	delay(1000);
+	Serial.print("magnet 1 off\n");
+	digitalWrite(MAGNET_1, LOW);
+	digitalWrite(MAGNET_2, HIGH);
+	delay(1000);
+	Serial.print("magnetic\n");
+	digitalWrite(MAGNET_1, HIGH);
+	digitalWrite(MAGNET_2, HIGH);
+	delay(1000);
+	Serial.print("magnet 2 off\n");
+	digitalWrite(MAGNET_1, HIGH);
+	digitalWrite(MAGNET_2, LOW);
+	delay(1000);
+	Serial.print("magnetic\n");
+	digitalWrite(MAGNET_1, HIGH);
+	digitalWrite(MAGNET_2, HIGH);
+	Serial.println("\nFinishing Test ...\n");
+	delay(1000);
+	//testState = ROBOT_TUNNING;
+}
 ////////////////////////////////////////////////////////////////
 // FUNCTIONS
 ////////////////////////////////////////////////////////////////
+
+void printDebug(String theString){
+	int counter = 0;
+	char temp[100];
+	while (theString[counter] != '\0' && counter < 100) 
+	{
+		temp[counter] = theString[counter];
+		counter++;
+	}
+	temp[counter] = '\n';
+	DebugPacket_t debug;
+	debug.message.type = 'd';
+	memcpy(debug.message.string, temp, sizeof(temp));
+	Serial.write(debug.BytePacket, sizeof(debug.BytePacket));
+}
+
+void printFault(String theString){
+	int counter = 0;
+	char temp[100];
+	while (theString[counter] != '\0' && counter < 100) 
+	{
+		temp[counter] = theString[counter];
+		counter++;
+	}
+	temp[counter] = '\n';
+	DebugPacket_t debug;
+	debug.message.type = 'f';
+	memcpy(debug.message.string, temp, sizeof(temp));
+	Serial.write(debug.BytePacket, sizeof(debug.BytePacket));
+}
+
+void readHeartbeat(heartPacket_t heartBeat){
+	numHb = heartBeat.hb.counter;
+}
+
+void printHeartbeat(){
+	heartPacket_t hb;
+	hb.hb.type = 'h';
+	hb.hb.counter = numHb;
+	Serial.write(hb.BytePacket, sizeof(hb.BytePacket));
+}
 
 /**
  * Tunes PID values quickly and tests small trajectories
@@ -407,7 +521,7 @@ void RunPidTuningDebug()
 void UpdateMotors()
 {
 	int speeds[MOTOR_COUNT];
-	for (int i = 0; i < MOTOR_COUNT; i++)
+	for (int i = 0; i < NUM_MOTORS; i++)
 	{
 		speeds[i] = jointMotor[i].CalcEffort();
 	}
@@ -424,11 +538,12 @@ void UpdateMotors()
 	}
 	else
 	{
-		for (int i = 0; i < MOTOR_COUNT; i++)
+		for (int i = 0; i < NUM_MOTORS; i++)
 		{
 			jointMotor[i].SendPWM(speeds[i]);
 		}
 	}
+	//Serial.printf("E %3.2f %3.2f %3.2f %3.2f %3.2f\n", speeds[0], speeds[1], speeds[2], speeds[3],  speeds[4]);
 }
 
 
@@ -451,29 +566,9 @@ void StartMove(bool dir)
 	}
 
 	startMoveTime = millis();
-	lastViaUpdate = startMoveTime;
-
 	state = ST_MOVING;
 }
 
-/**
- * Configures vias between waypoints for robot to move
- */
-void SetNewVias(void)
-{
-	uint32_t currTime = millis();
-	float fraction = (currTime - startMoveTime) / (float)(VIA_COUNT * VIA_INTERVAL);
-	if (fraction < 0)
-		fraction = 0;
-	if (fraction > 1)
-		fraction = 1;
-
-	for (int i = 0; i < MOTOR_COUNT; i++)
-	{
-		float viaAngle = startAngles[i] + (targetAngles[i] - startAngles[i]) * fraction;
-		jointMotor[i].SetTarget(viaAngle);
-	}
-}
 
 void ReadAngleString()
 {
@@ -540,45 +635,8 @@ void ReadAngleInputs()
 					temp[PARSE_PKT_LEN - 1] = '\n'; //you need this
 					tempIndex = 0;
 					if (jointIndex >= MOTOR_COUNT)
-					{   //Gripper
-						if (USE_GRIPPERS)
-						{
-							// Allen Key Control
-							if ((temp[0] - '0' == 1) || (temp[0] - '0' == 2) || (temp[0] - '0' == 3))
-							{
-								allenKeySelect = (temp[0] - '0');
-								allenKeyState = (temp[1] - '0');
-
-								allenKeyFinished = false;
-							}
-
-							// Gripper Control
-							if ((temp[2] - '0' == 1) || (temp[2] - '0' == 2) || (temp[2] - '0' == 3))
-							{
-								gripperSelect = (temp[2] - '0');
-								gripperState = (temp[3] - '0');
-
-								Serial.print("Gripper state:  ");
-								Serial.println(gripperState);
-
-								if (gripperSelect == 1)
-								{
-									Serial.println("Gripper select set to 1");
-									gripperFinished1 = false;
-								}
-								else if (gripperSelect == 2)
-								{
-									Serial.println("Gripper select set to 2");
-									gripperFinished2 = false;
-								}
-								else
-								{ // both gripper selected
-									// Serial.println(gripperSelect);
-									gripperFinished1 = false;
-									gripperFinished2 = false;
-								}
-							}
-						}
+					{   
+						//Gripper							
 					}
 					else
 					{   //Joint angles
@@ -633,21 +691,85 @@ void ReadAngleInputs()
  * 
  */
 void readSerial() {
+	
+	// make a switch statement
+	Serial.readBytesUntil('\n', serialBuffer, 249);
+	printDebug("read a line");
+	//byteMessage = serialBuffer;//from serial
+	switch(serialBuffer[0])
+	{
+		case 'h':
+			heartPacket_t hb;
+			unsigned char tempHB[16];
+			for (int i = 0; i < 16; i ++){
+				tempHB[i] = serialBuffer[i];
+			}
+			memcpy(hb.BytePacket, tempHB, sizeof(hb.BytePacket));
+			readHeartbeat(hb);
+			//do the joint reading 
+			printHeartbeat();
+			printDebug("here");
+			break;
+		case 'g':
+			poseGoalPacket_t pose;
+			unsigned char tempPose[48];
+			for (int i = 0; i < 48; i ++){
+				tempPose[i] = serialBuffer[i];
+			}
+			memcpy(pose.BytePacket, tempPose, sizeof(pose.BytePacket));
+			readJoints(pose);
+			//do the joint reading 
+			printSerial();
+			break;
+		case 'm':
+			magnetPacket_t mag;
+			unsigned char temp[16];
+			for (int i = 0; i < 16; i ++)
+			{
+				temp[i] = serialBuffer[i];
+			}
+			memcpy(mag.BytePacket, temp, sizeof(mag.BytePacket));
+			readMagnets(mag);
+			printMagnets();
+			break;
+		case 'p':
+			printDebug("should get here");
+			PID_Packet pid;
+			unsigned char tempPid[248];
+			printDebug("got to before the loop");
+			for (int i = 0; i < 248; i ++)
+			{
+				tempPid[i] = serialBuffer[i];
+			}
+			printDebug("got to after the loop");
+			memcpy(pid.BytePacket, tempPid, sizeof(pid.BytePacket));
+			printDebug("about to read PID");
+			readPID(pid);
+			printDebug("about to print PID");
+			printPID();
+			break;
+		default:
+			//print fault
+			break;
+	}
+}
+
+void readJoints(poseGoalPacket_t message) {
+	//posePacket_t poseMessage.I2CPacket = byteMessage;
+	/*
 	if (Serial.available() > 0)
 	{
 		new_command=true;
 		double current_time = millis();
 		previous_time = current_time;
 		Serial.readBytesUntil('\n', serialBuffer, TOTAL_PACKET_LEN);
+		//Serial.println("Message received:");
+		//Serial.println(serialBuffer);
 
-
-		String outString = "Message received: ";
-		outString.concat(serialBuffer);
-		Serial.println(outString);
 		int tempIndex = 0;
 		int jointIndex = 0;
 
-		if (serialBuffer[0] == '-' || serialBuffer[0] == '0')
+		if (serialBuffer[0] == '-' || serialBuffer[0] == ' ')
 		{
 			//read serial
 			//split it up into the separate pieces
@@ -668,17 +790,126 @@ void readSerial() {
 				// send robot off
 				jointMotor[jointIndex].SetTarget(tempAngle);
 			}
-
-			tempIndex++;
+			//the third to last and last characters should be the magnets
+			char magnet1 = serialBuffer[TOTAL_PACKET_LEN - 4];
+			char magnet2 = serialBuffer[TOTAL_PACKET_LEN - 2];
 			
 			// get magnet state
-			setMagnetState(int(serialBuffer[tempIndex]), int(serialBuffer[tempIndex + 2]));
+			setMagnetState(magnet1, magnet2);
+			//Serial.println("got here");
+			printSerial(); 
 		}
 	    else
 		{
 			Serial.println("Invalid Input"); //didn't get the serial message
 		}
 	}
+	*/
+	jointMotor[0].SetTarget(message.message.j0);
+	jointMotor[1].SetTarget(message.message.j1);
+	jointMotor[2].SetTarget(message.message.j2);
+	jointMotor[3].SetTarget(message.message.j3);
+	jointMotor[4].SetTarget(message.message.j4);
+}
+
+void readMagnets(magnetPacket_t message){
+	setMagnetState(message.message.magnet1, message.message.magnet2);
+	/*
+	magnetPacket_t mag;
+	mag.message.type = 'm';
+	mag.message.magnet1 = message.message.magnet1;
+	mag.message.magnet2 = message.message.magnet2;
+
+	//mag.message.magnet1 = 0;
+	//mag.message.magnet2 = 1;
+	Serial.write(mag.BytePacket, sizeof(mag.BytePacket));
+	*/
+}
+
+void printMagnets(){
+	magnetPacket_t mag;
+	mag.message.type = 'm';
+	//mag.message.padding;
+	
+	if (magState == magnetsOn)
+	{
+		mag.message.magnet1 = 1;
+		mag.message.magnet2 = 1;
+	} else if (magState == magnet1Off) {
+		mag.message.magnet1 = 0;
+		mag.message.magnet2 = 1;
+	} else if (magState == magnet2Off) {
+		mag.message.magnet1 = 1;
+		mag.message.magnet2 = 0;
+	} 
+	Serial.write(mag.BytePacket, sizeof(mag.BytePacket));
+}
+
+/*
+void printDebug(char message[]) {
+	DebugPacket_t debug;
+	int i = 0;
+	debug.message.type = 'd';
+	while(message[i] != '\n'){
+		debug.BytePacket[i + 8] = message[i];
+		i++;
+	}
+	Serial.write(debug.BytePacket, sizeof(debug.BytePacket));
+}
+*/
+void readPID(PID_Packet message){
+	jointMotor[0].set_PID(message.message.j0F, message.message.j0B);
+	jointMotor[1].set_PID(message.message.j1F, message.message.j1B);
+	jointMotor[2].set_PID(message.message.j2F, message.message.j2B);
+	jointMotor[3].set_PID(message.message.j3F, message.message.j3B);
+	jointMotor[4].set_PID(message.message.j4F, message.message.j4B);
+}
+
+
+
+void printPID(){
+	PID_Packet pid;
+	pid.message.type = 'p';
+	double arr[3];
+	arr[0] = 0.0;
+	arr[1] = 0.0;
+	arr[2] = 0.0;
+	
+	jointMotor[0].getPIDF(arr);
+	memcpy(pid.message.j0F, arr, sizeof(pid.message.j0F));
+	jointMotor[0].getPIDB(arr);
+	memcpy(pid.message.j0B, arr, sizeof(pid.message.j0B));
+	jointMotor[1].getPIDF(arr);
+	memcpy(pid.message.j1F, arr, sizeof(pid.message.j1F));
+	jointMotor[1].getPIDB(arr);
+	memcpy(pid.message.j1B, arr, sizeof(pid.message.j1B));
+	jointMotor[2].getPIDF(arr);
+	memcpy(pid.message.j2F, arr, sizeof(pid.message.j2F));
+	jointMotor[2].getPIDB(arr);
+	memcpy(pid.message.j2B, arr, sizeof(pid.message.j2B));
+	jointMotor[3].getPIDF(arr);
+	memcpy(pid.message.j3F, arr, sizeof(pid.message.j3F));
+	jointMotor[3].getPIDB(arr);
+	memcpy(pid.message.j3B, arr, sizeof(pid.message.j3B));
+	jointMotor[4].getPIDF(arr);
+	memcpy(pid.message.j4F, arr, sizeof(pid.message.j4F));
+	jointMotor[4].getPIDB(arr);
+	memcpy(pid.message.j4B, arr, sizeof(pid.message.j4B));
+
+	Serial.write(pid.BytePacket, sizeof(pid.BytePacket));
+}
+
+void printJointState(){
+	posePacket_t pose;
+	pose.message.type = 'j';
+
+	pose.message.j0 = jointMotor[0].getAngleDegrees();
+	pose.message.j1 = jointMotor[1].getAngleDegrees();
+	pose.message.j2 = jointMotor[2].getAngleDegrees();
+	pose.message.j3 = jointMotor[3].getAngleDegrees();
+	pose.message.j4 = jointMotor[4].getAngleDegrees();
+
+	Serial.write(pose.BytePacket, sizeof(pose.BytePacket));
 }
 
 /**
@@ -689,7 +920,7 @@ void printSerial() {
 	String outputString = "";
 	double tempAngle;
 	char tempString[20];
-
+	/*
 	//turn the angles into strings
 	for (int i = 0; i < NUM_MOTORS; i++)
 	{
@@ -699,12 +930,74 @@ void printSerial() {
 		
 		if (tempAngle >= 0)
 		{
-			outputString.concat('0');
+			outputString.concat(' ');
 		}
-		else
+		//else
+		//{
+		//	outputString.concat('-');
+		//}
+		tempAngle = abs(tempAngle);
+		if (tempAngle < 100)
+			tempString[0] = '0';
+		if (tempAngle < 10)
+			tempString[1] = '0';
+		
+		outputString.concat(tempString);
+		outputString.concat(" ");
+	}
+	//add magnet state to string
+	switch(magState)
+	{
+		case magnetsOn:
+			outputString.concat("0 0");
+			break;
+		case magnet1Off:
+			outputString.concat("1 0");
+			break;
+		case magnet2Off:
+			outputString.concat("0 1");
+			break;
+	}
+	//print string
+	Serial.println(outputString);
+	*/
+	poseGoalPacket_t pose;
+	pose.message.type = 'g';
+	pose.message.padding;
+	
+	pose.message.j0 = jointMotor[0].GetTarget();
+	pose.message.j1 = jointMotor[1].GetTarget();
+	pose.message.j2 = jointMotor[2].GetTarget();
+	pose.message.j3 = jointMotor[3].GetTarget();
+	pose.message.j4 = jointMotor[4].GetTarget();
+	Serial.write(pose.BytePacket, sizeof(pose.BytePacket));
+}
+
+/**
+ * @brief print where the fake joints currently are
+ * 
+ */
+void printFakeSerial() {
+	//Serial.println("here");
+	String outputString = "";
+	double tempAngle;
+	char tempString[20];
+
+	//turn the angles into strings
+	for (int i = 0; i < NUM_MOTORS; i++)
+	{
+		tempAngle = jointMotor[i].GetTarget();
+		
+		dtostrf(tempAngle,6,2,tempString);
+		
+		if (tempAngle >= 0)
 		{
-			outputString.concat('-');
+			outputString.concat(' ');
 		}
+		//else
+		//{
+		//	outputString.concat('-');
+		//}
 		tempAngle = abs(tempAngle);
 		if (tempAngle < 100)
 			tempString[0] = '0';
@@ -730,66 +1023,6 @@ void printSerial() {
 	//print string
 	Serial.println(outputString);
 
-}
-
-/**
- * Helper method to actuate grippers and allen key
- **/
-void ActuateGrippers()
-{
-
-	//Allen Key Control Code
-
-	if(new_command){
-		for(int i = 0; i < 4; i++){
-			gripper[i].last_update = millis();
-		}
-		new_command=false;
-	}
-	if (!allenKeyFinished && (allenKeySelect == 1 || allenKeySelect == 2))
-	{
-		allenKeyFinished = gripper[allenKeySelect - 1 + 2].setGripper(allenKeyState);
-	}
-
-	// Gripper Control Code
-	if (!gripperFinished1 && gripperSelect == 1)
-	{
-		gripperFinished1 = gripper[gripperSelect - 1].setGripper(gripperState);
-		//gripperFinished1 = true;
-	}
-
-	if (!gripperFinished2 && gripperSelect == 2)
-	{
-		gripperFinished2 = gripper[gripperSelect - 1].setGripper(gripperState);
-		//gripperFinished2 = true;
-	}
-
-	// Switching PID values for joint motors
-	if (gripperFinished1 && gripperSelect == 1 && gripperState == 1) // A link gripper just engaged
-	{
-
-		gripperEngagedSelect = jointMotor[0].a_link_engaged;
-		for (int i = 0; i < NUM_MOTORS; i++) // Switches PID values for joint motors
-		{
-			jointMotor[i].SwitchPID(gripperEngagedSelect);
-		}
-		gripperSelect = 0;
-	}
-	else if (gripperFinished2 && gripperSelect == 2 && gripperState == 1) // D link gripper just engaged
-	{
-
-		gripperEngagedSelect = jointMotor[0].d_link_engaged;
-		for (int i = 0; i < NUM_MOTORS; i++) // Switches PID values for joint motors
-		{
-			switchedPid_2 = true;
-			jointMotor[i].SwitchPID(gripperEngagedSelect);
-		}
-		gripperSelect = 0;
-	}
-	else
-	{
-		gripperEngagedSelect = jointMotor[0].neither_gripper_engaged;
-	}
 }
 
 /**
@@ -855,17 +1088,39 @@ void testJointMotor() {
  * 
  **/
 void setMagnetState(int mag1, int mag2) {
-    if (mag1 == 0 && mag2 == 0)
-                magState = magnetsOn;
-        else if (mag1 == 1 && mag2 == 0)
-                magState = magnet1Off;
-        else if (mag1 == 0 && mag2 == 1)
-                magState = magnet2Off;
-        else
-                printf("Error - invalid magnet state\n");
-
+	
+    if (mag1 == 1 && mag2 == 1) {
+		magState = magnetsOn;
+	}
+	else if (mag1 == 0 && mag2 == 1) {
+		magState = magnet1Off;
+	}
+	else if (mag1 == 1 && mag2 == 0) {
+		magState = magnet2Off;
+	}
+    
 }
 
+/**
+ * @brief Does the magnet signal
+ * 
+ */
+void updateMagnets() {
+	switch(magState) {
+		case magnetsOn:
+			digitalWrite(MAGNET_1, HIGH);
+			digitalWrite(MAGNET_2, HIGH);
+			break;
+		case magnet1Off:
+			digitalWrite(MAGNET_1, LOW);
+			digitalWrite(MAGNET_2, HIGH);
+			break;
+		case magnet2Off:
+			digitalWrite(MAGNET_1, HIGH);
+			digitalWrite(MAGNET_2, LOW);
+			break;
+	}
+}
 
 ////////////////////////////////////////////////////////////////
 // TEST FUNCTIONS
@@ -936,47 +1191,20 @@ void testMotors(void){
 	for(int i = 0; i < totalPins; i = i + 2){
 		Serial.printf("\n   Testing Motor: %d Pins: (%d, %d) ", i, pinM[i], pinM[i+1]);
 		motor = JointMotor2(pinM[i], pinM[i+1]);
+		Serial.printf("\n  forward");
 		motor.SendPWM(10);
-		delay(1000);
+		delay(2000);
+		Serial.printf("\n  stop");
 		motor.SendPWM(0);
-		delay(1000);
+		delay(2000);
+		Serial.printf("\n  backward");
+		motor.SendPWM(-10);
+		delay(2000);
+		Serial.printf("\n  stop");
+		motor.SendPWM(0);
+		delay(2000);
 	}
 	Serial.println("\nFinishing Test ...\n");
 	delay(4000);
-}
-
-void intServiceGrip1(void){
-  incrementTime[0] = millis();
-  if (incrementTime[0] - lastIncrementTime[0] > 50){
-      gripper[0].incrementIterator();
-  }
-  lastIncrementTime[0] = incrementTime[0];
-      
-}
-
-void intServiceGrip2(void){
-  incrementTime[1] = millis();
-  if (incrementTime[1] - lastIncrementTime[1] > 50){
-      gripper[1].incrementIterator();
-  }
-  lastIncrementTime[1] = incrementTime[1];
-      
-}
-
-void intServiceAllen1(void){
-  incrementTime[2] = millis();
-  if (incrementTime[2] - lastIncrementTime[2] > 50){
-      gripper[2].incrementIterator();
-  }
-  lastIncrementTime[2] = incrementTime[2];
-      
-}
-
-void intServiceAllen2(void){
-  incrementTime[3] = millis();
-  if (incrementTime[3] - lastIncrementTime[3] > 50){
-      gripper[3].incrementIterator();
-  }
-  lastIncrementTime[3] = incrementTime[3];
-      
+	//testState = ROBOT_TUNNING;
 }

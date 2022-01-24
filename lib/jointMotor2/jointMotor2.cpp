@@ -139,6 +139,14 @@ void JointMotor2::SetTarget(double angle)
 }
 
 /*
+* Get desired joint angle
+*/
+double JointMotor2::GetTarget(void)
+{
+	return targetAngle;
+}
+
+/*
 * TODO: Add moving average to see if the max change is greater than the one wanted 
   if it is then stop the motor from moving to that angle. There is two places where 
   this could work:1) in this calcEffor() function when I get the getAngleDegrees() 
@@ -182,6 +190,7 @@ int JointMotor2::CalcEffort(void)
 	double currentTime = millis();
 	if (currentTime - lastDebugUpdate >= 1000)
 	{
+		/*
 		Serial.print("\nID: ");
 		Serial.print(id);
 		// Serial.print(" CA: ");
@@ -192,6 +201,7 @@ int JointMotor2::CalcEffort(void)
 		Serial.print(error);
 		Serial.print(" Effort:");
 		Serial.print(effort);
+		*/
 		lastDebugUpdate = currentTime;
 	}
 
@@ -212,7 +222,7 @@ bool JointMotor2::SwitchPID(void)
 		kP = kP1;
 		kI = kI1;
 		kD = kD1;
-		Serial.printf("JOINT %d Switching to PID 1: %f, %f, %f\n", id, kP, kI, kD);
+		//Serial.printf("JOINT %d Switching to PID 1: %f, %f, %f\n", id, kP, kI, kD);
 		return false;
 	}
 	else if (fixed_link == d_link_engaged) // TODO switch to d_link_engaged
@@ -220,7 +230,7 @@ bool JointMotor2::SwitchPID(void)
 		kP = kP2;
 		kI = kI2;
 		kD = kD2;
-		Serial.printf("JOINT %d Switching to PID 2: %f, %f, %f\n", id, kP, kI, kD);
+		//Serial.printf("JOINT %d Switching to PID 2: %f, %f, %f\n", id, kP, kI, kD);
 		return true;
 	}
 	else
@@ -228,6 +238,7 @@ bool JointMotor2::SwitchPID(void)
 		return;
 	}
 }
+
 
 bool JointMotor2::SwitchPID(uint8_t gripperEngagedSelect)
 {
@@ -239,7 +250,7 @@ bool JointMotor2::SwitchPID(uint8_t gripperEngagedSelect)
 		kP = kP1;
 		kI = kI1;
 		kD = kD1;
-		Serial.println("Switching to PID 1");
+		//Serial.println("Switching to PID 1");
 		fixed_link = a_link_engaged;
 		return false;
 	}
@@ -248,7 +259,7 @@ bool JointMotor2::SwitchPID(uint8_t gripperEngagedSelect)
 		kP = kP2;
 		kI = kI2;
 		kD = kD2;
-		Serial.println("Switching to PID 2");
+		//Serial.println("Switching to PID 2");
 		fixed_link = d_link_engaged;
 		return true;
 	}
@@ -295,6 +306,15 @@ double JointMotor2::get_kI() {
 double JointMotor2::get_kD() {
 	return kD;
 }
+double JointMotor2::get_kP1() {
+	return kP1;
+}
+double JointMotor2::get_kI1() {
+	return kI1;
+}
+double JointMotor2::get_kD1() {
+	return kD1;
+}
 double JointMotor2::get_kP2() {
 	return kP2;
 }
@@ -309,4 +329,31 @@ double JointMotor2::get_angle_offset() {
 }
 uint8_t JointMotor2::get_id() {
 	return id;
+}
+
+void JointMotor2::getPIDF(double (&arr)[3]){
+	arr[0] = get_kP1();
+	arr[1] = get_kI1();
+	arr[2] = get_kD1();
+}
+void JointMotor2::getPIDB(double (&arr)[3]){
+	arr[0] = get_kP2();
+	arr[1] = get_kI2();
+	arr[2] = get_kD2();
+}
+
+/***********setters*************/
+void JointMotor2::set_PID(double kF[], double kB[]) {
+	
+	kP1 = kF[0];
+	kI1 = kF[1];
+	kD1 = kF[2];
+	kP2 = kB[0];
+	kI2 = kB[1];
+	kD2 = kB[2];
+
+	// switching pid back and forth should correctly set the pid values
+	SwitchPID();
+	SwitchPID();
+	
 }
