@@ -37,7 +37,7 @@ typedef union poseGoalPacket_t{
 	unsigned char BytePacket[sizeof(poseGoal_t)];
 };
 
-//Joint Goal message
+//Joint status message
 typedef struct pose_t {
 	char type;
 	char padding[7];
@@ -46,6 +46,16 @@ typedef struct pose_t {
 	double j2;
 	double j3;
 	double j4;
+	double v0;
+	double v1;
+	double v2;
+	double v3;
+	double v4;
+	double e0;
+	double e1;
+	double e2;
+	double e3;
+	double e4;
 };
 typedef union posePacket_t{
 	pose_t message;

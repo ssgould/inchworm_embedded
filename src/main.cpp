@@ -220,41 +220,8 @@ void setup()
 
 void loop()
 {
+
 	printJointState();
-	//String temp = "hi Eli";
-	//printFault(temp);
-	
-	//printSerial();
-	/*
-	if (testState == TEST_MAGNETS) {
-		updateMagnets();
-	}
-
-	if(testState == ROBOT_TUNNING || testState == ROBOT_NORMAL){
-		// turn the magnets on/off
-		if (USE_MAGNETS)
-		{
-			updateMagnets();
-		}
-
-		// Move joint motors
-		static uint32_t lastUpdateTime = millis();
-		uint32_t currTime = millis();
-		if (currTime - lastUpdateTime >= UPDATE_INTERVAL)
-		{
-			if (currTime - lastUpdateTime > UPDATE_INTERVAL)
-				Serial.println("Missed update schedule.");
-
-			lastUpdateTime += UPDATE_INTERVAL;
-
-			if (state == ST_HOLDING || ST_MOVING)
-			{
-				UpdateMotors();
-			}
-		}
-	}
-	*/
-
 	
 	if(testState == TEST_ALL){
 		testEncoders();
@@ -568,7 +535,7 @@ void StartMove(bool dir)
 	startMoveTime = millis();
 	state = ST_MOVING;
 }
-
+ 
 
 void ReadAngleString()
 {
@@ -900,6 +867,9 @@ void printPID(){
 }
 
 void printJointState(){
+	static int vel_startTime = millis();
+	int vel_delta = 10;
+
 	posePacket_t pose;
 	pose.message.type = 'j';
 
@@ -908,6 +878,40 @@ void printJointState(){
 	pose.message.j2 = jointMotor[2].getAngleDegrees();
 	pose.message.j3 = jointMotor[3].getAngleDegrees();
 	pose.message.j4 = jointMotor[4].getAngleDegrees();
+
+	// set the start of the joint positions
+	static int vel_j0_startPos = jointMotor[0].getAngleDegrees();
+	static int vel_j1_startPos = jointMotor[1].getAngleDegrees();
+	static int vel_j2_startPos = jointMotor[2].getAngleDegrees();
+	static int vel_j3_startPos = jointMotor[3].getAngleDegrees();
+	static int vel_j4_startPos = jointMotor[4].getAngleDegrees();
+
+	// check to see if there is enough time gone by so it doesnt just say 0
+	if ((vel_startTime - millis())> vel_delta){
+		
+		// calc the velocity (change in position over change in time)
+		pose.message.v0 = (vel_j0_startPos - jointMotor[0].getAngleDegrees())/(vel_startTime - millis());
+		pose.message.v1 = (vel_j1_startPos - jointMotor[1].getAngleDegrees())/(vel_startTime - millis());
+		pose.message.v2 = (vel_j2_startPos - jointMotor[2].getAngleDegrees())/(vel_startTime - millis());
+		pose.message.v3 = (vel_j3_startPos - jointMotor[3].getAngleDegrees())/(vel_startTime - millis());
+		pose.message.v4 = (vel_j4_startPos - jointMotor[4].getAngleDegrees())/(vel_startTime - millis());
+
+		// reset the starting variables 
+		vel_startTime = millis();
+		vel_j0_startPos = jointMotor[0].getAngleDegrees();
+		vel_j1_startPos = jointMotor[1].getAngleDegrees();
+		vel_j2_startPos = jointMotor[2].getAngleDegrees();
+		vel_j3_startPos = jointMotor[3].getAngleDegrees();
+		vel_j4_startPos = jointMotor[4].getAngleDegrees();
+	}
+
+
+	// get the effert 
+	pose.message.e0 = jointMotor[0].CalcEffort();
+	pose.message.e1 = jointMotor[1].CalcEffort();
+	pose.message.e2 = jointMotor[2].CalcEffort();
+	pose.message.e3 = jointMotor[3].CalcEffort();
+	pose.message.e4 = jointMotor[4].CalcEffort();
 
 	Serial.write(pose.BytePacket, sizeof(pose.BytePacket));
 }
