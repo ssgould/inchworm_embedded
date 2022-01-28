@@ -880,21 +880,23 @@ void printJointState(){
 	pose.message.j4 = jointMotor[4].getAngleDegrees();
 
 	// set the start of the joint positions
-	static int vel_j0_startPos = jointMotor[0].getAngleDegrees();
-	static int vel_j1_startPos = jointMotor[1].getAngleDegrees();
-	static int vel_j2_startPos = jointMotor[2].getAngleDegrees();
-	static int vel_j3_startPos = jointMotor[3].getAngleDegrees();
-	static int vel_j4_startPos = jointMotor[4].getAngleDegrees();
+	static double vel_j0_startPos = jointMotor[0].getAngleDegrees();
+	static double vel_j1_startPos = jointMotor[1].getAngleDegrees();
+	static double vel_j2_startPos = jointMotor[2].getAngleDegrees();
+	static double vel_j3_startPos = jointMotor[3].getAngleDegrees();
+	static double vel_j4_startPos = jointMotor[4].getAngleDegrees();
 
 	// check to see if there is enough time gone by so it doesnt just say 0
 	if ((vel_startTime - millis())> vel_delta){
-		
-		// calc the velocity (change in position over change in time)
-		pose.message.v0 = (vel_j0_startPos - jointMotor[0].getAngleDegrees())/(vel_startTime - millis());
-		pose.message.v1 = (vel_j1_startPos - jointMotor[1].getAngleDegrees())/(vel_startTime - millis());
-		pose.message.v2 = (vel_j2_startPos - jointMotor[2].getAngleDegrees())/(vel_startTime - millis());
-		pose.message.v3 = (vel_j3_startPos - jointMotor[3].getAngleDegrees())/(vel_startTime - millis());
-		pose.message.v4 = (vel_j4_startPos - jointMotor[4].getAngleDegrees())/(vel_startTime - millis());
+
+		double delta_time = (vel_startTime - millis())*1000;
+
+		// calc the velocity (change in position over change in time seconds)
+		pose.message.v0 = (vel_j0_startPos - jointMotor[0].getAngleDegrees())/(delta_time);
+		pose.message.v1 = (vel_j1_startPos - jointMotor[1].getAngleDegrees())/(delta_time);
+		pose.message.v2 = (vel_j2_startPos - jointMotor[2].getAngleDegrees())/(delta_time);
+		pose.message.v3 = (vel_j3_startPos - jointMotor[3].getAngleDegrees())/(delta_time);
+		pose.message.v4 = (vel_j4_startPos - jointMotor[4].getAngleDegrees())/(delta_time);
 
 		// reset the starting variables 
 		vel_startTime = millis();
