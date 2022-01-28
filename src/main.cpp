@@ -77,6 +77,8 @@ int testState = ROBOT_NORMAL;
 ros::NodeHandle nh;
 std_msgs::String debug_msg;
 std_msgs::String fault_msg;
+inchworm_hw_interface::MagnetState mag_msg;
+
 
 ////////////////////////////////////////////////////////////////
 // PUBLISHERS
@@ -84,6 +86,7 @@ std_msgs::String fault_msg;
 
 ros::Publisher debugPub("hw_interface/debug", &debug_msg);
 ros::Publisher faultPub("hw_interface/fault", &fault_msg);
+ros::Publisher magPub("hw_interface/magnet_state", &mag_msg);
 
 ////////////////////////////////////////////////////////////////
 // FUNCTION PROTOTYPES
@@ -94,6 +97,7 @@ void UpdateMotors(void);
 
 void printDebug(String theString);
 void printFault(String theString);
+void printMagnets(void);
 
 
 ////////////////////////////////////////////////////////////////
@@ -192,6 +196,7 @@ void setup()
 	nh.initNode();
 	nh.advertise(debugPub);
 	nh.advertise(faultPub);
+	nh.advertise(magPub);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -218,7 +223,7 @@ void loop()
 		}
 	}
 
-	printDebug("inch by inch");
+	printMagnets();
 
 	nh.spinOnce();
 	delay(10);
@@ -267,4 +272,21 @@ void printDebug(String theString){
 void printFault(String theString){
 	fault_msg.data = theString.c_str();
 	faultPub.publish(&fault_msg);
+}
+
+void printMagnets(){
+	
+	if (magState == magnetsOn)
+	{
+		mag_msg.magnet1 = 1;
+		mag_msg.magnet2 = 1;
+	} else if (magState == magnet1Off) {
+		mag_msg.magnet1 = 0;
+		mag_msg.magnet2 = 1;
+	} else if (magState == magnet2Off) {
+		mag_msg.magnet1 = 1;
+		mag_msg.magnet2 = 0;
+	} 
+	
+	magPub.publish(&mag_msg);
 }
