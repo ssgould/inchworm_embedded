@@ -14,7 +14,7 @@ JointMotor2::JointMotor2(int pwmF, int pwmR)
 JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
 						 uint8_t encoderAddress, double kp_a_link_fixed, double ki_a_link_fixed, double kd_a_link_fixed,
 						 double kp_d_link_fixed, double ki_d_link_fixed, double kd_d_link_fixed,
-						 double ang_offset, bool encoder_clockwise, uint8_t id_input)
+						 double ang_offset, bool encoder_clockwise, uint8_t id_input, double limit)
 {
 	//Pin Configuration
 	pwmForward = pwmF;
@@ -106,7 +106,7 @@ double JointMotor2::getAngleDegrees()
 
 	if (fabs(delta) > ANGLE_ERROR_THRESHOLD)
 	{
-		Serial.println("Angle error!");
+		//Serial.println("Angle error!");
 	}
 
 	last_calibrated_angle = calibrated_angle;
@@ -128,6 +128,7 @@ double JointMotor2::getAngleDegrees()
 	// }
 	return calibrated_angle;
 }
+
 
 /*
 * Set desired joint angle
@@ -342,6 +343,9 @@ void JointMotor2::getPIDB(double (&arr)[3]){
 	arr[2] = get_kD2();
 }
 
+double JointMotor2::getLimit(){
+	return limit;
+}
 /***********setters*************/
 void JointMotor2::set_PID(double kF[], double kB[]) {
 	

@@ -42,7 +42,7 @@ char tempSerialBuffer[TOTAL_PACKET_LEN]; // Temporary Serial Buffer
 const int PARSE_PKT_LEN = 5;
 char temp[PARSE_PKT_LEN];
 String inputBuffer; //String isn't the most efficient, but easier for I/O
-String angleInputs;
+
 ////////////////////////////////////////////////////////////////
 // GRIPPER CONTROL
 ////////////////////////////////////////////////////////////////
@@ -89,10 +89,9 @@ void readSerial(void);
 void readJoints(poseGoalPacket_t message);
 void readPID(PID_Packet message);
 void readMagnets(magnetPacket_t message);
-void printSerial(void);
+void printTarget(void);
 void printDebug(String theString);
 void printFault(String theString);
-void printFakeSerial(void);
 void printMagnets(void);
 void printPID(void);
 void printJointState(void);
@@ -114,8 +113,6 @@ void setup()
 	Serial.begin(115200); 	
 	Serial.setTimeout(20);
 	// Serial.setTimeout(0);
-
-	//Serial.println("Robot intializing....");
 
 	// Power LED
 	pinMode(POWER_LED, OUTPUT);
@@ -154,15 +151,15 @@ void setup()
 										JOINT_MOTOR5_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 5);
 			*/
 			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
-										JOINT_MOTOR1_ADR, 10, 0, 0, 10, 0, 0, 0.0, false, 1);
+										JOINT_MOTOR1_ADR, 10, 0, 0, 10, 0, 0, 0.0, false, 1, 30.0);
 			jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
-										JOINT_MOTOR2_ADR, 10, 0, 0, 10, 0, 0, 0.0, false, 2);
+										JOINT_MOTOR2_ADR, 10, 0, 0, 10, 0, 0, 0.0, false, 2, 60.0);
 			jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
-										JOINT_MOTOR3_ADR, 22, 0.5, 0, 23, 0.4, 0, 0.0, true, 3);
+										JOINT_MOTOR3_ADR, 22, 0.5, 0, 23, 0.4, 0, 0.0, true, 3, 90.0);
 			jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
-										JOINT_MOTOR4_ADR, 8, .3, 0, 23, .4, 0, 0.0, true, 4);
+										JOINT_MOTOR4_ADR, 8, .3, 0, 23, .4, 0, 0.0, true, 4, 60.0);
 			jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
-										JOINT_MOTOR5_ADR, 10, 0, 0, 10, 0, 0, 0.0, false, 5);
+										JOINT_MOTOR5_ADR, 10, 0, 0, 10, 0, 0, 0.0, false, 5, 30.0);
 			
 			// proper home
 			/*
@@ -204,9 +201,10 @@ void setup()
 		//wait for heartbeat
 		if (Serial.available() > 0) {
 			Serial.readBytesUntil('\n', serialBuffer, TOTAL_PACKET_LEN);
-			if (serialBuffer[0] = 'h') {
+			if (serialBuffer[0] == 'h') {
 				Serial.print("hhhhh");
 				readyToStart = true;
+				printPID();
 			}
 		}
 
@@ -221,40 +219,6 @@ void setup()
 void loop()
 {
 	printJointState();
-	//String temp = "hi Eli";
-	//printFault(temp);
-	
-	//printSerial();
-	/*
-	if (testState == TEST_MAGNETS) {
-		updateMagnets();
-	}
-
-	if(testState == ROBOT_TUNNING || testState == ROBOT_NORMAL){
-		// turn the magnets on/off
-		if (USE_MAGNETS)
-		{
-			updateMagnets();
-		}
-
-		// Move joint motors
-		static uint32_t lastUpdateTime = millis();
-		uint32_t currTime = millis();
-		if (currTime - lastUpdateTime >= UPDATE_INTERVAL)
-		{
-			if (currTime - lastUpdateTime > UPDATE_INTERVAL)
-				Serial.println("Missed update schedule.");
-
-			lastUpdateTime += UPDATE_INTERVAL;
-
-			if (state == ST_HOLDING || ST_MOVING)
-			{
-				UpdateMotors();
-			}
-		}
-	}
-	*/
-
 	
 	if(testState == TEST_ALL){
 		testEncoders();
@@ -264,7 +228,8 @@ void loop()
 	}else if(testState == TEST_MOTORS){
 		testMotors();
 	}else if(testState == ROBOT_TUNNING){
-		RunPidTuningDebug();
+		//not this
+		printDebug("this is where we used to tune pid");
 	}else if(testState == ROBOT_NORMAL){
 		readSerial();
 	}	
@@ -282,7 +247,7 @@ void loop()
 		if (currTime - lastUpdateTime >= UPDATE_INTERVAL)
 		{
 			if (currTime - lastUpdateTime > UPDATE_INTERVAL)
-				//Serial.println("Missed update schedule.");
+				printDebug("Missed update schedule");
 
 			lastUpdateTime += UPDATE_INTERVAL;
 
@@ -415,105 +380,6 @@ void printHeartbeat(){
 	Serial.write(hb.BytePacket, sizeof(hb.BytePacket));
 }
 
-/**
- * Tunes PID values quickly and tests small trajectories
- *
- * This method allows for the use of the Serial Terminal to tune
- * PID values separatly for when D or A link is fixed with the
- * Serial inputs shown below.
- *
- * 			> P0.1 //Controller term and then value
- *  		> A    //Prints all PID values
- *
- * Important: Once the PID values are tuned they can be printed
- * to Serial as they are volatile.
- *
- * To make tunning easier this method allows for the robot to be
- * controlled by moving it down and up with two simple commands
- * shown below. This is a simple way of checking if the values
- * for the PID controller are tunned properly.
- *
- * 			> M	// Move robot up
- *    		> N // Move robot down
- *
- */
-void RunPidTuningDebug()
-{
-	if (Serial.available())
-	{
-		Serial.println("Message received");
-
-		char c = Serial.read();
-		inputBuffer += c;
-
-		if (c == '\n')
-		{
-			// Move up
-			if (inputBuffer[0] == 'M')
-			{
-				StartMove(0);
-				state = ST_MOVING;
-			}
-
-			// Move down
-			if (inputBuffer[0] == 'N')
-			{
-				StartMove(1);
-				state = ST_MOVING;
-			}
-
-			// Tune PID values
-			if (inputBuffer[0] == 'P')
-			{
-				float k = inputBuffer.substring(1).toFloat();
-				for (int i = 0; i < MOTOR_COUNT; i++)
-				{
-					jointMotor[i].SetKp(k);
-				}
-			}
-
-			if (inputBuffer[0] == 'I')
-			{
-				float k = inputBuffer.substring(1).toFloat();
-				for (int i = 0; i < MOTOR_COUNT; i++)
-				{
-					jointMotor[i].SetKi(k);
-				}
-			}
-
-			if (inputBuffer[0] == 'D')
-			{
-				float k = inputBuffer.substring(1).toFloat();
-				for (int i = 0; i < MOTOR_COUNT; i++)
-				{
-					jointMotor[i].SetKd(k);
-				}
-			}
-
-			// Print PID values
-			if (inputBuffer[0] == 'A')
-			{
-				for (int i = 0; i < MOTOR_COUNT; i++)
-				{
-					jointMotor[i].printPID();
-				}
-			}
-
-			// if (inputBuffer[0] == 'S')
-			// {
-			// 	switchGrippers = switchGrippers == 1 ? 2 : 1;
-			// 	Serial.print("Switching PIDs");
-
-			// 	for (int i = 0; i < MOTOR_COUNT; i++)
-			// 	{
-			// 		jointMotor[i].SwitchPID(switchGrippers);
-			// 	}
-			// }
-
-			inputBuffer = ""; // Reset buffer
-		}
-	}
-}
 
 /**
  * Updates all motors on robot
@@ -533,158 +399,41 @@ void UpdateMotors()
 		for (int i = MOTOR_COUNT - 1; i >= 0; i--)
 		{
 			switchedPid_2 = false;
-			jointMotor[i].SendPWM(speeds[i]);
+			if (abs(jointMotor[i].getAngleDegrees()) > jointMotor[i].getLimit()) {
+				String fault = "motor ";
+				fault += i;
+				fault += " at ";
+				fault += jointMotor[i].getAngleDegrees();
+				fault += " past the limit ";
+				fault += jointMotor[i].getLimit();
+				printFault(fault);
+			} else {
+				jointMotor[i].SendPWM(speeds[i]);
+			}
+
+			
 		}
 	}
 	else
 	{
 		for (int i = 0; i < NUM_MOTORS; i++)
 		{
-			jointMotor[i].SendPWM(speeds[i]);
+			if (abs(jointMotor[i].getAngleDegrees()) > jointMotor[i].getLimit()) {
+				String fault = "motor ";
+				fault += i;
+				fault += " at ";
+				fault += jointMotor[i].getAngleDegrees();
+				fault += " past the limit ";
+				fault += jointMotor[i].getLimit();
+			} else {
+				jointMotor[i].SendPWM(speeds[i]);
+			}
 		}
 	}
 	//Serial.printf("E %3.2f %3.2f %3.2f %3.2f %3.2f\n", speeds[0], speeds[1], speeds[2], speeds[3],  speeds[4]);
 }
 
 
-/**
- * Helper method to start robot movement when tunning PID values
- */
-
-float startAngles[MOTOR_COUNT];
-float targetAngles[MOTOR_COUNT];
-
-void StartMove(bool dir)
-{
-	for (int i = 0; i < MOTOR_COUNT; i++)
-	{
-		startAngles[i] = jointMotor[i].getAngleDegrees();
-		if (dir)
-			targetAngles[i] = startAngles[i] - 5;
-		else
-			targetAngles[i] = startAngles[i] + 5;
-	}
-
-	startMoveTime = millis();
-	state = ST_MOVING;
-}
-
-
-void ReadAngleString()
-{
-
-	if (Serial.available() > 0)
-	{
-		angleInputs = Serial.readString();
-
-		int jointIndex = 0;
-		int index;
-		for(index = 0; index < (MOTOR_PKT_LEN*NUM_MOTORS); index+=MOTOR_PKT_LEN){
-			float angle = angleInputs.substring(index, index+MOTOR_PKT_LEN).toFloat();
-			//jointMotor[jointIndex].SetTarget(angle);
-			Serial.printf("%d angle: %.2f\n", index+1, angle);
-			jointIndex++;
-		}
-		//allenKey_A = angleInputs..
-
-	}
-}
-
-/**
- * Main method that reads control message form high level code
- *
- * This method parses and organizes the serial control message
- * to angle for each joint, gripper configuration, and allen
- * key actuation.
- */
-boolean toggleBuffer = true;
-void ReadAngleInputs()
-{
-	if (Serial.available() > 0)
-	{
-		new_command=true;
-		double current_time = millis();
-		Serial.println("Message received");
-		previous_time = current_time;
-		Serial.readBytesUntil('\n', serialBuffer, TOTAL_PACKET_LEN);
-		int tempIndex = 0;
-		int jointIndex = 0;
-		float tempAngle = 0;
-		boolean motorPktCompleted = true;
-
-		if(toggleBuffer){
-			for(int i = 0; i < TOTAL_PACKET_LEN; i++){
-				tempSerialBuffer[i] = serialBuffer[i];
-			}
-		}
-		for(int i = 0; i < TOTAL_PACKET_LEN; i++){
-			serialBuffer[i] = tempSerialBuffer[i];
-		}
-
-		if (serialBuffer[0] == '-' || serialBuffer[0] == '0')
-		{
-			for (int i = 0; i < TOTAL_PACKET_LEN; i++)
-			{
-				temp[tempIndex] = serialBuffer[i];
-				if (tempIndex < 3)
-				{
-					tempIndex++;
-				}
-				else
-				{
-					temp[PARSE_PKT_LEN - 1] = '\n'; //you need this
-					tempIndex = 0;
-					if (jointIndex >= MOTOR_COUNT)
-					{   
-						//Gripper							
-					}
-					else
-					{   //Joint angles
-						if (motorPktCompleted)
-						{							   // receiving first half of an angle value
-							motorPktCompleted = false; // flip the flag to false
-							if (temp[0] == '-')
-							{
-								temp[0] = '0';
-								tempAngle = -1 * atoi(temp);
-							}
-							else
-							{
-								tempAngle = atoi(temp);
-							}
-						}
-						else
-						{	// receiving second half of an angle value
-							motorPktCompleted = true; // flip the flag to true
-							temp[0] = '0';
-							temp[PARSE_PKT_LEN - 1] = '0';
-							tempAngle += (atof(temp) * 0.01); // divide by 1000 to compensate for the extra 0
-							jointMotor[jointIndex].SetTarget(tempAngle);
-							// jointMotor[jointIndex].sumError = 0.0;
-							Serial.print("Set angle[");
-							Serial.print(jointIndex + 1);
-							Serial.print("]: ");
-							Serial.println(tempAngle);
-							jointIndex++;
-							// state = ST_MOVING;
-						}
-					}
-				}
-			}
-		}
-		else
-		{
-			for (int i = 0; i < TOTAL_PACKET_LEN; i++)
-			{
-				Serial.read();
-			}
-		}
-
-		Serial.println(serialBuffer);
-		Serial.println(tempSerialBuffer);
-		toggleBuffer = !toggleBuffer;
-	}
-}
 
 /**
  * @brief read control message from ROS
@@ -719,7 +468,7 @@ void readSerial() {
 			memcpy(pose.BytePacket, tempPose, sizeof(pose.BytePacket));
 			readJoints(pose);
 			//do the joint reading 
-			printSerial();
+			printTarget();
 			break;
 		case 'm':
 			magnetPacket_t mag;
@@ -733,19 +482,14 @@ void readSerial() {
 			printMagnets();
 			break;
 		case 'p':
-			printDebug("should get here");
 			PID_Packet pid;
 			unsigned char tempPid[248];
-			printDebug("got to before the loop");
 			for (int i = 0; i < 248; i ++)
 			{
 				tempPid[i] = serialBuffer[i];
 			}
-			printDebug("got to after the loop");
 			memcpy(pid.BytePacket, tempPid, sizeof(pid.BytePacket));
-			printDebug("about to read PID");
 			readPID(pid);
-			printDebug("about to print PID");
 			printPID();
 			break;
 		default:
@@ -755,56 +499,6 @@ void readSerial() {
 }
 
 void readJoints(poseGoalPacket_t message) {
-	//posePacket_t poseMessage.I2CPacket = byteMessage;
-	/*
-	if (Serial.available() > 0)
-	{
-		new_command=true;
-		double current_time = millis();
-		previous_time = current_time;
-		Serial.readBytesUntil('\n', serialBuffer, TOTAL_PACKET_LEN);
-		//Serial.println("Message received:");
-		//Serial.println(serialBuffer);
-
-		int tempIndex = 0;
-		int jointIndex = 0;
-
-		if (serialBuffer[0] == '-' || serialBuffer[0] == ' ')
-		{
-			//read serial
-			//split it up into the separate pieces
-			tempIndex = 0;
-
-			//cycle through joints and decode angles
-			for (jointIndex = 0; jointIndex < NUM_MOTORS; jointIndex++)
-			{
-				tempIndex = jointIndex * MOTOR_PKT_LEN; //offsets start of motor packet
-				char angleChars[MOTOR_PKT_LEN];
-				for (int i = 0; i < MOTOR_PKT_LEN; i++)
-				{
-					angleChars[i] = serialBuffer[tempIndex + i];
-				}
-				std::string angleString = std::string(angleChars);
-				float tempAngle = atof(angleChars);
-
-				// send robot off
-				jointMotor[jointIndex].SetTarget(tempAngle);
-			}
-			//the third to last and last characters should be the magnets
-			char magnet1 = serialBuffer[TOTAL_PACKET_LEN - 4];
-			char magnet2 = serialBuffer[TOTAL_PACKET_LEN - 2];
-			
-			// get magnet state
-			setMagnetState(magnet1, magnet2);
-			//Serial.println("got here");
-			printSerial(); 
-		}
-	    else
-		{
-			Serial.println("Invalid Input"); //didn't get the serial message
-		}
-	}
-	*/
 	jointMotor[0].SetTarget(message.message.j0);
 	jointMotor[1].SetTarget(message.message.j1);
 	jointMotor[2].SetTarget(message.message.j2);
@@ -814,22 +508,11 @@ void readJoints(poseGoalPacket_t message) {
 
 void readMagnets(magnetPacket_t message){
 	setMagnetState(message.message.magnet1, message.message.magnet2);
-	/*
-	magnetPacket_t mag;
-	mag.message.type = 'm';
-	mag.message.magnet1 = message.message.magnet1;
-	mag.message.magnet2 = message.message.magnet2;
-
-	//mag.message.magnet1 = 0;
-	//mag.message.magnet2 = 1;
-	Serial.write(mag.BytePacket, sizeof(mag.BytePacket));
-	*/
 }
 
 void printMagnets(){
 	magnetPacket_t mag;
 	mag.message.type = 'm';
-	//mag.message.padding;
 	
 	if (magState == magnetsOn)
 	{
@@ -845,18 +528,6 @@ void printMagnets(){
 	Serial.write(mag.BytePacket, sizeof(mag.BytePacket));
 }
 
-/*
-void printDebug(char message[]) {
-	DebugPacket_t debug;
-	int i = 0;
-	debug.message.type = 'd';
-	while(message[i] != '\n'){
-		debug.BytePacket[i + 8] = message[i];
-		i++;
-	}
-	Serial.write(debug.BytePacket, sizeof(debug.BytePacket));
-}
-*/
 void readPID(PID_Packet message){
 	jointMotor[0].set_PID(message.message.j0F, message.message.j0B);
 	jointMotor[1].set_PID(message.message.j1F, message.message.j1B);
@@ -864,8 +535,6 @@ void readPID(PID_Packet message){
 	jointMotor[3].set_PID(message.message.j3F, message.message.j3B);
 	jointMotor[4].set_PID(message.message.j4F, message.message.j4B);
 }
-
-
 
 void printPID(){
 	PID_Packet pid;
@@ -913,57 +582,12 @@ void printJointState(){
 }
 
 /**
- * @brief print where the joints currently are
+ * @brief print where the joints are going
  * 
  */
-void printSerial() {
-	String outputString = "";
-	double tempAngle;
-	char tempString[20];
-	/*
-	//turn the angles into strings
-	for (int i = 0; i < NUM_MOTORS; i++)
-	{
-		tempAngle = jointMotor[i].getAngleDegrees();
-		
-		dtostrf(tempAngle,6,2,tempString);
-		
-		if (tempAngle >= 0)
-		{
-			outputString.concat(' ');
-		}
-		//else
-		//{
-		//	outputString.concat('-');
-		//}
-		tempAngle = abs(tempAngle);
-		if (tempAngle < 100)
-			tempString[0] = '0';
-		if (tempAngle < 10)
-			tempString[1] = '0';
-		
-		outputString.concat(tempString);
-		outputString.concat(" ");
-	}
-	//add magnet state to string
-	switch(magState)
-	{
-		case magnetsOn:
-			outputString.concat("0 0");
-			break;
-		case magnet1Off:
-			outputString.concat("1 0");
-			break;
-		case magnet2Off:
-			outputString.concat("0 1");
-			break;
-	}
-	//print string
-	Serial.println(outputString);
-	*/
+void printTarget() {
 	poseGoalPacket_t pose;
 	pose.message.type = 'g';
-	pose.message.padding;
 	
 	pose.message.j0 = jointMotor[0].GetTarget();
 	pose.message.j1 = jointMotor[1].GetTarget();
@@ -971,58 +595,6 @@ void printSerial() {
 	pose.message.j3 = jointMotor[3].GetTarget();
 	pose.message.j4 = jointMotor[4].GetTarget();
 	Serial.write(pose.BytePacket, sizeof(pose.BytePacket));
-}
-
-/**
- * @brief print where the fake joints currently are
- * 
- */
-void printFakeSerial() {
-	//Serial.println("here");
-	String outputString = "";
-	double tempAngle;
-	char tempString[20];
-
-	//turn the angles into strings
-	for (int i = 0; i < NUM_MOTORS; i++)
-	{
-		tempAngle = jointMotor[i].GetTarget();
-		
-		dtostrf(tempAngle,6,2,tempString);
-		
-		if (tempAngle >= 0)
-		{
-			outputString.concat(' ');
-		}
-		//else
-		//{
-		//	outputString.concat('-');
-		//}
-		tempAngle = abs(tempAngle);
-		if (tempAngle < 100)
-			tempString[0] = '0';
-		if (tempAngle < 10)
-			tempString[1] = '0';
-		
-		outputString.concat(tempString);
-		outputString.concat(" ");
-	}
-	//add magnet state to string
-	switch(magState)
-	{
-		case magnetsOn:
-			outputString.concat("0 0");
-			break;
-		case magnet1Off:
-			outputString.concat("1 0");
-			break;
-		case magnet2Off:
-			outputString.concat("0 1");
-			break;
-	}
-	//print string
-	Serial.println(outputString);
-
 }
 
 /**
