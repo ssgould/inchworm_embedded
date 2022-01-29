@@ -69,7 +69,7 @@ public:
 	uint8_t get_id();
 
 	/***********setters*************/
-	void set_PID(double kF[], double kB[]);
+	void set_PID(float kF[], float kB[]);
 	//*****************************
 
 	typedef enum

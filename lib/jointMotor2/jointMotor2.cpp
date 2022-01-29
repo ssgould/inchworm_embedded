@@ -343,7 +343,7 @@ void JointMotor2::getPIDB(double (&arr)[3]){
 }
 
 /***********setters*************/
-void JointMotor2::set_PID(double kF[], double kB[]) {
+void JointMotor2::set_PID(float kF[], float kB[]) {
 	
 	kP1 = kF[0];
 	kI1 = kF[1];

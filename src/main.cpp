@@ -13,7 +13,11 @@
 
 #include <ros.h>
 #include <std_msgs/String.h>
+#include <sensor_msgs/JointState.h>
 #include <inchworm_hw_interface/MagnetState.h>
+#include <inchworm_hw_interface/PID.h>
+#include <inchworm_hw_interface/PIDConsts.h>
+#include <std_msgs/Int32.h>
 
 ////////////////////////////////////////////////////////////////
 // TUNABLE PARAMETERS
@@ -75,30 +79,49 @@ int testState = ROBOT_NORMAL;
 //int testState = TEST_MOTORS;
 
 ros::NodeHandle nh;
+std_msgs::Int32 heartbeat_msg;
 std_msgs::String debug_msg;
 std_msgs::String fault_msg;
+sensor_msgs::JointState joint_msg;
 inchworm_hw_interface::MagnetState mag_msg;
-
-
-////////////////////////////////////////////////////////////////
-// PUBLISHERS
-////////////////////////////////////////////////////////////////
-
-ros::Publisher debugPub("hw_interface/debug", &debug_msg);
-ros::Publisher faultPub("hw_interface/fault", &fault_msg);
-ros::Publisher magPub("hw_interface/magnet_state", &mag_msg);
+inchworm_hw_interface::PIDConsts consts_msg;
 
 ////////////////////////////////////////////////////////////////
 // FUNCTION PROTOTYPES
 ////////////////////////////////////////////////////////////////
+
 void UpdateMotors(void);
 
-//serial stuff
+// ROS Serial publishing functions
 
 void printDebug(String theString);
 void printFault(String theString);
+void printJointState(void);
 void printMagnets(void);
+void printPID(void);
+// ROS Serial callbacks
 
+void heartbeatCB(const std_msgs::Int32 &msg);
+void magnetCB(const inchworm_hw_interface::MagnetState &msg);
+void goalCB(const sensor_msgs::JointState &msg);
+void pidCB(const inchworm_hw_interface::PIDConsts &msg);
+
+
+////////////////////////////////////////////////////////////////
+// PUBLISHERS AND SUBSCRIBERS
+////////////////////////////////////////////////////////////////
+
+ros::Publisher heartbeatPub("hw_interface/heartbeat_res", &heartbeat_msg);
+ros::Publisher debugPub("hw_interface/debug", &debug_msg);
+ros::Publisher faultPub("hw_interface/fault", &fault_msg);
+ros::Publisher jointPub("hw_interface/joint_state", &joint_msg);
+ros::Publisher magPub("hw_interface/magnet_state", &mag_msg);
+ros::Publisher pidPub("hw_interface/pid_consts", &consts_msg);
+
+ros::Subscriber<std_msgs::Int32> heartbeatSub("hw_interface/heartbeat_req", &heartbeatCB);
+ros::Subscriber<inchworm_hw_interface::MagnetState> magnetSub("hw_interface/set_magnet_state", &magnetCB);
+ros::Subscriber<sensor_msgs::JointState> goalSub("hw_interface/set_joint_goal", &goalCB);
+ros::Subscriber<inchworm_hw_interface::PIDConsts> pidSub("hw_interface/set_pid_consts", &pidCB);
 
 ////////////////////////////////////////////////////////////////
 // SETUP METHOD
@@ -196,7 +219,9 @@ void setup()
 	nh.initNode();
 	nh.advertise(debugPub);
 	nh.advertise(faultPub);
+	nh.advertise(jointPub);
 	nh.advertise(magPub);
+	nh.advertise(pidPub);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -224,6 +249,8 @@ void loop()
 	}
 
 	printMagnets();
+	printPID();
+	printJointState();
 
 	nh.spinOnce();
 	delay(10);
@@ -264,29 +291,155 @@ void UpdateMotors()
 	//Serial.printf("E %3.2f %3.2f %3.2f %3.2f %3.2f\n", speeds[0], speeds[1], speeds[2], speeds[3],  speeds[4]);
 }
 
-void printDebug(String theString){	
+void printDebug(String theString)
+{	
 	debug_msg.data = theString.c_str();
 	debugPub.publish(&debug_msg);
 }
 
-void printFault(String theString){
+void printFault(String theString)
+{
 	fault_msg.data = theString.c_str();
 	faultPub.publish(&fault_msg);
 }
 
-void printMagnets(){
+void printJointState()
+{
+	char *name[] = {"link1_to_foot", "link2_to_link1", "link3_to_link2", "link3_to_link4", "link4_to_foot"};
+	float pos[5];
+	// float vel[5];
+	float eff[5];
+
+	for(int i = 0; i < 5; i++)
+	{
+		pos[i] = jointMotor[i].getAngleDegrees();
+		// vel[i] = ???;
+		eff[i] = (float) jointMotor[i].CalcEffort();
+	}
+
+	joint_msg.name = name;
+	joint_msg.position = pos;
+	// joint_msg.velocity = vel;
+	joint_msg.effort = eff;
+
+	joint_msg.name_length = 5;
+	joint_msg.position_length = 5;
+	joint_msg.effort_length = 5;
+
+	jointPub.publish(&joint_msg);
+}
+
+void printMagnets()
+{
 	
 	if (magState == magnetsOn)
 	{
 		mag_msg.magnet1 = 1;
 		mag_msg.magnet2 = 1;
-	} else if (magState == magnet1Off) {
+	}
+	else if (magState == magnet1Off)
+	{
 		mag_msg.magnet1 = 0;
 		mag_msg.magnet2 = 1;
-	} else if (magState == magnet2Off) {
+	} 
+	else if (magState == magnet2Off)
+	{
 		mag_msg.magnet1 = 1;
 		mag_msg.magnet2 = 0;
 	} 
 	
 	magPub.publish(&mag_msg);
+}
+
+void printPID()
+{
+	inchworm_hw_interface::PID forward[5];
+	inchworm_hw_interface::PID backward[5];
+
+	double pid[3];
+
+	for(int i = 0; i < 5; i++)
+	{
+		jointMotor[i].getPIDF(pid);
+
+		forward[i].p = pid[0];
+		forward[i].i = pid[1];
+		forward[i].d = pid[2];
+
+		jointMotor[i].getPIDB(pid);
+
+		backward[i].p = pid[0];
+		backward[i].i = pid[1];
+		backward[i].d = pid[2];
+	}
+
+	consts_msg.forward = forward;
+	consts_msg.backward = backward;
+
+	consts_msg.forward_length = 5;
+	consts_msg.backward_length = 5;
+
+	pidPub.publish(&consts_msg);
+}
+
+void heartbeatCB(const std_msgs::Int32 &msg)
+{
+	heartbeat_msg.data = msg.data;
+
+	heartbeatPub.publish(&heartbeat_msg);
+}
+
+void magnetCB(const inchworm_hw_interface::MagnetState &msg)
+{
+	if(msg.magnet1 == 1 && msg.magnet2 == 1)
+	{
+		magState = magnetsOn;
+	}
+	else if(msg.magnet1 == 0 && msg.magnet2 == 1)
+	{
+		magState = magnet1Off;
+	}
+	else if(msg.magnet1 == 1 && msg.magnet2 == 0)
+	{
+		magState = magnet2Off;
+	}
+	else
+	{
+		printFault("Requested magnet state is invalid!");
+		magState = magnetsOn;
+	}
+
+	switch(magState)
+	{
+		case magnetsOn:
+			digitalWrite(MAGNET_1, HIGH);
+			digitalWrite(MAGNET_2, HIGH);
+			break;
+		case magnet1Off:
+			digitalWrite(MAGNET_1, LOW);
+			digitalWrite(MAGNET_2, HIGH);
+			break;
+		case magnet2Off:
+			digitalWrite(MAGNET_1, HIGH);
+			digitalWrite(MAGNET_2, LOW);
+			break;
+	}
+}
+
+void goalCB(const sensor_msgs::JointState &msg)
+{
+	for(int i = 0; i < 5; i++)
+	{
+		jointMotor[i].SetTarget(msg.position[i]);
+	}
+}
+
+void pidCB(const inchworm_hw_interface::PIDConsts &msg)
+{
+	for(int i = 0; i < 5; i++)
+	{
+		float forward[3] = {msg.forward[i].p, msg.forward[i].i, msg.forward[i].d};
+		float backward[3] = {msg.backward[i].p, msg.backward[i].i, msg.backward[i].d};
+		jointMotor[i].set_PID(forward, backward);
+	}
 }
