@@ -114,8 +114,8 @@ void pidCB(const inchworm_hw_interface::PIDConsts &msg);
 ros::Publisher heartbeatPub("hw_interface/heartbeat_res", &heartbeat_msg);
 ros::Publisher debugPub("hw_interface/debug", &debug_msg);
 ros::Publisher faultPub("hw_interface/fault", &fault_msg);
-ros::Publisher jointPub("hw_interface/joint_state", &joint_msg);
-ros::Publisher magPub("hw_interface/magnet_state", &mag_msg);
+ros::Publisher jointPub("hw_interface/joint_states", &joint_msg);
+ros::Publisher magPub("hw_interface/magnet_states", &mag_msg);
 ros::Publisher pidPub("hw_interface/pid_consts", &consts_msg);
 
 ros::Subscriber<std_msgs::Int32> heartbeatSub("hw_interface/heartbeat_req", &heartbeatCB);
@@ -305,6 +305,8 @@ void printFault(String theString)
 
 void printJointState()
 {
+	joint_msg.header.stamp = nh.now();
+
 	char *name[] = {"link1_to_foot", "link2_to_link1", "link3_to_link2", "link3_to_link4", "link4_to_foot"};
 	float pos[5];
 	// float vel[5];
@@ -312,7 +314,8 @@ void printJointState()
 
 	for(int i = 0; i < 5; i++)
 	{
-		pos[i] = jointMotor[i].getAngleDegrees();
+		// Convert to radians
+		pos[i] = jointMotor[i].getAngleDegrees() * 2*(3.14159) / 360;
 		// vel[i] = ???;
 		eff[i] = (float) jointMotor[i].CalcEffort();
 	}
