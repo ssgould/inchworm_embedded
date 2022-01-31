@@ -216,6 +216,12 @@ void setup()
 		//Serial.println("Done");
 		previous_time = millis();
 	}
+
+	for (int i = 0; i< NUM_MOTORS; i++){
+		jointMotor[i].set_vel_startTime(millis());
+		jointMotor[i].set_vel_posStart(jointMotor[i].getAngleDegrees()* 2*(3.14159) / 360);
+	}
+
 	nh.initNode();
 	nh.advertise(debugPub);
 	nh.advertise(faultPub);
@@ -309,20 +315,23 @@ void printJointState()
 
 	char *name[] = {"iw_ankle_foot_bottom", "iw_beam_ankle_bottom", "iw_mid_joint", "iw_beam_ankle_top", "iw_ankle_foot_top"};
 	float pos[5];
-	// float vel[5];
+	float vel[5];
 	float eff[5];
 
 	for(int i = 0; i < 5; i++)
 	{
 		// Convert to radians
 		pos[i] = jointMotor[i].getAngleDegrees() * 2*(3.14159) / 360;
-		// vel[i] = ???;
+		vel[i] = (jointMotor[i].get_vel_posStart() - pos[i])/((jointMotor[i].get_vel_posStart() - millis())/1000);
 		eff[i] = (float) jointMotor[i].CalcEffort();
+
+		jointMotor[i].set_vel_posStart(pos[i]);
+		jointMotor[i].set_vel_startTime(millis());
 	}
 
 	joint_msg.name = name;
 	joint_msg.position = pos;
-	// joint_msg.velocity = vel;
+	joint_msg.velocity = vel;
 	joint_msg.effort = eff;
 
 	joint_msg.name_length = 5;

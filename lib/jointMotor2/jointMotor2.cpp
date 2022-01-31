@@ -357,3 +357,19 @@ void JointMotor2::set_PID(float kF[], float kB[]) {
 	SwitchPID();
 	
 }
+
+double JointMotor2::get_vel_startTime(){
+	return vel_startTime;
+}
+
+void JointMotor2::set_vel_startTime(double startTime){
+	vel_startTime = startTime;
+}
+
+double JointMotor2::get_vel_posStart(){
+	return vel_posStart;
+}
+
+void JointMotor2::set_vel_posStart(double posStart){
+	vel_posStart = posStart;
+}

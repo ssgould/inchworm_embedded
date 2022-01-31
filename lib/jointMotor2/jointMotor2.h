@@ -29,6 +29,9 @@ private:
 
 	double lastDebugUpdate = 0;
 
+	double vel_startTime;  	// start time for delta time when calculating velocity
+	double vel_posStart;	// start position for change in joint position for calculating velocity
+
 public:
 	JointMotor2() {}
 	JointMotor2(int pwmF, int pwmR);
@@ -67,9 +70,14 @@ public:
 	void getPIDB(double (&arr)[3]);
 	double get_angle_offset();
 	uint8_t get_id();
+	double get_vel_startTime();
+	double get_vel_posStart();
 
 	/***********setters*************/
 	void set_PID(float kF[], float kB[]);
+	void set_vel_startTime(double startTime);
+	void set_vel_posStart(double posStart);
+
 	//*****************************
 
 	typedef enum
