@@ -193,11 +193,15 @@ void setup()
 			jointMotor[3].SetTarget(27.81);
 			jointMotor[4].SetTarget(0.0);
 			*/
-			jointMotor[0].SetTarget( 0);
-			jointMotor[1].SetTarget( 0.516 * 360/(2*PI));
-			jointMotor[2].SetTarget( 1.953 * 360/(2*PI));
-			jointMotor[3].SetTarget( 0.458 * 360/(2*PI));
-			jointMotor[4].SetTarget( 0);
+			// jointMotor[0].SetTarget( 0);
+			// jointMotor[1].SetTarget( 0.516 * 360/(2*PI));
+			// jointMotor[2].SetTarget( 1.953 * 360/(2*PI));
+			// jointMotor[3].SetTarget( 0.458 * 360/(2*PI));
+			// jointMotor[4].SetTarget( 0);
+
+			for(int i = 0; i < 5; i++) {
+				jointMotor[i].SetTarget(0);
+			}
 		}
 
 		inputBuffer.reserve(24);
@@ -232,6 +236,11 @@ void setup()
 	nh.advertise(goalPub);
 	nh.advertise(magPub);
 	nh.advertise(pidPub);
+
+	nh.subscribe(heartbeatSub);
+	nh.subscribe(pidSub);
+	nh.subscribe(goalSub);
+	nh.subscribe(magnetSub);
 }
 
 ////////////////////////////////////////////////////////////////
