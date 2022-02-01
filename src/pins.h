@@ -63,8 +63,8 @@
 #define JOINT_MOTOR5_FWD 22 // D-LINK WRIST
 #define JOINT_MOTOR5_REV 23
 #define JOINT_MOTOR5_EN 0
-#define JOINT_MOTOR5_ADR 0x48
-//#define JOINT_MOTOR5_ADR 0x48 // joint 5 (wrist not on teensy leg)
+#define JOINT_MOTOR5_ADR 0x49
+//#define JOINT_MOTOR5_ADR 0x49 // joint 5 (wrist not on teensy leg)
 
 // DEBUG PIN TO BE USED FOR ANYTHING
 #define DEBUG_PIN 0

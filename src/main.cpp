@@ -83,6 +83,7 @@ std_msgs::Int32 heartbeat_msg;
 std_msgs::String debug_msg;
 std_msgs::String fault_msg;
 sensor_msgs::JointState joint_msg;
+sensor_msgs::JointState goal_msg;
 inchworm_hw_interface::MagnetState mag_msg;
 inchworm_hw_interface::PIDConsts consts_msg;
 
@@ -97,6 +98,7 @@ void UpdateMotors(void);
 void printDebug(String theString);
 void printFault(String theString);
 void printJointState(void);
+void printJointGoal(void);
 void printMagnets(void);
 void printPID(void);
 // ROS Serial callbacks
@@ -115,6 +117,7 @@ ros::Publisher heartbeatPub("hw_interface/heartbeat_res", &heartbeat_msg);
 ros::Publisher debugPub("hw_interface/debug", &debug_msg);
 ros::Publisher faultPub("hw_interface/fault", &fault_msg);
 ros::Publisher jointPub("hw_interface/joint_states", &joint_msg);
+ros::Publisher goalPub("hw_interface/joint_goal", &goal_msg);
 ros::Publisher magPub("hw_interface/magnet_states", &mag_msg);
 ros::Publisher pidPub("hw_interface/pid_consts", &consts_msg);
 
@@ -190,11 +193,11 @@ void setup()
 			jointMotor[3].SetTarget(27.81);
 			jointMotor[4].SetTarget(0.0);
 			*/
-			jointMotor[0].SetTarget(0.0);
-			jointMotor[1].SetTarget(0.0);
-			jointMotor[2].SetTarget(0.0);
-			jointMotor[3].SetTarget(0.0);
-			jointMotor[4].SetTarget(0.0);
+			jointMotor[0].SetTarget( 0);
+			jointMotor[1].SetTarget( 0.516 * 360/(2*PI));
+			jointMotor[2].SetTarget( 1.953 * 360/(2*PI));
+			jointMotor[3].SetTarget( 0.458 * 360/(2*PI));
+			jointMotor[4].SetTarget( 0);
 		}
 
 		inputBuffer.reserve(24);
@@ -226,6 +229,7 @@ void setup()
 	nh.advertise(debugPub);
 	nh.advertise(faultPub);
 	nh.advertise(jointPub);
+	nh.advertise(goalPub);
 	nh.advertise(magPub);
 	nh.advertise(pidPub);
 }
@@ -257,6 +261,7 @@ void loop()
 	printMagnets();
 	printPID();
 	printJointState();
+	printJointGoal();
 
 	nh.spinOnce();
 	delay(10);
@@ -322,8 +327,8 @@ void printJointState()
 	{
 		// Convert to radians
 		pos[i] = jointMotor[i].getAngleDegrees() * 2*(3.14159) / 360;
-		vel[i] = (jointMotor[i].get_vel_posStart() - pos[i])/((jointMotor[i].get_vel_posStart() - millis())/1000);
-		eff[i] = (float) jointMotor[i].CalcEffort();
+		vel[i] = (jointMotor[i].get_vel_posStart() - pos[i])/((jointMotor[i].get_vel_startTime() - millis())/1000);
+		eff[i] = jointMotor[i].CalcEffort();
 
 		jointMotor[i].set_vel_posStart(pos[i]);
 		jointMotor[i].set_vel_startTime(millis());
@@ -336,9 +341,32 @@ void printJointState()
 
 	joint_msg.name_length = 5;
 	joint_msg.position_length = 5;
+	joint_msg.velocity_length = 5;
 	joint_msg.effort_length = 5;
 
 	jointPub.publish(&joint_msg);
+}
+
+void printJointGoal()
+{
+	goal_msg.header.stamp = nh.now();
+
+	char *name[] = {"iw_ankle_foot_bottom", "iw_beam_ankle_bottom", "iw_mid_joint", "iw_beam_ankle_top", "iw_ankle_foot_top"};
+	float pos[5];
+
+	for(int i = 0; i < 5; i++)
+	{
+		// Convert to radians
+		pos[i] = jointMotor[i].GetTarget() * 2*(3.14159) / 360;
+	}
+
+	goal_msg.name = name;
+	goal_msg.position = pos;
+
+	goal_msg.name_length = 5;
+	goal_msg.position_length = 5;
+
+	goalPub.publish(&goal_msg);
 }
 
 void printMagnets()
@@ -442,7 +470,8 @@ void goalCB(const sensor_msgs::JointState &msg)
 {
 	for(int i = 0; i < 5; i++)
 	{
-		jointMotor[i].SetTarget(msg.position[i]);
+		// Convert from radians to degrees
+		jointMotor[i].SetTarget(msg.position[i] * 180/PI);
 	}
 }
 
