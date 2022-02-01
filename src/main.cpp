@@ -113,18 +113,18 @@ void pidCB(const inchworm_hw_interface::PIDConsts &msg);
 // PUBLISHERS AND SUBSCRIBERS
 ////////////////////////////////////////////////////////////////
 
-ros::Publisher heartbeatPub("hw_interface/heartbeat_res", &heartbeat_msg);
-ros::Publisher debugPub("hw_interface/debug", &debug_msg);
-ros::Publisher faultPub("hw_interface/fault", &fault_msg);
-ros::Publisher jointPub("hw_interface/joint_states", &joint_msg);
-ros::Publisher goalPub("hw_interface/joint_goal", &goal_msg);
-ros::Publisher magPub("hw_interface/magnet_states", &mag_msg);
-ros::Publisher pidPub("hw_interface/pid_consts", &consts_msg);
+ros::Publisher heartbeatPub("inchworm/heartbeat_res", &heartbeat_msg);
+ros::Publisher debugPub("inchworm/debug", &debug_msg);
+ros::Publisher faultPub("inchworm/fault", &fault_msg);
+ros::Publisher jointPub("inchworm/joint_states", &joint_msg);
+ros::Publisher goalPub("inchworm/joint_goal", &goal_msg);
+ros::Publisher magPub("inchworm/magnet_states", &mag_msg);
+ros::Publisher pidPub("inchworm/pid_consts", &consts_msg);
 
-ros::Subscriber<std_msgs::Int32> heartbeatSub("hw_interface/heartbeat_req", &heartbeatCB);
-ros::Subscriber<inchworm_hw_interface::MagnetState> magnetSub("hw_interface/set_magnet_state", &magnetCB);
-ros::Subscriber<sensor_msgs::JointState> goalSub("hw_interface/set_joint_goal", &goalCB);
-ros::Subscriber<inchworm_hw_interface::PIDConsts> pidSub("hw_interface/set_pid_consts", &pidCB);
+ros::Subscriber<std_msgs::Int32> heartbeatSub("inchworm/heartbeat_req", &heartbeatCB);
+ros::Subscriber<inchworm_hw_interface::MagnetState> magnetSub("inchworm/set_magnet_state", &magnetCB);
+ros::Subscriber<sensor_msgs::JointState> goalSub("inchworm/set_joint_goal", &goalCB);
+ros::Subscriber<inchworm_hw_interface::PIDConsts> pidSub("inchworm/set_pid_consts", &pidCB);
 
 ////////////////////////////////////////////////////////////////
 // SETUP METHOD
