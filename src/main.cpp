@@ -22,7 +22,7 @@
 ////////////////////////////////////////////////////////////////
 // TUNABLE PARAMETERS
 ////////////////////////////////////////////////////////////////
-const bool CHANGE_JOINTMOTORS_FREQUENCY = false; // Be careful when enabling this constant (check the frequency of the pins to be changed)
+const bool CHANGE_JOINTMOTORS_FREQUENCY = true; // Be careful when enabling this constant (check the frequency of the pins to be changed)
 const bool USE_MOTORS = true;
 const bool USE_GRIPPERS = true;
 const bool USE_MAGNETS = true;
@@ -131,6 +131,10 @@ ros::Subscriber<inchworm_hw_interface::PIDConsts> pidSub("inchworm/set_pid_const
 ////////////////////////////////////////////////////////////////
 void setup()
 {
+	// setup timers
+
+
+
 	Wire.begin();		  	// Begin I2C
 	Serial.begin(57600); 	
 	//Serial.setTimeout(20);
@@ -150,9 +154,16 @@ void setup()
 		*/
 		if(CHANGE_JOINTMOTORS_FREQUENCY)
 		{
-			analogWriteFrequency(5,FREQUENCY_JOINT_MOTORS);
-			analogWriteFrequency(3,FREQUENCY_JOINT_MOTORS);
-			analogWriteFrequency(2,FREQUENCY_JOINT_MOTORS);
+			analogWriteFrequency(JOINT_MOTOR1_FWD,FREQUENCY_JOINT_MOTORS);
+			analogWriteFrequency(JOINT_MOTOR1_REV,FREQUENCY_JOINT_MOTORS);
+			analogWriteFrequency(JOINT_MOTOR2_FWD,FREQUENCY_JOINT_MOTORS);
+			analogWriteFrequency(JOINT_MOTOR2_REV,FREQUENCY_JOINT_MOTORS);
+			analogWriteFrequency(JOINT_MOTOR3_FWD,FREQUENCY_JOINT_MOTORS);
+			analogWriteFrequency(JOINT_MOTOR3_REV,FREQUENCY_JOINT_MOTORS);
+			analogWriteFrequency(JOINT_MOTOR4_FWD,FREQUENCY_JOINT_MOTORS);
+			analogWriteFrequency(JOINT_MOTOR4_REV,FREQUENCY_JOINT_MOTORS);
+			analogWriteFrequency(JOINT_MOTOR5_FWD,FREQUENCY_JOINT_MOTORS);
+			analogWriteFrequency(JOINT_MOTOR5_REV,FREQUENCY_JOINT_MOTORS);
 		}
 
 		temp[PARSE_PKT_LEN - 1] = '\n'; // Buffer for serial message (important)

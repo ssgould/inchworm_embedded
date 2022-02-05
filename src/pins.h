@@ -30,10 +30,7 @@
 #define MAGNET_1 24
 #define MAGNET_2 26           //foot 2 magnet
 
-//TEENSY CLOCK PINS
-// FTM0
-// FTM1
-// FTM3
+
 
 //3-DOF INCHWORM JOINT MOTORS
 #define JOINT_MOTOR1_FWD 9  // A-LINK WRIST
