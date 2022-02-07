@@ -242,9 +242,6 @@ bool JointMotor2::SwitchPID(void)
 
 bool JointMotor2::SwitchPID(uint8_t gripperEngagedSelect)
 {
-	// Serial.println("Switching the PID values");
-	angle_offset += targetAngle - getAngleDegrees();
-
 	if (fixed_link == d_link_engaged && gripperEngagedSelect == a_link_engaged) // TODO switch to a_link_engaged
 	{
 		kP = kP1;
