@@ -9,6 +9,9 @@ JointMotor2::JointMotor2(int pwmF, int pwmR)
 	pwmReverse = pwmR;
 	pinMode(pwmForward, OUTPUT);
 	pinMode(pwmReverse, OUTPUT);
+	for (int i = 0; i < 10; i++) {
+		vel[i] = 1000.0;
+	}
 }
 
 JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
@@ -43,6 +46,10 @@ JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
 	encoder.setClockWise(enc_clockwise);
 
 	id = id_input;
+
+	for (int i = 0; i < 10; i++) {
+		vel[i] = 1000.0;
+	}
 }
 
 const int maxDutyCycle = 230;
@@ -369,4 +376,22 @@ double JointMotor2::get_vel_posStart(){
 
 void JointMotor2::set_vel_posStart(double posStart){
 	vel_posStart = posStart;
+}
+
+double JointMotor2::get_velocity(uint32_t mil){
+	double velocity, sum = 0;
+	int num = 0;
+	velocity = (get_vel_posStart() - getAngleDegrees())/((get_vel_startTime() - mil)/1000);
+	for (int i = 9; i > 0; i--){
+		vel[i] = vel[i-1];
+	}
+	vel[0] = velocity;
+	
+	for (int i = 0; i < 10; i++) {
+		if (vel[i] != 1000.0) {
+			sum += vel[i];
+			num++;
+		}
+	}
+	return (sum / num);
 }
