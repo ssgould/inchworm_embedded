@@ -18,7 +18,7 @@ JointMotor2::JointMotor2(int pwmF, int pwmR)
 JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
 						 uint8_t encoderAddress, double kp_a_link_fixed, double ki_a_link_fixed, double kd_a_link_fixed,
 						 double kp_d_link_fixed, double ki_d_link_fixed, double kd_d_link_fixed,
-						 double ang_offset, bool encoder_clockwise, uint8_t id_input)
+						 double ang_offset, double min_angle, double max_angle, bool encoder_clockwise, uint8_t id_input)
 {
 	//Pin Configuration
 	pwmForward = pwmF;
@@ -48,6 +48,11 @@ JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
 
 	id = id_input;
 
+	//min and max safety
+	minAngle = min_angle;
+	maxAngle = max_angle;
+
+	//set up arrays
 	for (int i = 0; i < 10; i++) {
 		vel[i] = 1000.0;
 		integral[i] = 0;
@@ -128,7 +133,12 @@ double JointMotor2::getAngleDegrees()
 */
 void JointMotor2::SetTarget(double angle)
 {
-	targetAngle = angle;
+	if (angle > maxAngle)
+		targetAngle = maxAngle;
+	else if (angle < minAngle)
+		targetAngle = minAngle;
+	else
+		targetAngle = angle;
 	return;
 }
 
