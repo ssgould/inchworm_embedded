@@ -11,6 +11,7 @@ JointMotor2::JointMotor2(int pwmF, int pwmR)
 	pinMode(pwmReverse, OUTPUT);
 	for (int i = 0; i < 10; i++) {
 		vel[i] = 1000.0;
+		integral[i] = 0;
 	}
 }
 
@@ -49,6 +50,7 @@ JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
 
 	for (int i = 0; i < 10; i++) {
 		vel[i] = 1000.0;
+		integral[i] = 0;
 	}
 }
 
@@ -117,22 +119,7 @@ double JointMotor2::getAngleDegrees()
 	}
 
 	last_calibrated_angle = calibrated_angle;
-	// double currentTime = millis();
-	// if (currentTime - lastDebugUpdate >= 3000)
-	// {
-	// 	Serial.print("\nID: ");
-	// 	Serial.print(id);
-	// 	Serial.print("\tCALIBRATED ANGLE: ");
-	// 	Serial.print(calibrated_angle);
-	// 	Serial.print("\t ANGLE: ");
-	// 	Serial.print(angle);
-	// 	// Serial.print("\t TAngle: ");
-	// 	// Serial.print(targetAngle);
-	// 	// Serial.print("\t Error:");
-	// 	// Serial.println(targetAngle-calibrated_angle);
-	//
-	// 	lastDebugUpdate = currentTime;
-	// }
+	
 	return calibrated_angle;
 }
 
@@ -188,8 +175,19 @@ int JointMotor2::CalcEffort(void)
 	}
 
 	double deltaError = error - lastError;
+	//get integral term
+	double iError = kI * sumError;
+	double sumIntegral = 0;
+	//move all the terms over in array
+	for (int i = 9; i > 0; i--) {
+		integral[i] = integral[i-1];
+		sumIntegral += integral[i];
+	}
+	//add in the integral term
+	integral[0] = iError;
+	sumIntegral += iError;
 
-	double effort = (kP * error) + (kI * sumError) + (kD * deltaError);
+	double effort = (kP * error) + (sumIntegral / 10) + (kD * deltaError);
 
 	lastError = error;
 
@@ -386,7 +384,7 @@ double JointMotor2::get_velocity(uint32_t mil){
 		vel[i] = vel[i-1];
 	}
 	vel[0] = velocity;
-	
+
 	for (int i = 0; i < 10; i++) {
 		if (vel[i] != 1000.0) {
 			sum += vel[i];

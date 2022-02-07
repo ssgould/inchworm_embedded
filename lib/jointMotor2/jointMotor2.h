@@ -18,6 +18,9 @@ private:
 	double kP1, kI1, kD1; //For when A link is fixed
 	double kP, kI, kD;	  //Params actually being used
 
+	double vel[10];
+	double integral[10];
+
 	double targetAngle;
 
 	double last_calibrated_angle; //angle of joint
@@ -72,6 +75,7 @@ public:
 	uint8_t get_id();
 	double get_vel_startTime();
 	double get_vel_posStart();
+	double get_velocity(uint32_t mil);
 
 	/***********setters*************/
 	void set_PID(float kF[], float kB[]);
