@@ -76,7 +76,6 @@ MagnetState magState = magnetsOn;
 // SYTEM CONSTANTS
 ////////////////////////////////////////////////////////////////
 int testState = ROBOT_NORMAL;
-//int testState = TEST_MOTORS;
 
 ros::NodeHandle nh;
 std_msgs::Int32 heartbeat_msg;
@@ -132,11 +131,7 @@ ros::Subscriber<inchworm_hw_interface::PIDConsts> pidSub("inchworm/set_pid_const
 void setup()
 {
 	Wire.begin();		  	// Begin I2C
-	Serial.begin(57600); 	
-	//Serial.setTimeout(20);
-	// Serial.setTimeout(0);
-
-	//Serial.println("Robot intializing....");
+	Serial.begin(57600);
 
 	// Power LED
 	pinMode(POWER_LED, OUTPUT);
@@ -220,7 +215,6 @@ void setup()
 			pinMode(DEBUG_PIN, INPUT);
 		}
 
-		//Serial.println("Done");
 		previous_time = millis();
 	}
 
