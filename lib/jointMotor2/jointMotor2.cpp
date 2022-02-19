@@ -10,9 +10,10 @@ JointMotor2::JointMotor2(int pwmF, int pwmR)
 	pinMode(pwmForward, OUTPUT);
 	pinMode(pwmReverse, OUTPUT);
 	for (int i = 0; i < 10; i++) {
-		vel[i] = 1000.0;
+		vel[i] = 0;
 		integral[i] = 0;
 	}
+	vel_counter = 0;
 }
 
 JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
@@ -54,7 +55,7 @@ JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
 
 	//set up arrays
 	for (int i = 0; i < 10; i++) {
-		vel[i] = 1000.0;
+		vel[i] = 0;
 		integral[i] = 0;
 	}
 }
@@ -395,11 +396,12 @@ double JointMotor2::get_velocity(uint32_t mil){
 	}
 	vel[0] = velocity;
 
-	for (int i = 0; i < 10; i++) {
-		if (vel[i] != 1000.0) {
-			sum += vel[i];
-			num++;
-		}
+	for (int i = 0; i < vel_counter; i++) {
+		sum += vel[i];
+		num++;
 	}
+	if (vel_counter < 10)
+		vel_counter++;
+	
 	return (sum / num);
 }

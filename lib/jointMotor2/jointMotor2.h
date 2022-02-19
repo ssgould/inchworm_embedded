@@ -20,6 +20,7 @@ private:
 
 	double vel[10];
 	double integral[10];
+	int vel_counter;
 
 	double targetAngle;
 	double minAngle;
