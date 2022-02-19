@@ -9,12 +9,17 @@ JointMotor2::JointMotor2(int pwmF, int pwmR)
 	pwmReverse = pwmR;
 	pinMode(pwmForward, OUTPUT);
 	pinMode(pwmReverse, OUTPUT);
+	for (int i = 0; i < 10; i++) {
+		vel[i] = 0;
+		integral[i] = 0;
+	}
+	vel_counter = 0;
 }
 
 JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
 						 uint8_t encoderAddress, double kp_a_link_fixed, double ki_a_link_fixed, double kd_a_link_fixed,
 						 double kp_d_link_fixed, double ki_d_link_fixed, double kd_d_link_fixed,
-						 double ang_offset, bool encoder_clockwise, uint8_t id_input)
+						 double ang_offset, double min_angle, double max_angle, bool encoder_clockwise, uint8_t id_input)
 {
 	//Pin Configuration
 	pwmForward = pwmF;
@@ -43,6 +48,16 @@ JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
 	encoder.setClockWise(enc_clockwise);
 
 	id = id_input;
+
+	//min and max safety
+	minAngle = min_angle;
+	maxAngle = max_angle;
+
+	//set up arrays
+	for (int i = 0; i < 10; i++) {
+		vel[i] = 0;
+		integral[i] = 0;
+	}
 }
 
 const int maxDutyCycle = 230;
@@ -110,22 +125,7 @@ double JointMotor2::getAngleDegrees()
 	}
 
 	last_calibrated_angle = calibrated_angle;
-	// double currentTime = millis();
-	// if (currentTime - lastDebugUpdate >= 3000)
-	// {
-	// 	Serial.print("\nID: ");
-	// 	Serial.print(id);
-	// 	Serial.print("\tCALIBRATED ANGLE: ");
-	// 	Serial.print(calibrated_angle);
-	// 	Serial.print("\t ANGLE: ");
-	// 	Serial.print(angle);
-	// 	// Serial.print("\t TAngle: ");
-	// 	// Serial.print(targetAngle);
-	// 	// Serial.print("\t Error:");
-	// 	// Serial.println(targetAngle-calibrated_angle);
-	//
-	// 	lastDebugUpdate = currentTime;
-	// }
+	
 	return calibrated_angle;
 }
 
@@ -134,7 +134,12 @@ double JointMotor2::getAngleDegrees()
 */
 void JointMotor2::SetTarget(double angle)
 {
-	targetAngle = angle;
+	if (angle > maxAngle)
+		targetAngle = maxAngle;
+	else if (angle < minAngle)
+		targetAngle = minAngle;
+	else
+		targetAngle = angle;
 	return;
 }
 
@@ -181,8 +186,19 @@ int JointMotor2::CalcEffort(void)
 	}
 
 	double deltaError = error - lastError;
+	//get integral term
+	double iError = kI * sumError;
+	double sumIntegral = 0;
+	//move all the terms over in array
+	for (int i = 9; i > 0; i--) {
+		integral[i] = integral[i-1];
+		sumIntegral += integral[i];
+	}
+	//add in the integral term
+	integral[0] = iError;
+	sumIntegral += iError;
 
-	double effort = (kP * error) + (kI * sumError) + (kD * deltaError);
+	double effort = (kP * error) + (sumIntegral / 10) + (kD * deltaError);
 
 	lastError = error;
 
@@ -242,9 +258,6 @@ bool JointMotor2::SwitchPID(void)
 
 bool JointMotor2::SwitchPID(uint8_t gripperEngagedSelect)
 {
-	// Serial.println("Switching the PID values");
-	angle_offset += targetAngle - getAngleDegrees();
-
 	if (fixed_link == d_link_engaged && gripperEngagedSelect == a_link_engaged) // TODO switch to a_link_engaged
 	{
 		kP = kP1;
@@ -372,4 +385,23 @@ double JointMotor2::get_vel_posStart(){
 
 void JointMotor2::set_vel_posStart(double posStart){
 	vel_posStart = posStart;
+}
+
+double JointMotor2::get_velocity(uint32_t mil){
+	double velocity, sum = 0;
+	int num = 0;
+	velocity = (get_vel_posStart() - getAngleDegrees())/((get_vel_startTime() - mil)/1000);
+	for (int i = 9; i > 0; i--){
+		vel[i] = vel[i-1];
+	}
+	vel[0] = velocity;
+
+	for (int i = 0; i < vel_counter; i++) {
+		sum += vel[i];
+		num++;
+	}
+	if (vel_counter < 10)
+		vel_counter++;
+	
+	return (sum / num);
 }
