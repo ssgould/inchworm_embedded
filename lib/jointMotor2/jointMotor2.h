@@ -18,9 +18,11 @@ private:
 	double kP1, kI1, kD1; //For when A link is fixed
 	double kP, kI, kD;	  //Params actually being used
 
+
+	int arr_size = 10;
 	double vel[10];
 	double integral[10];
-	int vel_counter;
+	int vel_pos, int_pos;
 
 	double targetAngle;
 	double minAngle;
@@ -32,6 +34,7 @@ private:
 
 	double sumError = 0;
 	double lastError = 0;
+	int maxDutyCycle = 230;
 
 	double lastDebugUpdate = 0;
 

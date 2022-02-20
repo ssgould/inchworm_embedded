@@ -34,7 +34,7 @@ const bool USE_DEBUG_BUTTON = true;
 const int NUM_MOTORS = 5;
 JointMotor2 jointMotor[NUM_MOTORS];
 STATE state = ST_HOLDING;
-double previous_time;
+uint32_t previous_time;
 uint32_t startMoveTime = 0;
 int numHb = 0;
 
@@ -157,6 +157,7 @@ void setup()
 		 */
 		if(USE_MOTORS){
 			// proper home
+			
 			/*
 			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
 										JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
@@ -168,6 +169,7 @@ void setup()
 										JOINT_MOTOR4_ADR, 8, .3, 0, 23, .4, 0, 27.8, true, 4);
 			jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
 										JOINT_MOTOR5_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 5);
+				
 			*/
 			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
 										JOINT_MOTOR1_ADR, 10, 0, 0, 10, 0, 0, 0.0, -180, 180, false, 1);
@@ -178,7 +180,7 @@ void setup()
 			jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
 										JOINT_MOTOR4_ADR, 8, .3, 0, 23, .4, 0, 0.0, -10, 90, true, 4);
 			jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
-										JOINT_MOTOR5_ADR, 10, 0, 0, 10, 0, 0, 0.0, -180, 180, false, 5);
+										JOINT_MOTOR5_ADR, 10, 0, 0, 10, 0, 0, 0.0, -180.0, 180.0, false, 5);
 			
 			// proper home
 			/*
@@ -218,7 +220,7 @@ void setup()
 		previous_time = millis();
 	}
 
-	for (int i = 0; i< NUM_MOTORS; i++){
+	for (int i = 0; i < NUM_MOTORS; i++){
 		jointMotor[i].set_vel_startTime(millis());
 		jointMotor[i].set_vel_posStart(jointMotor[i].getAngleDegrees()* 2*(3.14159) / 360);
 	}

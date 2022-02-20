@@ -9,11 +9,6 @@ JointMotor2::JointMotor2(int pwmF, int pwmR)
 	pwmReverse = pwmR;
 	pinMode(pwmForward, OUTPUT);
 	pinMode(pwmReverse, OUTPUT);
-	for (int i = 0; i < 10; i++) {
-		vel[i] = 0;
-		integral[i] = 0;
-	}
-	vel_counter = 0;
 }
 
 JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
@@ -58,9 +53,10 @@ JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
 		vel[i] = 0;
 		integral[i] = 0;
 	}
+	vel_pos = 0;
+	int_pos = 0;
 }
 
-const int maxDutyCycle = 230;
 void JointMotor2::SendPWM(int speed)
 {
 	if (speed < 0)
@@ -189,16 +185,18 @@ int JointMotor2::CalcEffort(void)
 	//get integral term
 	double iError = kI * sumError;
 	double sumIntegral = 0;
-	//move all the terms over in array
-	for (int i = 9; i > 0; i--) {
-		integral[i] = integral[i-1];
-		sumIntegral += integral[i];
-	}
-	//add in the integral term
-	integral[0] = iError;
-	sumIntegral += iError;
+	
+	//put the integral term in the array, replacing oldest value
+	integral[int_pos] = iError;
+	int_pos++;
 
-	double effort = (kP * error) + (sumIntegral / 10) + (kD * deltaError);
+	if (int_pos == arr_size) 
+		int_pos = 0;
+	
+	for (int i = 0; i < arr_size; i++)
+		sumIntegral += iError;
+
+	double effort = (kP * error) + (sumIntegral / arr_size) + (kD * deltaError);
 
 	lastError = error;
 
@@ -206,19 +204,12 @@ int JointMotor2::CalcEffort(void)
 	double currentTime = millis();
 	if (currentTime - lastDebugUpdate >= 1000)
 	{
-		/*
-		Serial.print("\nID: ");
-		Serial.print(id);
-		// Serial.print(" CA: ");
-		// Serial.print(currentAngle);
-		// Serial.print(" TA: ");
-		// Serial.print(targetAngle);
-		Serial.print(" ER:");
-		Serial.print(error);
-		Serial.print(" Effort:");
-		Serial.print(effort);
-		*/
 		lastDebugUpdate = currentTime;
+	}
+	if (effort > maxDutyCycle) {
+		effort = maxDutyCycle;
+	} else if (effort < -maxDutyCycle) {
+		effort = -maxDutyCycle;
 	}
 
 	return effort;
@@ -391,17 +382,15 @@ double JointMotor2::get_velocity(uint32_t mil){
 	double velocity, sum = 0;
 	int num = 0;
 	velocity = (get_vel_posStart() - getAngleDegrees())/((get_vel_startTime() - mil)/1000);
-	for (int i = 9; i > 0; i--){
-		vel[i] = vel[i-1];
-	}
-	vel[0] = velocity;
-
-	for (int i = 0; i < vel_counter; i++) {
-		sum += vel[i];
-		num++;
-	}
-	if (vel_counter < 10)
-		vel_counter++;
 	
-	return (sum / num);
+	//put the velocity term in the array, replacing oldest value
+	vel[vel_pos] = velocity;
+	vel_pos++;
+
+	//sum the velocites
+	for (int i = 0; i < arr_size; i++) {
+		sum += vel[i];
+	}
+	
+	return (sum / arr_size);
 }
