@@ -12,8 +12,9 @@ JointMotor2::JointMotor2(int pwmF, int pwmR)
 }
 
 JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
-						 uint8_t encoderAddress, double kp_a_link_fixed, double ki_a_link_fixed, double kd_a_link_fixed,
-						 double kp_d_link_fixed, double ki_d_link_fixed, double kd_d_link_fixed,
+						 uint8_t encoderAddress,
+						 double kp_a_link_fixed, double ki_a_link_fixed, double kd_a_link_fixed, double kf_a_link_fixed,
+						 double kp_d_link_fixed, double ki_d_link_fixed, double kd_d_link_fixed, double kf_d_link_fixed,
 						 double ang_offset, double min_angle, double max_angle, bool encoder_clockwise, uint8_t id_input)
 {
 	//Pin Configuration
@@ -33,10 +34,12 @@ JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
 	kP = kP1 = kp_a_link_fixed;
 	kI = kI1 = ki_a_link_fixed;
 	kD = kD1 = kd_a_link_fixed;
+	kF = kF1 = kf_a_link_fixed;
 
 	kP2 = kp_d_link_fixed;
 	kI2 = ki_d_link_fixed;
 	kD2 = kd_d_link_fixed;
+	kF2 = kf_d_link_fixed;
 
 	angle_offset = ang_offset;
 	enc_clockwise = encoder_clockwise;
@@ -49,7 +52,7 @@ JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
 	maxAngle = max_angle;
 }
 
-const int maxDutyCycle = 230;
+const int maxDutyCycle = 255;
 void JointMotor2::SendPWM(int speed)
 {
 	if (speed < 0)
@@ -191,7 +194,7 @@ int JointMotor2::CalcEffort(void)
 
 	double deltaError = error - lastError;
 
-	double effort = (kP * error) + (kI * sumError) + (kD * deltaError);
+	double effort = (kP * error) + (kI * sumError) + (kD * deltaError) + kF;
 
 	lastError = error;
 
@@ -231,6 +234,7 @@ bool JointMotor2::SwitchPID(void)
 		kP = kP1;
 		kI = kI1;
 		kD = kD1;
+		kF = kF1;
 		//Serial.printf("JOINT %d Switching to PID 1: %f, %f, %f\n", id, kP, kI, kD);
 		return false;
 	}
@@ -239,6 +243,7 @@ bool JointMotor2::SwitchPID(void)
 		kP = kP2;
 		kI = kI2;
 		kD = kD2;
+		kF = kF2;
 		//Serial.printf("JOINT %d Switching to PID 2: %f, %f, %f\n", id, kP, kI, kD);
 		return true;
 	}
