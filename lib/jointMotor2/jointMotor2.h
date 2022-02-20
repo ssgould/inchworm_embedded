@@ -19,6 +19,8 @@ private:
 	double kP, kI, kD;	  //Params actually being used
 
 	double targetAngle;
+	double minAngle;
+	double maxAngle;
 
 	double last_calibrated_angle; //angle of joint
 	double angle_offset;		  // offset of angle in calibration position
@@ -38,7 +40,7 @@ public:
 	JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1,
 				uint8_t encoderAddress, double kp_a_link_fixed, double ki_a_link_fixed, double kd_a_link_fixed,
 				double kp_d_link_fixed, double ki_d_link_fixed, double kd_d_link_fixed,
-				double ang_offset, bool encoder_clockwise, uint8_t id_input);
+				double ang_offset, double min_angle, double max_angle, bool encoder_clockwise, uint8_t id_input);
 
 	void SendPWM(int speed);
 	void SetTarget(double angle);

@@ -172,6 +172,7 @@ void setup()
 		 */
 		if(USE_MOTORS){
 			// proper home
+			
 			/*
 			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
 										JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
@@ -183,17 +184,18 @@ void setup()
 										JOINT_MOTOR4_ADR, 8, .3, 0, 23, .4, 0, 27.8, true, 4);
 			jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
 										JOINT_MOTOR5_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 5);
+				
 			*/
 			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
-										JOINT_MOTOR1_ADR, 10, 0, 0, 10, 0, 0, 0.0, false, 1);
+										JOINT_MOTOR1_ADR, 10, 0, 0, 10, 0, 0, 0.0, -180, 180, false, 1);
 			jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
-										JOINT_MOTOR2_ADR, 10, 0, 0, 10, 0, 0, 19.655, false, 2);
+										JOINT_MOTOR2_ADR, 60, 0, 5, 10, 0, 0, 19.655, -10, 90, false, 2);
 			jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
-										JOINT_MOTOR3_ADR, 22, 0, 0, 23, 0.4, 0, 140.689, true, 3);
+										JOINT_MOTOR3_ADR, 22, 0, 0, 23, 0.4, 0, 140.689, -10, 140, true, 3);
 			jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
-										JOINT_MOTOR4_ADR, 8, 0, 0, 23, .4, 0, 19.655, true, 4);
+										JOINT_MOTOR4_ADR, 8, 0, 0, 23, .4, 0, 19.655, -10, 90, true, 4);
 			/*jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
-										JOINT_MOTOR5_ADR, 10, 0, 0, 10, 0, 0, 0.0, false, 5);*/
+										JOINT_MOTOR5_ADR, 10, 0, 0, 10, 0, 0, 0.0, -180.0, 180.0, false, 5);*/
 			
 			// proper home
 			/*
@@ -238,7 +240,7 @@ void setup()
 		previous_time = millis();
 	}
 
-	for (int i = 0; i< NUM_MOTORS; i++){
+	for (int i = 0; i < NUM_MOTORS; i++){
 		jointMotor[i].set_vel_startTime(millis());
 		jointMotor[i].set_vel_posStart(jointMotor[i].getAngleDegrees()* 2*(3.14159) / 360);
 	}
