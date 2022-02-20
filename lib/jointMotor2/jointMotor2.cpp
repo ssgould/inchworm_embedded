@@ -201,7 +201,7 @@ int JointMotor2::CalcEffort(void)
 	lastError = error;
 
 	// //TODO:
-	double currentTime = millis();
+	uint32_t currentTime = millis();
 	if (currentTime - lastDebugUpdate >= 1000)
 	{
 		lastDebugUpdate = currentTime;
@@ -362,11 +362,11 @@ void JointMotor2::set_PID(float kF[], float kB[]) {
 	
 }
 
-double JointMotor2::get_vel_startTime(){
+uint32_t JointMotor2::get_vel_startTime(){
 	return vel_startTime;
 }
 
-void JointMotor2::set_vel_startTime(double startTime){
+void JointMotor2::set_vel_startTime(uint32_t startTime){
 	vel_startTime = startTime;
 }
 

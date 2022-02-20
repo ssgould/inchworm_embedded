@@ -22,7 +22,7 @@
 ////////////////////////////////////////////////////////////////
 // TUNABLE PARAMETERS
 ////////////////////////////////////////////////////////////////
-const bool CHANGE_JOINTMOTORS_FREQUENCY = false; // Be careful when enabling this constant (check the frequency of the pins to be changed)
+const bool CHANGE_JOINTMOTORS_FREQUENCY = true; // Be careful when enabling this constant (check the frequency of the pins to be changed)
 const bool USE_MOTORS = true;
 const bool USE_GRIPPERS = true;
 const bool USE_MAGNETS = true;
@@ -31,7 +31,7 @@ const bool USE_DEBUG_BUTTON = true;
 ////////////////////////////////////////////////////////////////
 // CONTROLLER CONSTANTS
 ////////////////////////////////////////////////////////////////
-const int NUM_MOTORS = 5;
+const int NUM_MOTORS = 4;
 JointMotor2 jointMotor[NUM_MOTORS];
 STATE state = ST_HOLDING;
 uint32_t previous_time;
@@ -48,7 +48,6 @@ char serialBuffer[TOTAL_PACKET_LEN];
 char tempSerialBuffer[TOTAL_PACKET_LEN]; // Temporary Serial Buffer
 const int PARSE_PKT_LEN = 5;
 char temp[PARSE_PKT_LEN];
-String inputBuffer; //String isn't the most efficient, but easier for I/O
 String angleInputs;
 ////////////////////////////////////////////////////////////////
 // GRIPPER CONTROL
@@ -130,6 +129,10 @@ ros::Subscriber<inchworm_hw_interface::PIDConsts> pidSub("inchworm/set_pid_const
 ////////////////////////////////////////////////////////////////
 void setup()
 {
+	// setup timers
+
+
+
 	Wire.begin();		  	// Begin I2C
 	Serial.begin(57600);
 
@@ -145,9 +148,16 @@ void setup()
 		*/
 		if(CHANGE_JOINTMOTORS_FREQUENCY)
 		{
-			analogWriteFrequency(5,FREQUENCY_JOINT_MOTORS);
-			analogWriteFrequency(3,FREQUENCY_JOINT_MOTORS);
-			analogWriteFrequency(2,FREQUENCY_JOINT_MOTORS);
+			analogWriteFrequency(JOINT_MOTOR1_FWD,FREQUENCY_JOINT_MOTORS);
+			analogWriteFrequency(JOINT_MOTOR1_REV,FREQUENCY_JOINT_MOTORS);
+			analogWriteFrequency(JOINT_MOTOR2_FWD,FREQUENCY_JOINT_MOTORS);
+			analogWriteFrequency(JOINT_MOTOR2_REV,FREQUENCY_JOINT_MOTORS);
+			analogWriteFrequency(JOINT_MOTOR3_FWD,FREQUENCY_JOINT_MOTORS);
+			analogWriteFrequency(JOINT_MOTOR3_REV,FREQUENCY_JOINT_MOTORS);
+			analogWriteFrequency(JOINT_MOTOR4_FWD,FREQUENCY_JOINT_MOTORS);
+			analogWriteFrequency(JOINT_MOTOR4_REV,FREQUENCY_JOINT_MOTORS);
+			analogWriteFrequency(JOINT_MOTOR5_FWD,FREQUENCY_JOINT_MOTORS);
+			analogWriteFrequency(JOINT_MOTOR5_REV,FREQUENCY_JOINT_MOTORS);
 		}
 
 		temp[PARSE_PKT_LEN - 1] = '\n'; // Buffer for serial message (important)
@@ -174,13 +184,13 @@ void setup()
 			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
 										JOINT_MOTOR1_ADR, 10, 0, 0, 10, 0, 0, 0.0, -180, 180, false, 1);
 			jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
-										JOINT_MOTOR2_ADR, 10, 0, 0, 10, 0, 0, 0.0, -10, 90, false, 2);
+										JOINT_MOTOR2_ADR, 60, 0, 5, 10, 0, 0, 19.655, -10, 90, false, 2);
 			jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
-										JOINT_MOTOR3_ADR, 22, 0.5, 0, 23, 0.4, 0, 0.0, -10, 140, true, 3);
+										JOINT_MOTOR3_ADR, 22, 0, 0, 23, 0.4, 0, 140.689, -10, 140, true, 3);
 			jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
-										JOINT_MOTOR4_ADR, 8, .3, 0, 23, .4, 0, 0.0, -10, 90, true, 4);
-			jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
-										JOINT_MOTOR5_ADR, 10, 0, 0, 10, 0, 0, 0.0, -180.0, 180.0, false, 5);
+										JOINT_MOTOR4_ADR, 8, 0, 0, 23, .4, 0, 19.655, -10, 90, true, 4);
+			/*jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
+										JOINT_MOTOR5_ADR, 10, 0, 0, 10, 0, 0, 0.0, -180.0, 180.0, false, 5);*/
 			
 			// proper home
 			/*
@@ -196,12 +206,16 @@ void setup()
 			// jointMotor[3].SetTarget( 0.458 * 360/(2*PI));
 			// jointMotor[4].SetTarget( 0);
 
-			for(int i = 0; i < 5; i++) {
-				jointMotor[i].SetTarget(0);
-			}
-		}
+			// for(int i = 0; i < 5; i++) {
+			// 	jointMotor[i].SetTarget(0);
+			// }
 
-		inputBuffer.reserve(24);
+			jointMotor[0].SetTarget(0);
+			jointMotor[1].SetTarget(19.655);
+			jointMotor[2].SetTarget(140.689);
+			jointMotor[3].SetTarget(19.655);
+			// jointMotor[4].SetTarget(0);
+		}
 
 		/*
 		* Initialize Magnets
@@ -281,7 +295,7 @@ void loop()
  */
 void UpdateMotors()
 {
-	int speeds[MOTOR_COUNT];
+	int speeds[NUM_MOTORS];
 	for (int i = 0; i < NUM_MOTORS; i++)
 	{
 		speeds[i] = jointMotor[i].CalcEffort();
@@ -291,7 +305,7 @@ void UpdateMotors()
 	// minimize delay between each joint movement
 	if (switchedPid_2)
 	{
-		for (int i = MOTOR_COUNT - 1; i >= 0; i--)
+		for (int i = NUM_MOTORS - 1; i >= 0; i--)
 		{
 			switchedPid_2 = false;
 			jointMotor[i].SendPWM(speeds[i]);
@@ -328,7 +342,7 @@ void printJointState()
 	float vel[5];
 	float eff[5];
 
-	for(int i = 0; i < 5; i++)
+	for(int i = 0; i < NUM_MOTORS; i++)
 	{
 		// Convert to radians
 		pos[i] = jointMotor[i].getAngleDegrees() * 2*(3.14159) / 360;
@@ -359,7 +373,7 @@ void printJointGoal()
 	char *name[] = {"iw_ankle_foot_bottom", "iw_beam_ankle_bottom", "iw_mid_joint", "iw_beam_ankle_top", "iw_ankle_foot_top"};
 	float pos[5];
 
-	for(int i = 0; i < 5; i++)
+	for(int i = 0; i < NUM_MOTORS; i++)
 	{
 		// Convert to radians
 		pos[i] = jointMotor[i].GetTarget() * 2*(3.14159) / 360;
@@ -403,7 +417,7 @@ void printPID()
 
 	double pid[3];
 
-	for(int i = 0; i < 5; i++)
+	for(int i = 0; i < NUM_MOTORS; i++)
 	{
 		jointMotor[i].getPIDF(pid);
 
@@ -473,7 +487,7 @@ void magnetCB(const inchworm_hw_interface::MagnetState &msg)
 
 void goalCB(const sensor_msgs::JointState &msg)
 {
-	for(int i = 0; i < 5; i++)
+	for(int i = 0; i < NUM_MOTORS; i++)
 	{
 		// Convert from radians to degrees
 		jointMotor[i].SetTarget(msg.position[i] * 180/PI);
@@ -482,7 +496,7 @@ void goalCB(const sensor_msgs::JointState &msg)
 
 void pidCB(const inchworm_hw_interface::PIDConsts &msg)
 {
-	for(int i = 0; i < 5; i++)
+	for(int i = 0; i < NUM_MOTORS; i++)
 	{
 		float forward[3] = {msg.forward[i].p, msg.forward[i].i, msg.forward[i].d};
 		float backward[3] = {msg.backward[i].p, msg.backward[i].i, msg.backward[i].d};
