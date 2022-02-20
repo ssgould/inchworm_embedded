@@ -18,10 +18,12 @@ private:
 	double kP1, kI1, kD1, kF1; //For when A link is fixed
 	double kP, kI, kD, kF;	  //Params actually being used
 
+	static const int MAX_DUTY_CYCLE = 255;
 
-	int arr_size = 10;
-	double vel[10];
-	double integral[10];
+	static const int BUFFER_SIZE = 10;
+
+	double vel[BUFFER_SIZE];
+	double integral[BUFFER_SIZE];
 	int vel_pos, int_pos;
 
 	double targetAngle;
@@ -34,7 +36,6 @@ private:
 
 	double sumError = 0;
 	double lastError = 0;
-	int maxDutyCycle = 230;
 
 	double lastDebugUpdate = 0;
 

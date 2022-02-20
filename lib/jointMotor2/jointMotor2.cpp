@@ -52,7 +52,7 @@ JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
 	maxAngle = max_angle;
 
 	//set up arrays
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < BUFFER_SIZE; i++) {
 		vel[i] = 0;
 		integral[i] = 0;
 	}
@@ -60,23 +60,22 @@ JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
 	int_pos = 0;
 }
 
-const int maxDutyCycle = 255;
 void JointMotor2::SendPWM(int speed)
 {
 	if (speed < 0)
 	{
-		if (speed < -maxDutyCycle)
+		if (speed < -MAX_DUTY_CYCLE)
 		{
-			speed = -maxDutyCycle;
+			speed = -MAX_DUTY_CYCLE;
 		}
 		analogWrite(pwmReverse, 0);
 		analogWrite(pwmForward, -speed);
 	}
 	else
 	{
-		if (speed > maxDutyCycle)
+		if (speed > MAX_DUTY_CYCLE)
 		{
-			speed = maxDutyCycle;
+			speed = MAX_DUTY_CYCLE;
 		}
 		analogWrite(pwmForward, 0);
 		analogWrite(pwmReverse, speed);
@@ -168,39 +167,46 @@ int JointMotor2::CalcEffort(void)
 
 	double error = targetAngle - currentAngle;
 
-	if (error > 180)
-		error -= 360;
-	if (error < -180)
-		error += 360;
-
-	sumError += error;
-
-	//Cap sum of the error
-	if (sumError > SUM_THRESHOLD)
-	{
-		sumError = SUM_THRESHOLD;
-	}
-	if (sumError < -SUM_THRESHOLD)
-	{
-		sumError = -SUM_THRESHOLD;
-	}
+	// if (error > 180)
+	// 	error -= 360;
+	// if (error < -180)
+	// 	error += 360;
 
 	double deltaError = error - lastError;
-	//get integral term
-	double iError = kI * sumError;
-	double sumIntegral = 0;
 	
 	//put the integral term in the array, replacing oldest value
-	integral[int_pos] = iError;
+	integral[int_pos] = error;
 	int_pos++;
 
-	if (int_pos == arr_size) 
+	if (int_pos == BUFFER_SIZE)
 		int_pos = 0;
-	
-	for (int i = 0; i < arr_size; i++)
-		sumIntegral += iError;
 
-	double effort = (kP * error) + (sumIntegral / arr_size) + (kD * deltaError) + kF;
+	double currentIntegralErr = 0;
+
+	for (int i = 0; i < BUFFER_SIZE; i++)
+		currentIntegralErr += integral[i];
+
+	//Cap sum of the error
+	if (currentIntegralErr > SUM_THRESHOLD)
+	{
+		currentIntegralErr = SUM_THRESHOLD;
+	}
+	if (currentIntegralErr < -SUM_THRESHOLD)
+	{
+		currentIntegralErr = -SUM_THRESHOLD;
+	}
+
+	double i_amt = kI * (currentIntegralErr / BUFFER_SIZE);
+
+	double I_LIMIT = MAX_DUTY_CYCLE / 2;
+
+	if(i_amt > I_LIMIT) {
+		i_amt = I_LIMIT;
+	} else if(i_amt < -I_LIMIT) {
+		i_amt = -I_LIMIT;
+	}
+
+	double effort = (kP * error) + i_amt + (kD * deltaError) + kF;
 
 	lastError = error;
 
@@ -210,10 +216,10 @@ int JointMotor2::CalcEffort(void)
 	{
 		lastDebugUpdate = currentTime;
 	}
-	if (effort > maxDutyCycle) {
-		effort = maxDutyCycle;
-	} else if (effort < -maxDutyCycle) {
-		effort = -maxDutyCycle;
+	if (effort > MAX_DUTY_CYCLE) {
+		effort = MAX_DUTY_CYCLE;
+	} else if (effort < -MAX_DUTY_CYCLE) {
+		effort = -MAX_DUTY_CYCLE;
 	}
 
 	return effort;
@@ -394,9 +400,9 @@ double JointMotor2::get_velocity(uint32_t mil){
 	vel_pos++;
 
 	//sum the velocites
-	for (int i = 0; i < arr_size; i++) {
+	for (int i = 0; i < BUFFER_SIZE; i++) {
 		sum += vel[i];
 	}
 	
-	return (sum / arr_size);
+	return (sum / BUFFER_SIZE);
 }
