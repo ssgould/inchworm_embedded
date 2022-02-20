@@ -134,7 +134,11 @@ void setup()
 
 
 	Wire.begin();		  	// Begin I2C
-	Serial.begin(57600);
+	Serial.begin(115200); 	
+	//Serial.setTimeout(20);
+	// Serial.setTimeout(0);
+
+	//Serial.println("Robot intializing....");
 
 	// Power LED
 	pinMode(POWER_LED, OUTPUT);
@@ -182,13 +186,13 @@ void setup()
 				
 			*/
 			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
-										JOINT_MOTOR1_ADR, 10, 0, 0, 10, 0, 0, 0.0, -180, 180, false, 1);
+										JOINT_MOTOR1_ADR, 10, 0, 0, 0, 10, 0, 0, 0, 0.0, -180, 180, false, 1);
 			jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
-										JOINT_MOTOR2_ADR, 60, 0, 5, 10, 0, 0, 19.655, -10, 90, false, 2);
+										JOINT_MOTOR2_ADR, 50, 0, 0, -115, 10, 0, 0, 0, 19.655, -10, 90, false, 2);
 			jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
-										JOINT_MOTOR3_ADR, 22, 0, 0, 23, 0.4, 0, 140.689, -10, 140, true, 3);
+										JOINT_MOTOR3_ADR, 22, 0, 0, 0, 23, 0, 0, 0, 140.689, -10, 140, true, 3);
 			jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
-										JOINT_MOTOR4_ADR, 8, 0, 0, 23, .4, 0, 19.655, -10, 90, true, 4);
+										JOINT_MOTOR4_ADR, 8, 0, 0, 0, 23, 0, 0, 0, 19.655, -10, 90, true, 4);
 			/*jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
 										JOINT_MOTOR5_ADR, 10, 0, 0, 10, 0, 0, 0.0, -180.0, 180.0, false, 5);*/
 			
@@ -283,7 +287,7 @@ void loop()
 	printJointGoal();
 
 	nh.spinOnce();
-	delay(10);
+	// delay(10);
 
 }
 ////////////////////////////////////////////////////////////////

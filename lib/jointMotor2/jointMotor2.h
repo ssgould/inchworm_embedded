@@ -14,9 +14,9 @@ private:
 	AMS_AS5048B encoder;
 
 	// PID
-	double kP2, kI2, kD2; //For when D link is fixed
-	double kP1, kI1, kD1; //For when A link is fixed
-	double kP, kI, kD;	  //Params actually being used
+	double kP2, kI2, kD2, kF2; //For when D link is fixed
+	double kP1, kI1, kD1, kF1; //For when A link is fixed
+	double kP, kI, kD, kF;	  //Params actually being used
 
 
 	int arr_size = 10;
@@ -45,8 +45,9 @@ public:
 	JointMotor2() {}
 	JointMotor2(int pwmF, int pwmR);
 	JointMotor2(int pinDirectionA1, int pinDirectionB1, int pinPWM1,
-				uint8_t encoderAddress, double kp_a_link_fixed, double ki_a_link_fixed, double kd_a_link_fixed,
-				double kp_d_link_fixed, double ki_d_link_fixed, double kd_d_link_fixed,
+				uint8_t encoderAddress,
+				double kp_a_link_fixed, double ki_a_link_fixed, double kd_a_link_fixed, double kf_a_link_fixed,
+				double kp_d_link_fixed, double ki_d_link_fixed, double kd_d_link_fixed, double kf_d_link_fixed,
 				double ang_offset, double min_angle, double max_angle, bool encoder_clockwise, uint8_t id_input);
 
 	void SendPWM(int speed);
