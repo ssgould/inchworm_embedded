@@ -47,7 +47,6 @@ public:
 	double GetTarget(void);
 	int CalcEffort(void);
 	double getAngleDegrees();
-	bool SwitchPID(uint8_t gripperEngagedSelect);
 	bool SwitchPID(void);
 	void SetKp(float k) { kP = k; }
 	void SetKi(float k) { kI = k; }
@@ -82,15 +81,7 @@ public:
 
 	//*****************************
 
-	typedef enum
-	{							 // Used globaly as states for pid selection
-		both_grippers_engaged,   //0
-		a_link_engaged,			 //1
-		d_link_engaged,			 //2
-		neither_gripper_engaged, //3
-	} gripperSelect;
-
-	int fixed_link = a_link_engaged;
+	int fixed_link = 0;
 
 };
 
