@@ -7,6 +7,7 @@
 #include "config.h"
 #include "pins.h"
 #include "jointMotor2.h"
+#include "nfc.h"
 #include "Gripper.h"
 #include "test1Step.h"
 #include "SystemStateConstants.h"
@@ -17,6 +18,7 @@
 #include <inchworm_hw_interface/MagnetState.h>
 #include <inchworm_hw_interface/PID.h>
 #include <inchworm_hw_interface/PIDConsts.h>
+#include <inchworm_hw_interface/ReadNFCBlock.h>
 #include <std_msgs/Int32.h>
 
 ////////////////////////////////////////////////////////////////
@@ -31,7 +33,7 @@ const bool USE_DEBUG_BUTTON = true;
 ////////////////////////////////////////////////////////////////
 // CONTROLLER CONSTANTS
 ////////////////////////////////////////////////////////////////
-const int NUM_MOTORS = 4;
+const int NUM_MOTORS = 5;
 JointMotor2 jointMotor[NUM_MOTORS];
 STATE state = ST_HOLDING;
 uint32_t previous_time;
@@ -62,6 +64,12 @@ bool new_command = true;
 ////////////////////////////////////////////////////////////////
 enum MagnetState {magnetsOn, magnet1Off, magnet2Off};
 MagnetState magState = magnetsOn;
+
+////////////////////////////////////////////////////////////////
+// NFC STUFF
+////////////////////////////////////////////////////////////////
+NFC* nfc_0;
+uint8_t NFC_0_PIN = 29;
 
 ////////////////////////////////////////////////////////////////
 // TEST ANGLES
@@ -106,9 +114,10 @@ void magnetCB(const inchworm_hw_interface::MagnetState &msg);
 void goalCB(const sensor_msgs::JointState &msg);
 void pidCB(const inchworm_hw_interface::PIDConsts &msg);
 
+void handleNFCReq(const inchworm_hw_interface::ReadNFCBlockRequest &req, inchworm_hw_interface::ReadNFCBlockResponse &res);
 
 ////////////////////////////////////////////////////////////////
-// PUBLISHERS AND SUBSCRIBERS
+// PUBLISHERS, SUBSCRIBERS, SERVICES
 ////////////////////////////////////////////////////////////////
 
 ros::Publisher heartbeatPub("inchworm/heartbeat_res", &heartbeat_msg);
@@ -124,6 +133,8 @@ ros::Subscriber<inchworm_hw_interface::MagnetState> magnetSub("inchworm/set_magn
 ros::Subscriber<sensor_msgs::JointState> goalSub("inchworm/set_joint_goal", &goalCB);
 ros::Subscriber<inchworm_hw_interface::PIDConsts> pidSub("inchworm/set_pid_consts", &pidCB);
 
+ros::ServiceServer<inchworm_hw_interface::ReadNFCBlockRequest, inchworm_hw_interface::ReadNFCBlockResponse> nfcServer("inchworm/request_nfc", &handleNFCReq);
+
 ////////////////////////////////////////////////////////////////
 // SETUP METHOD
 ////////////////////////////////////////////////////////////////
@@ -138,7 +149,9 @@ void setup()
 	//Serial.setTimeout(20);
 	// Serial.setTimeout(0);
 
-	//Serial.println("Robot intializing....");
+	delay(5000);
+
+	Serial.println("Robot intializing....");
 
 	// Power LED
 	pinMode(POWER_LED, OUTPUT);
@@ -170,40 +183,30 @@ void setup()
 		 * Intialize Joint Motors (PINs, Dynamic PID values, Encoder I2C address, direction, ID)
 		 */
 		if(USE_MOTORS){
-			// proper home
+			// proper home			
 			
-			/*
-			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
-										JOINT_MOTOR1_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 1);
-			jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
-										JOINT_MOTOR2_ADR, 22, .5, 0, 8, .3, 0, 27.81, false, 2);
-			jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
-										JOINT_MOTOR3_ADR, 22, 0.5, 0, 23, 0.4, 0, 124.38, true, 3);
-			jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
-										JOINT_MOTOR4_ADR, 8, .3, 0, 23, .4, 0, 27.8, true, 4);
-			jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
-										JOINT_MOTOR5_ADR, 0, 0, 0, 0, 0, 0, 0.0, false, 5);
-				
-			*/
+			Serial.println("Constructing motors");
 			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
 										JOINT_MOTOR1_ADR, 10, 0, 0, 0, 10, 0, 0, 0, 0.0, -180, 180, false, 1);
 			jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
-										JOINT_MOTOR2_ADR, 50, 0, 0, -115, 10, 0, 0, 0, 19.655, -10, 90, false, 2);
+										JOINT_MOTOR2_ADR, 60, 0, 12.5, -115, 10, 0, 0, 0, 19.655, -10, 90, false, 2);
 			jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
-										JOINT_MOTOR3_ADR, 22, 0, 0, 0, 23, 0, 0, 0, 140.689, -10, 140, true, 3);
+										JOINT_MOTOR3_ADR, 30, 0, 6.25, -60, 23, 0, 0, 0, 140.689, -10, 140, true, 3);
 			jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
-										JOINT_MOTOR4_ADR, 8, 0, 0, 0, 23, 0, 0, 0, 19.655, -10, 90, true, 4);
-			/*jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
-										JOINT_MOTOR5_ADR, 10, 0, 0, 10, 0, 0, 0.0, -180.0, 180.0, false, 5);*/
+										JOINT_MOTOR4_ADR, 25, 0, 0, 0, 23, 0, 0, 0, 19.655, -10, 90, true, 4);
+			jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
+										JOINT_MOTOR5_ADR, 10, 0, 0, 10, 0, 0, 0, 0, 0.0, -180.0, 180.0, false, 5);
+
+			Serial.println("Constructed motors");
 			
 			// proper home
-			/*
-			jointMotor[0].SetTarget(0.0);
-			jointMotor[1].SetTarget(27.81);
-			jointMotor[2].SetTarget(124.38);
-			jointMotor[3].SetTarget(27.81);
-			jointMotor[4].SetTarget(0.0);
-			*/
+			
+			// jointMotor[0].SetTarget(0.0);
+			// jointMotor[1].SetTarget(27.81);
+			// jointMotor[2].SetTarget(124.38);
+			// jointMotor[3].SetTarget(27.81);
+			// jointMotor[4].SetTarget(0.0);
+			
 			// jointMotor[0].SetTarget( 0);
 			// jointMotor[1].SetTarget( 0.516 * 360/(2*PI));
 			// jointMotor[2].SetTarget( 1.953 * 360/(2*PI));
@@ -218,7 +221,7 @@ void setup()
 			jointMotor[1].SetTarget(19.655);
 			jointMotor[2].SetTarget(140.689);
 			jointMotor[3].SetTarget(19.655);
-			// jointMotor[4].SetTarget(0);
+			jointMotor[4].SetTarget(0);
 		}
 
 		/*
@@ -229,6 +232,12 @@ void setup()
 
 		digitalWrite(MAGNET_1, HIGH);
 		digitalWrite(MAGNET_2, HIGH);
+
+		/*
+		 * Start NFC
+		 */
+		nfc_0 = new NFC(NFC_0_PIN, &printDebug, &printFault);
+		nfc_0->powerOn();
 		
 		if(USE_DEBUG_BUTTON)
 		{
@@ -243,6 +252,8 @@ void setup()
 		jointMotor[i].set_vel_posStart(jointMotor[i].getAngleDegrees()* 2*(3.14159) / 360);
 	}
 
+	Serial.println("Initializing all nh");
+
 	nh.initNode();
 	nh.advertise(debugPub);
 	nh.advertise(faultPub);
@@ -251,10 +262,14 @@ void setup()
 	nh.advertise(magPub);
 	nh.advertise(pidPub);
 
+	nh.advertiseService(nfcServer);
+
 	nh.subscribe(heartbeatSub);
 	nh.subscribe(pidSub);
 	nh.subscribe(goalSub);
 	nh.subscribe(magnetSub);
+
+	Serial.println("Done setup()");
 }
 
 ////////////////////////////////////////////////////////////////
@@ -287,7 +302,7 @@ void loop()
 	printJointGoal();
 
 	nh.spinOnce();
-	// delay(10);
+	delay(3);
 
 }
 ////////////////////////////////////////////////////////////////
@@ -505,5 +520,21 @@ void pidCB(const inchworm_hw_interface::PIDConsts &msg)
 		float forward[3] = {msg.forward[i].p, msg.forward[i].i, msg.forward[i].d};
 		float backward[3] = {msg.backward[i].p, msg.backward[i].i, msg.backward[i].d};
 		jointMotor[i].set_PID(forward, backward);
+	}
+}
+
+void handleNFCReq(const inchworm_hw_interface::ReadNFCBlockRequest &req, inchworm_hw_interface::ReadNFCBlockResponse &res) {
+	uint8_t data[16];
+
+	bool success = nfc_0->getBlock(req.block, data);
+
+	printDebug("getBlock() called");
+
+	if(success) {
+		res.data = data;
+		res.data_length = 16;
+	} else {
+		String err = "Failed to read NFC data";
+		printFault(err);
 	}
 }
