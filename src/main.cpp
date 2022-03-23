@@ -19,6 +19,7 @@
 #include <inchworm_hw_interface/PID.h>
 #include <inchworm_hw_interface/PIDConsts.h>
 #include <inchworm_hw_interface/ReadNFCBlock.h>
+#include <inchworm_hw_interface/WriteNFCBlock.h>
 #include <std_msgs/Int32.h>
 
 ////////////////////////////////////////////////////////////////
@@ -114,7 +115,8 @@ void magnetCB(const inchworm_hw_interface::MagnetState &msg);
 void goalCB(const sensor_msgs::JointState &msg);
 void pidCB(const inchworm_hw_interface::PIDConsts &msg);
 
-void handleNFCReq(const inchworm_hw_interface::ReadNFCBlockRequest &req, inchworm_hw_interface::ReadNFCBlockResponse &res);
+void handleNFCRead(const inchworm_hw_interface::ReadNFCBlockRequest &req, inchworm_hw_interface::ReadNFCBlockResponse &res);
+void handleNFCWrite(const inchworm_hw_interface::WriteNFCBlockRequest &req, inchworm_hw_interface::WriteNFCBlockResponse &res);
 
 ////////////////////////////////////////////////////////////////
 // PUBLISHERS, SUBSCRIBERS, SERVICES
@@ -133,7 +135,8 @@ ros::Subscriber<inchworm_hw_interface::MagnetState> magnetSub("inchworm/set_magn
 ros::Subscriber<sensor_msgs::JointState> goalSub("inchworm/set_joint_goal", &goalCB);
 ros::Subscriber<inchworm_hw_interface::PIDConsts> pidSub("inchworm/set_pid_consts", &pidCB);
 
-ros::ServiceServer<inchworm_hw_interface::ReadNFCBlockRequest, inchworm_hw_interface::ReadNFCBlockResponse> nfcServer("inchworm/request_nfc", &handleNFCReq);
+ros::ServiceServer<inchworm_hw_interface::ReadNFCBlockRequest, inchworm_hw_interface::ReadNFCBlockResponse> nfcReadServer("inchworm/nfc_read", &handleNFCRead);
+ros::ServiceServer<inchworm_hw_interface::WriteNFCBlockRequest, inchworm_hw_interface::WriteNFCBlockResponse> nfcWriteServer("inchworm/nfc_write", &handleNFCWrite);
 
 ////////////////////////////////////////////////////////////////
 // SETUP METHOD
@@ -262,7 +265,8 @@ void setup()
 	nh.advertise(magPub);
 	nh.advertise(pidPub);
 
-	nh.advertiseService(nfcServer);
+	nh.advertiseService(nfcReadServer);
+	nh.advertiseService(nfcWriteServer);
 
 	nh.subscribe(heartbeatSub);
 	nh.subscribe(pidSub);
@@ -523,18 +527,30 @@ void pidCB(const inchworm_hw_interface::PIDConsts &msg)
 	}
 }
 
-void handleNFCReq(const inchworm_hw_interface::ReadNFCBlockRequest &req, inchworm_hw_interface::ReadNFCBlockResponse &res) {
+void handleNFCRead(const inchworm_hw_interface::ReadNFCBlockRequest &req, inchworm_hw_interface::ReadNFCBlockResponse &res) {
 	uint8_t data[16];
 
-	bool success = nfc_0->getBlock(req.block, data);
+	bool success = nfc_0->readBlock(req.block, data);
 
-	printDebug("getBlock() called");
+	printDebug("readBlock() called");
 
 	if(success) {
 		res.data = data;
 		res.data_length = 16;
 	} else {
-		String err = "Failed to read NFC data";
-		printFault(err);
+		printFault("Failed to read NFC data");
+	}
+}
+
+void handleNFCWrite(const inchworm_hw_interface::WriteNFCBlockRequest &req, inchworm_hw_interface::WriteNFCBlockResponse &res) {
+	if(req.data_length != 16) {
+		printFault("NFC write service called with incorrect data array length");
+		return;
+	}
+
+	bool success = nfc_0->writeBlock(req.block, req.data);
+
+	if(!success) {
+		printFault("Failed to read NFC data");
 	}
 }
