@@ -15,7 +15,8 @@ JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
 						 uint8_t encoderAddress,
 						 double kp_a_link_fixed, double ki_a_link_fixed, double kd_a_link_fixed, double kf_a_link_fixed,
 						 double kp_d_link_fixed, double ki_d_link_fixed, double kd_d_link_fixed, double kf_d_link_fixed,
-						 double ang_offset, double min_angle, double max_angle, bool encoder_clockwise, uint8_t id_input)
+						 double ang_offset, double min_angle, double max_angle, bool encoder_clockwise, uint8_t id_input,
+						 void (*printDebug)(const String&, const String&), void (*printFault)(const String&, const String&))
 {
 	//Pin Configuration
 	pwmForward = pwmF;
@@ -26,7 +27,7 @@ JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
 	pinMode(pinEnable, OUTPUT);
 	digitalWrite(pinEnable, HIGH);
 	//Encoder Setup
-	encoder = AMS_AS5048B(encoderAddress);
+	encoder = AMS_AS5048B(encoderAddress, printDebug, printFault);
 	encoder.begin();	  //Encoder Constructor
 	encoder.setZeroReg(); //Zero Encoders
 
@@ -58,6 +59,9 @@ JointMotor2::JointMotor2(int pwmF, int pwmR, int pinE,
 	}
 	vel_pos = 0;
 	int_pos = 0;
+
+	this->printDebug = printDebug;
+	this->printFault = printFault;
 }
 
 void JointMotor2::SendPWM(int speed)
@@ -120,7 +124,7 @@ double JointMotor2::getAngleDegrees()
 
 	if (fabs(delta) > ANGLE_ERROR_THRESHOLD)
 	{
-		Serial.println("Angle error!");
+		this->printFault("Angle error!", "");
 	}
 
 	last_calibrated_angle = calibrated_angle;
@@ -254,7 +258,7 @@ bool JointMotor2::SwitchPID(void)
 	}
 	else
 	{
-		return;
+		return false;
 	}
 }
 
@@ -281,7 +285,7 @@ bool JointMotor2::SwitchPID(uint8_t gripperEngagedSelect)
 	}
 	else
 	{
-		return;
+		return false;
 	}
 }
 
@@ -392,12 +396,14 @@ void JointMotor2::set_vel_posStart(double posStart){
 
 double JointMotor2::get_velocity(uint32_t mil){
 	double velocity, sum = 0;
-	int num = 0;
 	velocity = (get_vel_posStart() - getAngleDegrees())/((get_vel_startTime() - mil)/1000);
 	
 	//put the velocity term in the array, replacing oldest value
 	vel[vel_pos] = velocity;
 	vel_pos++;
+
+	if(vel_pos == BUFFER_SIZE)
+		vel_pos = 0;
 
 	//sum the velocites
 	for (int i = 0; i < BUFFER_SIZE; i++) {

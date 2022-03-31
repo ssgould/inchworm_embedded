@@ -57,7 +57,7 @@
 
 
 // OPERATIONS
-#define SERIAL_DEBUG_ENABLED
+//#define SERIAL_DEBUG_ENABLED
 // #define USE_WIREBEGIN_ENABLED // to comment if Wire.begin() function is called in Setup() for instance. Usefull to manage one or several I2C devices in the same sketch
 
 // Default addresses for AS5048B
@@ -100,7 +100,7 @@
 class AMS_AS5048B {
  public:
 	AMS_AS5048B(void);
-	AMS_AS5048B(uint8_t chipAddress);
+	AMS_AS5048B(uint8_t chipAddress, void (*printDebug)(const String&, const String&), void (*printFault)(const String&, const String&));
 
 	void		begin(void); // to init the object, must be called in the setup loop
 	void		toggleDebug(void); // start / stop debug through serial at anytime
@@ -139,6 +139,10 @@ class AMS_AS5048B {
 	double		_movingAvgExpCos;
 	double		_movingAvgExpAlpha;
 	int		_movingAvgCountLoop;
+
+	// Logging functions
+	void (*_printDebug)(const String&, const String&);
+  void (*_printFault)(const String&, const String&);
 
 	//methods
 	uint8_t		readReg8(uint8_t address);

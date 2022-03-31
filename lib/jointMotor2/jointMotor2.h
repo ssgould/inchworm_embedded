@@ -4,6 +4,7 @@
 #define _JOINTMOTOR2_h
 
 #include "ams_as5048b.h"
+#include <string>
 
 class JointMotor2
 {
@@ -42,6 +43,10 @@ private:
 	uint32_t vel_startTime;  	// start time for delta time when calculating velocity
 	double vel_posStart;	// start position for change in joint position for calculating velocity
 
+	// Logging functions
+	void (*printDebug)(const String&, const String&);
+  void (*printFault)(const String&, const String&);
+
 public:
 	JointMotor2() {}
 	JointMotor2(int pwmF, int pwmR);
@@ -49,7 +54,8 @@ public:
 				uint8_t encoderAddress,
 				double kp_a_link_fixed, double ki_a_link_fixed, double kd_a_link_fixed, double kf_a_link_fixed,
 				double kp_d_link_fixed, double ki_d_link_fixed, double kd_d_link_fixed, double kf_d_link_fixed,
-				double ang_offset, double min_angle, double max_angle, bool encoder_clockwise, uint8_t id_input);
+				double ang_offset, double min_angle, double max_angle, bool encoder_clockwise, uint8_t id_input,
+				void (*printDebug)(const String&, const String&), void (*printFault)(const String&, const String&));
 
 	void SendPWM(int speed);
 	void SetTarget(double angle);

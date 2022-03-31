@@ -35,9 +35,12 @@ AMS_AS5048B::AMS_AS5048B(void) {
 	_debugFlag = false;
 }
 
-AMS_AS5048B::AMS_AS5048B(uint8_t chipAddress) {
+AMS_AS5048B::AMS_AS5048B(uint8_t chipAddress, void (*printDebug)(const String&, const String&), void (*printFault)(const String&, const String&)) {
 	_chipAddress = chipAddress;
 	_debugFlag = false;
+
+	_printDebug = printDebug;
+	_printFault = printFault;
 }
 
 /*========================================================================*/
@@ -436,8 +439,8 @@ uint8_t AMS_AS5048B::readReg8(uint8_t address) {
 	Wire.write(address);
 	requestResult = Wire.endTransmission(false);
 	if (requestResult){
-		Serial.print("I2C error: ");
-		Serial.println(requestResult);
+		_printFault("I2C error", String(_chipAddress));
+		_printFault(requestResult, String(_chipAddress));
 	}
 
 	Wire.requestFrom(_chipAddress, nbByte2Read);
@@ -458,8 +461,8 @@ uint16_t AMS_AS5048B::readReg16(uint8_t address) {
 	Wire.write(address);
 	requestResult = Wire.endTransmission(false);
 	if (requestResult){
-		Serial.print("I2C error: ");
-		Serial.println(requestResult);
+		_printFault("I2C error", String(_chipAddress));
+		_printFault(requestResult, String(_chipAddress));
 		// return I2C_ERROR;
 	}
 

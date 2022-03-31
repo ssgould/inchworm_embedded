@@ -528,7 +528,7 @@ uint8_t PN532::mifareclassic_AuthenticateBlock (uint8_t *uid, uint8_t uidLen, ui
     @returns 1 if everything executed properly, 0 for an error
 */
 /**************************************************************************/
-uint8_t PN532::mifareclassic_ReadDataBlock (uint8_t blockNumber, uint8_t *data)
+uint8_t PN532::mifareclassic_ReadDataBlock (uint8_t blockNumber, uint8_t *data, uint16_t timeout)
 {
     DMSG("Trying to read 16 bytes from block ");
     DMSG_INT(blockNumber);
@@ -545,7 +545,7 @@ uint8_t PN532::mifareclassic_ReadDataBlock (uint8_t blockNumber, uint8_t *data)
     }
 
     /* Read the response packet */
-    HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer));
+    HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer), timeout);
 
     /* If byte 8 isn't 0x00 we probably have an error */
     if (pn532_packetbuffer[0] != 0x00) {
