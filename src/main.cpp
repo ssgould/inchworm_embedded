@@ -31,6 +31,8 @@ const bool USE_GRIPPERS = true;
 const bool USE_MAGNETS = true;
 const bool USE_DEBUG_BUTTON = true;
 
+const bool PRINT_DEBUG = false;
+
 ////////////////////////////////////////////////////////////////
 // CONTROLLER CONSTANTS
 ////////////////////////////////////////////////////////////////
@@ -146,11 +148,11 @@ ros::ServiceServer<inchworm_hw_interface::WriteNFCBlockRequest, inchworm_hw_inte
 ////////////////////////////////////////////////////////////////
 void setup()
 {
+	pinMode(18, INPUT_PULLUP);
+	pinMode(19, INPUT_PULLUP);
+
 	// setup timers
-
-
-
-	Wire.begin();		  	// Begin I2C
+	Wire.begin();
 	Serial.begin(115200);
 
 	nh.initNode();
@@ -204,7 +206,7 @@ void setup()
 			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
 										JOINT_MOTOR1_ADR, 10, 0, 0, 0, 10, 0, 0, 0, 0.0, -180, 180, true, 1, &printDebug, &printFault);
 			jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
-										JOINT_MOTOR2_ADR, 60, 0, 12.5, -115, 10, 0, 0, 0, 19.655, -10, 90, false, 2, &printDebug, &printFault);
+										JOINT_MOTOR2_ADR, 40, 0, 10, -115, 10, 0, 0, 0, 19.655, -10, 90, false, 2, &printDebug, &printFault);
 			jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
 										JOINT_MOTOR3_ADR, 30, 0, 6.25, -60, 23, 0, 0, 0, 140.689, -10, 140, true, 3, &printDebug, &printFault);
 			jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
@@ -255,7 +257,7 @@ void setup()
 
 void loop()
 {
-	printDebug("Beginning of loop", "");
+	printDebug("Beginning of loop", "loop");
 	if(testState == ROBOT_TUNNING || testState == ROBOT_NORMAL){
 		// Move joint motors
 		static uint32_t lastUpdateTime = millis();
@@ -322,14 +324,16 @@ void UpdateMotors()
 }
 
 void printDebug(const String& theString, const String& id)
-{	
-	debug_msg.data = theString.c_str();
-	debugPub.publish(&debug_msg);
+{
+	if(PRINT_DEBUG) {
+		debug_msg.data = (id + String("\t") + theString).c_str();
+		debugPub.publish(&debug_msg);
+	}
 }
 
 void printFault(const String& theString, const String& id)
 {
-	fault_msg.data = theString.c_str();
+	fault_msg.data = (id + String("\t") + theString).c_str();
 	faultPub.publish(&fault_msg);
 }
 
