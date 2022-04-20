@@ -58,7 +58,7 @@
 //#define JOINT_MOTOR4_ADR 0x42 // no one has it? i2c error  = 2  (joint 2 / 3)
 
 #define JOINT_MOTOR5_FWD 22 // D-LINK WRIST
-#define JOINT_MOTOR5_REV 23
+#define JOINT_MOTOR5_REV 17
 #define JOINT_MOTOR5_EN 0
 #define JOINT_MOTOR5_ADR 0x46
 //#define JOINT_MOTOR5_ADR 0x49 // joint 5 (wrist not on teensy leg)

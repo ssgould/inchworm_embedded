@@ -201,25 +201,30 @@ void setup()
 		 * Intialize Joint Motors (PINs, Dynamic PID values, Encoder I2C address, direction, ID)
 		 */
 		if(USE_MOTORS){
-			// proper home			
+			// Home pose
+			float offset_0 = 0;
+			float offset_1 = 19.655;
+			float offset_2 = 140.689;
+			float offset_3 = 19.655;
+			float offset_4 = -90;
 			
-			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // A-LINK WRIST
-										JOINT_MOTOR1_ADR, 10, 0, 0, 0, 10, 0, 0, 0, 0.0, -180, 180, true, 1, &printDebug, &printFault);
-			jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // AB-LINK JOINT
-										JOINT_MOTOR2_ADR, 40, 0, 10, -115, 10, 0, 0, 0, 19.655, -10, 90, false, 2, &printDebug, &printFault);
-			jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // BC-LINK JOINT
-										JOINT_MOTOR3_ADR, 30, 0, 6.25, -60, 23, 0, 0, 0, 140.689, -10, 140, true, 3, &printDebug, &printFault);
-			jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // CD-LINK JOINT
-										JOINT_MOTOR4_ADR, 25, 0, 0, 0, 23, 0, 0, 0, 19.655, -10, 90, true, 4, &printDebug, &printFault);
-			jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // D-LINK WRIST
-										JOINT_MOTOR5_ADR, 10, 0, 0, 10, 0, 0, 0, 0, 0.0, -180.0, 180.0, false, 5, &printDebug, &printFault);
+			jointMotor[0] = JointMotor2(JOINT_MOTOR1_FWD, JOINT_MOTOR1_REV, JOINT_MOTOR1_EN, // ANKLE_FOOT_BOTTOM
+										JOINT_MOTOR1_ADR, 10, 0, 0, 0, 10, 0, 0, 0, offset_0, -180, 180, false, 1, &printDebug, &printFault);
+			jointMotor[1] = JointMotor2(JOINT_MOTOR2_FWD, JOINT_MOTOR2_REV, JOINT_MOTOR2_EN, // BEAM_ANKLE_BOTTOM
+										JOINT_MOTOR2_ADR, 40, 0, 10, -115, 10, 0, 0, 0, offset_1, -10, 90, false, 2, &printDebug, &printFault);
+			jointMotor[2] = JointMotor2(JOINT_MOTOR3_FWD, JOINT_MOTOR3_REV, JOINT_MOTOR3_EN, // MID_JOINT
+										JOINT_MOTOR3_ADR, 30, 0, 6.25, -60, 23, 0, 0, 0, offset_2, -10, 140, true, 3, &printDebug, &printFault);
+			jointMotor[3] = JointMotor2(JOINT_MOTOR4_FWD, JOINT_MOTOR4_REV, JOINT_MOTOR4_EN, // BEAM_ANKLE_TOP
+										JOINT_MOTOR4_ADR, 25, 0, 0, 0, 23, 0, 0, 0, offset_3, -10, 90, true, 4, &printDebug, &printFault);
+			jointMotor[4] = JointMotor2(JOINT_MOTOR5_FWD, JOINT_MOTOR5_REV, JOINT_MOTOR5_EN, // ANKLE_FOOT_TOP
+										JOINT_MOTOR5_ADR, 10, 0, 0, 10, 0, 0, 0, 0, offset_4, -180.0, 180.0, false, 5, &printDebug, &printFault);
 			
 			// proper home
-			jointMotor[0].SetTarget(0);
-			jointMotor[1].SetTarget(19.655);
-			jointMotor[2].SetTarget(140.689);
-			jointMotor[3].SetTarget(19.655);
-			jointMotor[4].SetTarget(0);
+			jointMotor[0].SetTarget(offset_0);
+			jointMotor[1].SetTarget(offset_1);
+			jointMotor[2].SetTarget(offset_2);
+			jointMotor[3].SetTarget(offset_3);
+			jointMotor[4].SetTarget(offset_4);
 		}
 
 		/*
@@ -298,7 +303,7 @@ void UpdateMotors()
 {
 	int speeds[NUM_MOTORS];
 	printDebug("Calculating effort", "");
-	for (int i = 1; i < NUM_MOTORS; i++)
+	for (int i = 0; i < NUM_MOTORS; i++)
 	{
 		speeds[i] = jointMotor[i].CalcEffort();
 	}
@@ -308,7 +313,7 @@ void UpdateMotors()
 	// minimize delay between each joint movement
 	if (switchedPid_2)
 	{
-		for (int i = NUM_MOTORS - 1; i >= 1; i--)
+		for (int i = NUM_MOTORS - 1; i >= 0; i--)
 		{
 			switchedPid_2 = false;
 			jointMotor[i].SendPWM(speeds[i]);
@@ -316,8 +321,9 @@ void UpdateMotors()
 	}
 	else
 	{
-		for (int i = 1; i < NUM_MOTORS; i++)
+		for (int i = 0; i < NUM_MOTORS; i++)
 		{
+			printDebug("Sending PWM for motor", String(i));
 			jointMotor[i].SendPWM(speeds[i]);
 		}
 	}
